@@ -59,7 +59,30 @@ caliber -a my-agent verify <prediction-id> --correct
 # Generate Trust Card
 caliber -a my-agent card
 caliber -a my-agent card --json
+
+# Quick progress check
+caliber -a my-agent summary
 ```
+
+### Try It Now
+
+Make 3 predictions about your codebase before checking:
+
+```bash
+caliber predict "src/ has more than 10 Python files" -c 70 -d codebase
+caliber predict "package.json has a test script" -c 85 -d codebase
+caliber predict "the main module uses asyncio" -c 60 -d architecture
+```
+
+Then verify each one:
+
+```bash
+caliber verify <id1> --correct   # or --incorrect
+caliber verify <id2> --correct
+caliber verify <id3> --incorrect
+```
+
+After 3 predictions: `caliber summary`. After 20: `caliber card`.
 
 ## Trust Card Format
 
