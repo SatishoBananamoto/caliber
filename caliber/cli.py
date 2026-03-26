@@ -142,6 +142,35 @@ def list_predictions(ctx, unverified: bool, domain: str):
         click.echo(f"  {p.claim}")
 
 
+@cli.command("import")
+@click.argument("file_path", type=click.Path(exists=True))
+@click.option("--format", "fmt", type=click.Choice(["auto", "md", "csv"]),
+              default="auto", help="Import format.")
+@click.pass_context
+def import_data(ctx, file_path: str, fmt: str):
+    """Import predictions from a file.
+
+    Supported formats: CALIBRATE.md (markdown), CSV.
+    Auto-detect by file extension.
+    """
+    from caliber.importer import import_calibrate_md, import_csv
+
+    tracker = _get_tracker(ctx.obj["agent"], ctx.obj["store"])
+
+    if fmt == "auto":
+        if file_path.endswith(".csv"):
+            fmt = "csv"
+        else:
+            fmt = "md"
+
+    if fmt == "md":
+        count = import_calibrate_md(file_path, tracker)
+    else:
+        count = import_csv(file_path, tracker)
+
+    click.echo(f"Imported {count} predictions from {file_path}")
+
+
 def main():
     cli()
 
