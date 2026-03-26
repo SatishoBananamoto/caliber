@@ -110,7 +110,37 @@ def summary(ctx):
 
     if verified:
         correct = sum(1 for p in tracker.verified if p.outcome)
+        avg_conf = sum(p.confidence for p in tracker.verified) / verified
         click.echo(f"  Accuracy: {correct/verified:.1%} ({correct}/{verified})")
+        click.echo(f"  Avg confidence: {avg_conf:.1%}")
+        gap = avg_conf - correct/verified
+        if abs(gap) < 0.05:
+            click.echo(f"  Calibration: well-calibrated")
+        elif gap > 0:
+            click.echo(f"  Calibration: overconfident by {gap:.0%}")
+        else:
+            click.echo(f"  Calibration: underconfident by {abs(gap):.0%}")
+
+        # Early insights
+        if verified >= 5:
+            # Domain breakdown
+            domains = {}
+            for p in tracker.verified:
+                domains.setdefault(p.domain, [0, 0])
+                domains[p.domain][0] += 1
+                if p.outcome:
+                    domains[p.domain][1] += 1
+            if len(domains) > 1:
+                weakest = min(domains.items(), key=lambda x: x[1][1]/x[1][0] if x[1][0] else 1)
+                strongest = max(domains.items(), key=lambda x: x[1][1]/x[1][0] if x[1][0] else 0)
+                if weakest[0] != strongest[0]:
+                    click.echo(f"  Strongest: {strongest[0]} ({strongest[1][1]}/{strongest[1][0]})")
+                    click.echo(f"  Weakest: {weakest[0]} ({weakest[1][1]}/{weakest[1][0]})")
+
+        if verified < 20:
+            click.echo(f"\n  Need {20 - verified} more predictions for meaningful Trust Card.")
+        elif verified < 100:
+            click.echo(f"\n  Need ~{100 - verified} more per bucket for statistical significance.")
 
 
 @cli.command("list")
