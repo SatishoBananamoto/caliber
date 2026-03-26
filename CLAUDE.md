@@ -27,43 +27,41 @@ python3 -m caliber.cli -a agent-name card [--json]
 
 ```
 caliber/
-├── tracker.py    # TrustTracker + Prediction dataclass (core)
-├── card.py       # TrustCard generation (confidence buckets, danger zones)
-├── storage.py    # FileStorage (JSON) + MemoryStorage (tests)
-├── cli.py        # Click-based CLI
-└── __init__.py   # Public API: TrustTracker, Prediction, TrustCard
+├── tracker.py      # TrustTracker + Prediction (core)
+├── card.py         # TrustCard (buckets, significance, danger/strength zones)
+├── storage.py      # FileStorage (JSON) + MemoryStorage (tests)
+├── cli.py          # Click CLI (predict, verify, card, summary, list, import, trajectory)
+├── mcp_server.py   # FastMCP server (6 tools)
+├── trajectory.py   # Trajectory analysis (snapshots, trends)
+├── commitment.py   # SHA-256 prediction anchoring
+├── importer.py     # Import from CALIBRATE.md and CSV
+└── __init__.py     # Public API
 ```
 
-## Known Issues / Design Debts
+## Known Issues / Remaining Work
 
-1. **danger_zones only flags overconfident buckets.** Doesn't show
-   "strength zones" where agent is underconfident (accuracy > confidence).
-   Should flag both directions. (P-057 discovery)
+1. **MCP config not auto-applied.** Needs manual addition to ~/.mcp.json.
+   Config is already added for this machine.
 
-2. **0.10 threshold for danger zone is feeling-based AND underpowered.**
-   Binomial tests show NO bucket-level findings are significant at p<0.10
-   with current sample sizes (3-22 per bucket). The Trust Card should
-   include significance tests (binomial p-values per bucket) and flag
-   underpowered results. Critical: without this, users will treat noise
-   as patterns, exactly as MY UNIVERSE did for 3 sessions.
+2. **extract_calibrate_md.py is still standalone.** The `caliber import`
+   CLI command exists, but the standalone script remains for backwards compat.
 
-3. **No import CLI command.** extract_calibrate_md.py is standalone.
-   Should be integrated as `caliber import`.
+3. **Difficulty metrics not implemented.** Trust Cards can be gamed by
+   making only easy predictions. Need claim specificity scoring or
+   cross-agent comparison. Phase 2 problem.
 
-4. **No trajectory support.** Trust Card is a snapshot. Should show
-   how calibration changes over time (trajectory insight from session 3).
+4. **Verification subjectivity unaddressed.** Who decides "correct"?
+   For filesystem checks: objective. For code review: subjective.
+   Phase 2 problem.
 
-5. **No prediction anchoring.** Trust Cards can be fabricated. Need
-   commitment scheme (hash-based, Pre-Mortem from session 3).
+5. **No PyPI package.** Local install only. Need to publish.
 
-## Next Steps (Priority Order)
+## Next Steps
 
-1. **MCP server** (Phase 1.5) — enables agent-native calibration tracking.
-   Design sketch in ~/MY UNIVERSE/ANALYSES.md. ~150 lines.
-2. **GitHub repo + PyPI** — shipping.
-3. **Strength zones** — flag underconfident buckets (negative cal gap).
-4. **Trajectory** — snapshot series in Trust Card format.
-5. **Commitment scheme** — SHA-256 prediction anchoring.
+1. **PyPI publishing** — `pip install caliber`
+2. **Difficulty metrics** — detect trivial prediction farming
+3. **Trust Card verification** — chi-square on distributions, consistency checks
+4. **A2A Agent Card extension** — add calibration data to Agent Cards
 
 ## Origin
 
