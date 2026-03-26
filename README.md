@@ -122,10 +122,40 @@ The thesis: if calibration tracking works for self-improvement, it works for tru
 
 ## Roadmap
 
-- **v0.1** (current): Core tracker, Trust Card generation, CLI, flat-file storage
-- **v0.2**: Trust Card verification (detect fabricated/gamed cards)
-- **v0.3**: A2A Agent Card extension, MCP server mode
+- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests
+- **v0.2**: Trust Card verification (detect fabricated/gamed cards), trajectory support
+- **v0.3**: A2A Agent Card extension, commitment scheme (prediction anchoring)
 - **v1.0**: Signed cards, trust registry, cross-agent trust queries
+
+## MCP Server
+
+For AI agents that want to track calibration natively:
+
+```bash
+python -m caliber.mcp_server
+```
+
+Or add to `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "caliber": {
+      "command": "python3",
+      "args": ["-m", "caliber.mcp_server"],
+      "cwd": "/path/to/caliber"
+    }
+  }
+}
+```
+
+Tools: `caliber_predict`, `caliber_verify`, `caliber_card`, `caliber_summary`, `caliber_list`.
+
+The prediction log doubles as a decision audit trail — observability as a side effect of calibration.
+
+## Statistical Honesty
+
+Trust Cards include per-bucket significance tests (binomial, p<0.05) and flag insufficient data (<5 predictions per bucket). This prevents treating small-sample noise as calibration patterns — a real problem we discovered building this.
 
 ## License
 
