@@ -171,6 +171,27 @@ def import_data(ctx, file_path: str, fmt: str):
     click.echo(f"Imported {count} predictions from {file_path}")
 
 
+@cli.command()
+@click.option("--interval", "-i", default=10, help="Predictions per snapshot.")
+@click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.pass_context
+def trajectory(ctx, interval: int, as_json: bool):
+    """Show how calibration changes over time."""
+    from caliber.trajectory import Trajectory
+
+    tracker = _get_tracker(ctx.obj["agent"], ctx.obj["store"])
+    if len(tracker.verified) < interval:
+        click.echo(f"Need at least {interval} verified predictions for trajectory.")
+        return
+
+    traj = Trajectory.from_predictions(ctx.obj["agent"], tracker.verified, interval=interval)
+    if as_json:
+        import json
+        click.echo(json.dumps(traj.to_dict(), indent=2))
+    else:
+        click.echo(traj.summary())
+
+
 def main():
     cli()
 

@@ -165,5 +165,29 @@ def caliber_list(
     ]
 
 
+@server.tool()
+def caliber_trajectory(
+    agent: str = DEFAULT_AGENT,
+    interval: int = 10,
+) -> dict:
+    """Show how calibration changes over time.
+
+    Returns trajectory with snapshots at regular intervals and
+    trends (improving/declining/stable).
+
+    Args:
+        agent: Agent name.
+        interval: Predictions per snapshot (default 10).
+    """
+    from caliber.trajectory import Trajectory
+
+    tracker = _get_tracker(agent)
+    if len(tracker.verified) < interval:
+        return {"error": f"Need at least {interval} verified predictions."}
+
+    traj = Trajectory.from_predictions(agent, tracker.verified, interval=interval)
+    return traj.to_dict()
+
+
 if __name__ == "__main__":
     server.run()
