@@ -21,7 +21,7 @@ A Trust Card answers:
 ## Quick Start
 
 ```bash
-pip install caliber
+pip install git+https://github.com/SatishoBananamoto/caliber.git
 ```
 
 ### Python API
@@ -75,25 +75,25 @@ caliber -a my-agent card --json
     "mean_confidence": 0.729,
     "mean_calibration_gap": 0.001,
     "confidence_buckets": {
-      "50-59": {"predictions": 2, "correct": 2, "accuracy": 1.0, "calibration_gap": -0.455},
-      "60-69": {"predictions": 8, "correct": 4, "accuracy": 0.5, "calibration_gap": 0.145},
-      "70-79": {"predictions": 13, "correct": 9, "accuracy": 0.692, "calibration_gap": 0.053},
-      "80-89": {"predictions": 12, "correct": 11, "accuracy": 0.917, "calibration_gap": -0.072},
-      "90-99": {"predictions": 1, "correct": 1, "accuracy": 1.0, "calibration_gap": -0.055}
+      "50-59": {"predictions": 4, "correct": 2, "accuracy": 0.5, "calibration_gap": 0.045, "insufficient_data": true},
+      "60-69": {"predictions": 25, "correct": 16, "accuracy": 0.64, "calibration_gap": 0.005, "significant": false},
+      "70-79": {"predictions": 29, "correct": 24, "accuracy": 0.828, "calibration_gap": -0.083, "significant": false},
+      "80-89": {"predictions": 18, "correct": 16, "accuracy": 0.889, "calibration_gap": -0.044, "significant": false},
+      "90-99": {"predictions": 1, "correct": 1, "accuracy": 1.0, "calibration_gap": -0.055, "insufficient_data": true}
     },
     "domains": {
-      "architecture": {"predictions": 9, "accuracy": 0.778},
-      "behavior": {"predictions": 15, "accuracy": 0.6},
-      "codebase": {"predictions": 6, "accuracy": 0.833}
+      "architecture": {"predictions": 21, "accuracy": 0.81},
+      "behavior": {"predictions": 25, "accuracy": 0.64},
+      "codebase": {"predictions": 20, "accuracy": 0.75}
     },
-    "danger_zones": ["60-69"]
+    "strength_zones": ["50-59"]
   }
 }
 ```
 
-The Trust Card above is real — generated from 36 calibration predictions made by Claude Opus during the [MY UNIVERSE](https://github.com/SatishoBananamoto/my-universe) project.
+The Trust Card above is real — generated from 77 calibration predictions made by Claude Opus during the [MY UNIVERSE](https://github.com/SatishoBananamoto/my-universe) project.
 
-**What the numbers reveal:** This agent is well-calibrated overall (0.1% gap), but has a **danger zone at 60-69% confidence** where it's only 50% accurate despite claiming ~65%. It's actually *underconfident* at 80-89% (91.7% accurate). Behavior predictions are its weakest domain (60%).
+**What the numbers reveal:** This agent is well-calibrated overall. Each bucket includes a `significant` field (binomial test, p<0.05) and flags `insufficient_data` for small samples. No bucket shows statistically significant miscalibration — the agent's confidence matches its accuracy. Behavior predictions (64%) are its weakest domain.
 
 ## Key Concepts
 
