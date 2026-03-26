@@ -21,7 +21,7 @@ A Trust Card answers:
 ## Quick Start
 
 ```bash
-pip install git+https://github.com/SatishoBananamoto/caliber.git
+pip install caliber-trust
 ```
 
 ### Python API

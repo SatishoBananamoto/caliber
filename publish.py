@@ -2,34 +2,34 @@
 """Publish caliber to PyPI.
 
 Usage:
-    kv run -e pypi -- python3 publish.py    # Uses PYPI_TOKEN from kv
-    PYPI_TOKEN=xxx python3 publish.py       # Manual token
+    kv_run(argv=["python3", "publish.py"], env="pypi")
+
+Reads PYPI_TOKEN from environment, sets TWINE_USERNAME/TWINE_PASSWORD,
+then calls twine upload directly (no subprocess, stays in same process).
 """
 import os
 import sys
+import glob
 
 token = os.environ.get("PYPI_TOKEN")
 if not token:
     print("Error: PYPI_TOKEN not set")
-    print("Usage: kv run -e pypi -- python3 publish.py")
     sys.exit(1)
 
-# Write temporary .pypirc
-import tempfile
-pypirc = tempfile.NamedTemporaryFile(mode='w', suffix='.pypirc', delete=False)
-pypirc.write(f"""[pypi]
-username = __token__
-password = {token}
-""")
-pypirc.close()
+# Set twine env vars so twine.cli picks them up
+os.environ["TWINE_USERNAME"] = "__token__"
+os.environ["TWINE_PASSWORD"] = token
 
-import subprocess
-result = subprocess.run(
-    ["python3", "-m", "twine", "upload",
-     "--config-file", pypirc.name,
-     "dist/*"],
-    cwd=os.path.dirname(os.path.abspath(__file__)),
-)
+# Find dist files
+dist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dist")
+dists = glob.glob(os.path.join(dist_dir, "*"))
+if not dists:
+    print(f"Error: no files in {dist_dir}")
+    sys.exit(1)
 
-os.unlink(pypirc.name)
-sys.exit(result.returncode)
+print(f"Uploading: {[os.path.basename(d) for d in dists]}")
+
+# Call twine directly in-process (no subprocess)
+sys.argv = ["twine", "upload"] + dists
+from twine.__main__ import main
+sys.exit(main())
