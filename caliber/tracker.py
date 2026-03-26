@@ -26,9 +26,11 @@ class Prediction:
     outcome: Optional[bool] = None  # True=correct, False=incorrect, None=unverified
     verified_at: Optional[datetime] = None
     notes: Optional[str] = None
+    commitment_hash: Optional[str] = None
+    commitment_salt: Optional[str] = None
 
     def to_dict(self) -> dict:
-        return {
+        d = {
             "id": self.id,
             "claim": self.claim,
             "confidence": self.confidence,
@@ -38,6 +40,10 @@ class Prediction:
             "verified_at": self.verified_at.isoformat() if self.verified_at else None,
             "notes": self.notes,
         }
+        if self.commitment_hash:
+            d["commitment_hash"] = self.commitment_hash
+            d["commitment_salt"] = self.commitment_salt
+        return d
 
     @classmethod
     def from_dict(cls, data: dict) -> Prediction:
@@ -48,6 +54,8 @@ class Prediction:
             domain=data["domain"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
             outcome=data.get("outcome"),
+            commitment_hash=data.get("commitment_hash"),
+            commitment_salt=data.get("commitment_salt"),
             verified_at=(
                 datetime.fromisoformat(data["verified_at"])
                 if data.get("verified_at")
@@ -84,8 +92,10 @@ class TrustTracker:
         agent_name: str,
         storage: Optional[Storage] = None,
         store_path: Optional[str] = None,
+        signed: bool = False,
     ):
         self.agent_name = agent_name
+        self.signed = signed
         self._predictions: dict[str, Prediction] = {}
 
         if storage is not None:
@@ -123,12 +133,24 @@ class TrustTracker:
         confidence = _validate_confidence(confidence)
 
         pid = prediction_id or uuid.uuid4().hex[:8]
+        ts = timestamp or datetime.now(timezone.utc)
+
+        commitment_hash = None
+        commitment_salt = None
+        if self.signed:
+            from caliber.commitment import create_commitment
+            c = create_commitment(claim, confidence, domain, ts)
+            commitment_hash = c.commitment_hash
+            commitment_salt = c.salt
+
         pred = Prediction(
             id=pid,
             claim=claim,
             confidence=confidence,
             domain=domain,
-            timestamp=timestamp or datetime.now(timezone.utc),
+            timestamp=ts,
+            commitment_hash=commitment_hash,
+            commitment_salt=commitment_salt,
         )
         self._predictions[pid] = pred
         self._save()
