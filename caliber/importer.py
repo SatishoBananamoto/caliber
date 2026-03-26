@@ -28,7 +28,7 @@ def import_calibrate_md(
     count = 0
 
     pattern = (
-        r"### \[P-(\d+)\] (\d{4}-\d{2}-\d{2}) — (\w+)\n\n"
+        r"### \[P-(\d+)\] (\d{4}-\d{2}-\d{2}) — (\w+)\s*\n+"
         r"(.*?)(?=\n### \[P-|\n---|\Z)"
     )
     for m in re.finditer(pattern, text, re.DOTALL):
