@@ -8,6 +8,7 @@ says it's 80% confident, how often is it actually right?"
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional, TYPE_CHECKING
@@ -19,6 +20,11 @@ if TYPE_CHECKING:
 # Confidence bucket boundaries — chosen from MY UNIVERSE calibration data.
 # The 60-79% range is split into two buckets because that's where
 # miscalibration concentrates.
+def _norm_cdf(x: float) -> float:
+    """Standard normal CDF using math.erfc (no scipy needed)."""
+    return 0.5 * math.erfc(-x / math.sqrt(2))
+
+
 BUCKET_RANGES = [
     (0.50, 0.59, "50-59"),
     (0.60, 0.69, "60-69"),
@@ -60,11 +66,38 @@ class BucketStats:
             return None
         return self.expected_accuracy - self.accuracy
 
+    @property
+    def significant(self) -> Optional[bool]:
+        """Is the calibration gap statistically significant (p < 0.05)?
+
+        Uses normal approximation to binomial test. Returns None if
+        insufficient data (< 5 predictions).
+        """
+        if self.predictions < 5 or self.accuracy is None:
+            return None
+        p0 = self.expected_accuracy
+        p_hat = self.accuracy
+        n = self.predictions
+        # Normal approximation to binomial
+        se = math.sqrt(p0 * (1 - p0) / n)
+        if se == 0:
+            return None
+        z = (p_hat - p0) / se
+        # Two-sided test: is the gap significantly different from zero?
+        # Using standard normal CDF approximation
+        p_value = 2 * (1 - _norm_cdf(abs(z)))
+        return p_value < 0.05
+
     def to_dict(self) -> dict:
         d = {"predictions": self.predictions, "correct": self.correct}
         if self.accuracy is not None:
             d["accuracy"] = round(self.accuracy, 3)
             d["calibration_gap"] = round(self.calibration_gap, 3)
+            sig = self.significant
+            if sig is not None:
+                d["significant"] = sig
+            if self.predictions < 5:
+                d["insufficient_data"] = True
         return d
 
 
@@ -116,6 +149,7 @@ class TrustCard:
     confidence_buckets: dict[str, BucketStats] = field(default_factory=dict)
     domains: dict[str, DomainStats] = field(default_factory=dict)
     danger_zones: list[str] = field(default_factory=list)
+    strength_zones: list[str] = field(default_factory=list)
 
     @classmethod
     def from_predictions(
@@ -161,13 +195,23 @@ class TrustCard:
                 avg_confidence=d_avg_conf,
             )
 
-        # Identify danger zones — buckets where accuracy < expected - 0.10
-        # (more than 10 percentage points worse than confidence implies)
+        # Identify danger zones (overconfident) and strength zones (underconfident).
+        # Uses both threshold (gap > 0.10) and statistical test when available.
+        # A zone is flagged if: gap exceeds threshold AND (significant OR insufficient data for test).
         danger_zones = []
+        strength_zones = []
         for label, bucket in buckets.items():
             if bucket.predictions >= 3 and bucket.calibration_gap is not None:
-                if bucket.calibration_gap > 0.10:
-                    danger_zones.append(label)
+                sig = bucket.significant  # None if <5 predictions
+                gap = bucket.calibration_gap
+                if gap > 0.10:
+                    # Overconfident: accuracy < expected
+                    if sig is True or sig is None:  # confirmed or untestable
+                        danger_zones.append(label)
+                elif gap < -0.10:
+                    # Underconfident: accuracy > expected
+                    if sig is True or sig is None:
+                        strength_zones.append(label)
 
         # Mean calibration gap (weighted by bucket size)
         weighted_gaps = []
@@ -191,6 +235,7 @@ class TrustCard:
             confidence_buckets=buckets,
             domains=domains,
             danger_zones=danger_zones,
+            strength_zones=strength_zones,
         )
 
     def to_dict(self) -> dict:
@@ -226,6 +271,8 @@ class TrustCard:
 
         if self.danger_zones:
             cal["danger_zones"] = self.danger_zones
+        if self.strength_zones:
+            cal["strength_zones"] = self.strength_zones
 
         return d
 
@@ -259,10 +306,19 @@ class TrustCard:
             lines.append("\nConfidence buckets:")
             for label, bucket in self.confidence_buckets.items():
                 if bucket.predictions > 0:
-                    marker = " ⚠" if label in self.danger_zones else ""
+                    marker = ""
+                    if label in self.danger_zones:
+                        marker = " ⚠ DANGER"
+                    elif label in self.strength_zones:
+                        marker = " ✓ STRENGTH"
+                    sig_note = ""
+                    if bucket.predictions < 5:
+                        sig_note = " [insufficient data]"
+                    elif bucket.significant is False:
+                        sig_note = " [not significant]"
                     lines.append(
                         f"  {label}%: {bucket.accuracy:.1%} accurate "
-                        f"({bucket.predictions} predictions){marker}"
+                        f"({bucket.predictions} predictions){marker}{sig_note}"
                     )
 
         if self.domains:
@@ -277,6 +333,10 @@ class TrustCard:
         if self.danger_zones:
             lines.append(
                 f"\nDanger zones: {', '.join(f'{z}%' for z in self.danger_zones)}"
+            )
+        if self.strength_zones:
+            lines.append(
+                f"Strength zones: {', '.join(f'{z}%' for z in self.strength_zones)}"
             )
 
         return "\n".join(lines)

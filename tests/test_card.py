@@ -197,3 +197,71 @@ class TestTrustCard:
         assert card.total_verified == 36
         assert 0 < card.overall_accuracy < 1
         assert len(card.domains) <= 3
+
+
+class TestBucketSignificance:
+    def test_insufficient_data(self):
+        b = BucketStats(label="60-69", predictions=3, correct=1)
+        assert b.significant is None  # too few for test
+
+    def test_well_calibrated_not_significant(self):
+        b = BucketStats(label="80-89", predictions=20, correct=17)
+        assert b.significant is False  # 85% at 84.5% expected — no gap
+
+    def test_large_miscalibration_significant(self):
+        b = BucketStats(label="60-69", predictions=100, correct=50)
+        assert b.significant is True  # 50% at 64.5% expected — real gap
+
+    def test_significance_in_to_dict(self):
+        b = BucketStats(label="70-79", predictions=10, correct=7)
+        d = b.to_dict()
+        assert "significant" in d
+        assert isinstance(d["significant"], bool)
+
+    def test_insufficient_in_to_dict(self):
+        b = BucketStats(label="90-99", predictions=2, correct=2)
+        d = b.to_dict()
+        assert d.get("insufficient_data") is True
+
+
+class TestStrengthZones:
+    def _make_predictions(self, specs):
+        preds = []
+        for i, (conf, domain, correct) in enumerate(specs):
+            preds.append(Prediction(
+                id=f"P-{i+1:03d}", claim=f"pred {i+1}",
+                confidence=conf, domain=domain,
+                timestamp=datetime(2026, 3, 24, tzinfo=timezone.utc),
+                outcome=correct,
+                verified_at=datetime(2026, 3, 24, tzinfo=timezone.utc),
+            ))
+        return preds
+
+    def test_strength_zone_detected(self):
+        # 3+ predictions in 50-59%, all correct → underconfident
+        preds = self._make_predictions([
+            (0.55, "a", True),
+            (0.52, "a", True),
+            (0.58, "a", True),
+        ])
+        card = TrustCard.from_predictions("test", preds)
+        assert "50-59" in card.strength_zones
+
+    def test_no_strength_zone_when_calibrated(self):
+        preds = self._make_predictions([
+            (0.85, "a", True),
+            (0.82, "a", False),
+            (0.88, "a", True),
+        ])
+        card = TrustCard.from_predictions("test", preds)
+        assert card.strength_zones == []
+
+    def test_strength_zone_in_json(self):
+        preds = self._make_predictions([
+            (0.55, "a", True),
+            (0.52, "a", True),
+            (0.58, "a", True),
+        ])
+        card = TrustCard.from_predictions("test", preds)
+        data = json.loads(card.to_json())
+        assert "strength_zones" in data["calibration"]
