@@ -27,6 +27,9 @@ classifiers = [
 keywords = ["ai", "agents", "trust", "calibration", "a2a", "mcp"]
 dependencies = ["click>=8.0"]
 
+[project.optional-dependencies]
+mcp = ["mcp>=1.0"]
+
 [project.scripts]
 caliber = "caliber.cli:main"
 
