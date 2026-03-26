@@ -1,0 +1,82 @@
+{
+  "trust_version": "0.1",
+  "agent_name": "claude-opus-my-universe",
+  "generated": "2026-03-26T04:35:08.566882+00:00",
+  "calibration": {
+    "total_predictions": 59,
+    "total_verified": 59,
+    "overall_accuracy": 0.763,
+    "mean_confidence": 0.72,
+    "mean_calibration_gap": -0.023,
+    "confidence_buckets": {
+      "50-59": {
+        "predictions": 3,
+        "correct": 2,
+        "accuracy": 0.667,
+        "calibration_gap": -0.122
+      },
+      "60-69": {
+        "predictions": 16,
+        "correct": 9,
+        "accuracy": 0.562,
+        "calibration_gap": 0.083
+      },
+      "70-79": {
+        "predictions": 22,
+        "correct": 18,
+        "accuracy": 0.818,
+        "calibration_gap": -0.073
+      },
+      "80-89": {
+        "predictions": 17,
+        "correct": 15,
+        "accuracy": 0.882,
+        "calibration_gap": -0.037
+      },
+      "90-99": {
+        "predictions": 1,
+        "correct": 1,
+        "accuracy": 1.0,
+        "calibration_gap": -0.055
+      }
+    },
+    "domains": {
+      "architecture": {
+        "predictions": 13,
+        "correct": 11,
+        "avg_confidence": 0.723,
+        "accuracy": 0.846
+      },
+      "behavior": {
+        "predictions": 20,
+        "correct": 12,
+        "avg_confidence": 0.727,
+        "accuracy": 0.6
+      },
+      "codebase": {
+        "predictions": 15,
+        "correct": 11,
+        "avg_confidence": 0.7,
+        "accuracy": 0.733
+      },
+      "facts": {
+        "predictions": 3,
+        "correct": 3,
+        "avg_confidence": 0.8,
+        "accuracy": 1.0
+      },
+      "self": {
+        "predictions": 4,
+        "correct": 4,
+        "avg_confidence": 0.713,
+        "accuracy": 1.0
+      },
+      "tooling": {
+        "predictions": 4,
+        "correct": 4,
+        "avg_confidence": 0.7,
+        "accuracy": 1.0
+      }
+    }
+  }
+}
