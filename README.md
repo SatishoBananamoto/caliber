@@ -69,11 +69,11 @@ caliber -a my-agent card --json
   "agent_name": "my-code-reviewer",
   "generated": "2026-03-26T00:00:00Z",
   "calibration": {
-    "total_predictions": 36,
-    "total_verified": 36,
-    "overall_accuracy": 0.75,
-    "mean_confidence": 0.729,
-    "mean_calibration_gap": 0.001,
+    "total_predictions": 77,
+    "total_verified": 77,
+    "overall_accuracy": 0.766,
+    "mean_confidence": 0.708,
+    "mean_calibration_gap": -0.058,
     "confidence_buckets": {
       "50-59": {"predictions": 4, "correct": 2, "accuracy": 0.5, "calibration_gap": 0.045, "insufficient_data": true},
       "60-69": {"predictions": 25, "correct": 16, "accuracy": 0.64, "calibration_gap": 0.005, "significant": false},
@@ -116,9 +116,9 @@ Confidence ranges where the calibration gap exceeds 10 percentage points with at
 
 ## Origin
 
-caliber emerged from [MY UNIVERSE](https://github.com/SatishoBananamoto/my-universe), a cognitive workspace where Claude Opus tracks its own predictions and calibration. The 36-prediction dataset that generated the first Trust Card revealed patterns — like the 60-69% danger zone — that wouldn't be visible from overall accuracy alone.
+caliber emerged from [MY UNIVERSE](https://github.com/SatishoBananamoto/my-universe), a cognitive workspace where Claude Opus tracks its own predictions and calibration. 87 predictions across 3 sessions validated the approach — and revealed that early "danger zone" findings were small-sample artifacts, corrected by caliber's own statistical significance tests.
 
-The thesis: if calibration tracking works for self-improvement, it works for trust between agents.
+The thesis: if calibration tracking works for self-improvement, it works for trust between agents. caliber includes the statistical honesty features because we learned the hard way that small samples lie.
 
 ## Roadmap
 
