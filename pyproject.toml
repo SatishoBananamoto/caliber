@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "caliber"
+version = "0.1.0"
+description = "Trust protocol for AI agents. Prove capability through calibration, not claims."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    {name = "Satish Patil", email = "satishpatil@proton.me"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+keywords = ["ai", "agents", "trust", "calibration", "a2a", "mcp"]
+
+[project.urls]
+Homepage = "https://github.com/SatishoBananamoto/caliber"
+Repository = "https://github.com/SatishoBananamoto/caliber"
+
+[tool.setuptools.packages.find]
+include = ["caliber*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
