@@ -143,6 +143,41 @@ def summary(ctx):
             click.echo(f"\n  Need ~{100 - verified} more per bucket for statistical significance.")
 
 
+@cli.command()
+@click.pass_context
+def badge(ctx):
+    """Generate a shields.io badge URL for your Trust Card."""
+    tracker = _get_tracker(ctx.obj["agent"], ctx.obj["store"])
+    if not tracker.verified:
+        click.echo("No verified predictions yet.")
+        sys.exit(1)
+
+    correct = sum(1 for p in tracker.verified if p.outcome)
+    total = len(tracker.verified)
+    accuracy = correct / total
+    avg_conf = sum(p.confidence for p in tracker.verified) / total
+    gap = abs(avg_conf - accuracy)
+
+    if gap < 0.05:
+        label = "well calibrated"
+        color = "brightgreen"
+    elif gap < 0.10:
+        label = "slightly miscalibrated"
+        color = "yellow"
+    else:
+        label = "miscalibrated"
+        color = "orange"
+
+    agent = ctx.obj["agent"]
+    badge_url = (
+        f"https://img.shields.io/badge/"
+        f"caliber-{accuracy:.0%}%20({total}%20preds%2C%20{label})-{color}"
+    )
+    markdown = f"![{agent} Trust Card]({badge_url})"
+    click.echo(f"Badge URL: {badge_url}")
+    click.echo(f"Markdown:  {markdown}")
+
+
 @cli.command("list")
 @click.option("--unverified", is_flag=True, help="Show only unverified predictions.")
 @click.option("--domain", "-d", default=None, help="Filter by domain.")
