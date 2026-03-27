@@ -73,6 +73,34 @@ class TestSignedTracker:
         )
         assert verify_commitment(c, pred.claim, pred.confidence, pred.domain, pred.timestamp)
 
+    def test_tampered_hash_fails(self):
+        from caliber.commitment import Commitment
+
+        tracker = TrustTracker("test", storage=MemoryStorage(), signed=True)
+        pid = tracker.predict("original", 0.80, "x")
+        pred = tracker.get(pid)
+
+        tampered = Commitment(
+            commitment_hash="a" * 64,
+            salt=pred.commitment_salt,
+            committed_at=pred.timestamp,
+        )
+        assert not verify_commitment(tampered, pred.claim, pred.confidence, pred.domain, pred.timestamp)
+
+    def test_tampered_salt_fails(self):
+        from caliber.commitment import Commitment
+
+        tracker = TrustTracker("test", storage=MemoryStorage(), signed=True)
+        pid = tracker.predict("original", 0.80, "x")
+        pred = tracker.get(pid)
+
+        tampered = Commitment(
+            commitment_hash=pred.commitment_hash,
+            salt="b" * 32,
+            committed_at=pred.timestamp,
+        )
+        assert not verify_commitment(tampered, pred.claim, pred.confidence, pred.domain, pred.timestamp)
+
     def test_commitment_in_storage(self):
         storage = MemoryStorage()
         t1 = TrustTracker("test", storage=storage, signed=True)

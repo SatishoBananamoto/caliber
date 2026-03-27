@@ -23,14 +23,14 @@ The tool was used during real vigil engineering work (5 predictions, 4/5 correct
 ### Weaknesses
 
 1. **No external users.** Only used by the author's agent. Needs stranger validation.
-2. **Commitment scheme untested.** SHA-256 anchoring exists but no tests verify it prevents tampering.
+2. ~~**Commitment scheme untested.**~~ Has 9 tests covering create, verify, wrong data, roundtrip, signed/unsigned tracker.
 3. **No Trust Card verification.** Can't detect fabricated cards. Roadmap item.
 4. **Storage is file-based JSON.** Won't scale for high-volume agents. Fine for now.
 5. **CLI assumes single agent.** `-a` flag exists but multi-agent workflows haven't been tested.
 
 ### Recommendations
 
-1. **Write commitment scheme tests.** Verify tampering detection works.
+1. ~~**Write commitment scheme tests.**~~ Already has 9 tests. Add tampered-hash and tampered-salt tests.
 2. **Test multi-agent workflows.** Two agents with different Trust Cards.
 3. **Add trajectory to CLI.** `caliber trajectory` command.
 4. **Get one external user.** Post in Claude Code community or AI agent forums.
