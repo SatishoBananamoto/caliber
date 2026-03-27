@@ -68,3 +68,37 @@ caliber/
 Extracted from MY UNIVERSE (~/MY UNIVERSE/) — Claude's cognitive workspace.
 The calibration practice revealed patterns (danger zones, evidence quality)
 that became caliber's core features. See PLAN-TRUST-LAYER.md in MY UNIVERSE.
+
+<!-- scroll:start -->
+## Project Knowledge (scroll)
+
+*Extracted from `caliber` git history.*
+
+### Decisions
+
+- **DEC-001**: Changed PyPI distribution name from 'caliber' to 'caliber-trust' (high)
+  - The original name 'caliber' was already taken by an existing ML library by gianlucadetommaso. The alternative 'agent-trust' was too similar to existing projects. 'caliber-trust' was available and clearly indicates the purpose.
+- **DEC-002**: Implemented commitment scheme using SHA-256 for prediction anchoring (high)
+  - Provides cryptographic proof of prediction timing without requiring external services or blockchain infrastructure. Uses standard SHA-256 with random salt for security. TrustTracker(signed=True) automatically creates commitments for seamless integration.
+
+### Known Mistakes
+
+- **MST-001**: Importer regex was too strict, causing data import failures (high)
+  - Made the regex more flexible to handle entries with single newline after header, improving import success rate to 77/87 entries.
+
+### Learnings
+
+- **LRN-001**: SVX integration identified as highest value for automatic calibration data generation (high)
+  - SVX integration provides the most value by automatically converting safety simulations into calibration data, enabling proof of safety layer effectiveness through accumulated evidence rather than assertions.
+
+### Observations
+
+- **OBS-001**: Enhanced summary feedback improves early user engagement before sufficient data accumulation (high)
+  - Addresses the cold start problem in calibration tracking by providing immediate value and clear progress indicators, encouraging continued usage until meaningful statistical analysis becomes available.
+
+### Goals
+
+- **GOL-001**: Complete Phase 1 v0.1 design implementation (high)
+  - All v0.1 design debts resolved with working implementations of core calibration tracking features.
+
+<!-- scroll:end -->
