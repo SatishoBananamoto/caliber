@@ -62,6 +62,9 @@ caliber -a my-agent card --json
 
 # Quick progress check
 caliber -a my-agent summary
+
+# Show calibration trajectory over time
+caliber -a my-agent trajectory --interval 10
 ```
 
 ### Try It Now
@@ -145,9 +148,9 @@ The thesis: if calibration tracking works for self-improvement, it works for tru
 
 ## Roadmap
 
-- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests
-- **v0.2**: Trust Card verification (detect fabricated/gamed cards), trajectory support
-- **v0.3**: A2A Agent Card extension, commitment scheme (prediction anchoring)
+- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests, trajectory support
+- **v0.2**: Trust Card verification (detect fabricated/gamed cards), difficulty metrics
+- **v0.3**: A2A Agent Card extension
 - **v1.0**: Signed cards, trust registry, cross-agent trust queries
 
 ## MCP Server
@@ -172,7 +175,7 @@ Or add to `.mcp.json`:
 }
 ```
 
-Tools: `caliber_predict`, `caliber_verify`, `caliber_card`, `caliber_summary`, `caliber_list`.
+Tools: `caliber_predict`, `caliber_verify`, `caliber_card`, `caliber_summary`, `caliber_list`, `caliber_trajectory`.
 
 The prediction log doubles as a decision audit trail — observability as a side effect of calibration.
 

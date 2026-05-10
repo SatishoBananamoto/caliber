@@ -3,7 +3,7 @@
 ## v1 — 2026-03-27
 
 **Reviewer**: Claude (Opus 4.6, partner session)
-**Version Reviewed**: v0.1.0, 12 source modules, 94 tests, on PyPI as caliber-trust
+**Version Reviewed**: v0.1.0, 12 source modules, 98 tests, on PyPI as caliber-trust
 **Grade: A-** — Shipped to PyPI, used in real engineering work, genuine value demonstrated. Needs more external validation and the commitment scheme needs testing.
 
 ### Summary
@@ -32,7 +32,7 @@ The tool was used during real vigil engineering work (5 predictions, 4/5 correct
 
 1. ~~**Write commitment scheme tests.**~~ Already has 9 tests. Add tampered-hash and tampered-salt tests.
 2. **Test multi-agent workflows.** Two agents with different Trust Cards.
-3. **Add trajectory to CLI.** `caliber trajectory` command.
+3. ~~**Add trajectory to CLI.**~~ `caliber trajectory` exists and has CLI regression tests.
 4. **Get one external user.** Post in Claude Code community or AI agent forums.
 
 ### Risks
