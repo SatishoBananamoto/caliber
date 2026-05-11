@@ -4,8 +4,8 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.1.0 (on PyPI as `caliber-trust`)
-**Last session**: 2026-05-11 — tested multi-agent CLI workflows and fixed storage name collisions
-**Repo**: Main branch. Last verified locally with 101 tests passing.
+**Last session**: 2026-05-11 — cleaned up CALIBRATE import wrapper
+**Repo**: Main branch. Last verified locally with 103 tests passing.
 
 ---
 
@@ -13,10 +13,9 @@
 
 ### What just happened (2026-05-11)
 
-Added a public CLI regression for two agents sharing one store and generating
-separate Trust Cards. While testing that boundary, fixed `FileStorage` agent
-filename collisions by URL-encoding agent names and retaining legacy load
-fallback for older sanitized files. 101 tests pass.
+Converted `extract_calibrate_md.py` from a duplicate parser into a compatibility
+wrapper around `caliber.importer.import_calibrate_md`, and added CLI import
+coverage for CALIBRATE.md. 103 tests pass.
 
 ### Prior shipped baseline (2026-03-27)
 
@@ -52,7 +51,7 @@ _MCP server works but integration points need polish._
 - [ ] MCP config auto-apply — currently needs manual addition to ~/.mcp.json
 - [x] Test multi-agent workflows (two agents with different Trust Cards) — 2026-05-11 · CLI regression covers shared-store separation and collision-prone agent names
 - [x] Add `caliber trajectory` CLI command — verified 2026-05-10 · `tests/test_cli.py`
-- [ ] Clean up extract_calibrate_md.py (standalone script → use `caliber import` command)
+- [x] Clean up extract_calibrate_md.py (standalone script → use `caliber import` command) — 2026-05-11 · wrapper now reuses shared importer; CLI import has regression coverage
 
 ### Phase 2: Trust Card integrity (future)
 
@@ -80,6 +79,7 @@ _Deferred until more usage data exists._
 - [x] CI — `commit:fdf9ee8`
 - [x] CLI trajectory regression tests — 2026-05-10 · 98 tests passing
 - [x] CLI multi-agent workflow regression tests — 2026-05-11 · 101 tests passing
+- [x] CALIBRATE import wrapper cleanup — 2026-05-11 · 103 tests passing
 
 </details>
 
@@ -122,6 +122,13 @@ _Deferred until more usage data exists._
 - **Completed:** Added CLI regression for two agents sharing one store and generating separate Trust Cards; fixed URL-safe agent filenames with legacy load fallback
 - **Why:** REVIEW and GAUGE still listed multi-agent workflows as untested, and the old storage sanitizer could collide for distinct agent names
 - **State:** 101 tests passing. Next remains external user validation.
+
+### 2026-05-11 — Codex/Kai field session
+
+- **Worked on:** CALIBRATE import cleanup
+- **Completed:** Archived the previous standalone parser, converted `extract_calibrate_md.py` into a compatibility wrapper around the shared importer, and added CLI import coverage
+- **Why:** GAUGE still listed the standalone script cleanup as open, and duplicate parser logic could drift from the maintained import path
+- **State:** 103 tests passing. Next remains external user validation.
 
 ---
 

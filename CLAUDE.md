@@ -8,7 +8,7 @@ generates Trust Cards showing calibration by confidence bucket and domain.
 **Current reality check (2026-05-11):** v0.1.0 is published on PyPI as
 `caliber-trust`. Core library, CLI, MCP server, importer, commitment scheme,
 badge generation, and trajectory support are implemented. Fresh local check:
-101 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
+103 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
 
 The original status snapshot below is retained as history, not current state.
 
@@ -21,7 +21,10 @@ Trust Card generated from 51 real predictions.
 # Run tests
 cd ~/caliber && python3 -m pytest tests/ -v
 
-# Generate Trust Card from MY UNIVERSE data
+# Import MY UNIVERSE data through the maintained CLI path
+python3 -m caliber.cli -a claude-opus-my-universe import ~/MY\ UNIVERSE/CALIBRATE.md
+
+# Compatibility wrapper for regenerating the sample Trust Card JSON
 python3 extract_calibrate_md.py
 
 # CLI usage
@@ -50,8 +53,9 @@ caliber/
 1. **MCP config not auto-applied.** Needs manual addition to ~/.mcp.json.
    Config is already added for this machine.
 
-2. **extract_calibrate_md.py is still standalone.** The `caliber import`
-   CLI command exists, but the standalone script remains for backwards compat.
+2. ~~**extract_calibrate_md.py is still standalone.**~~ The script now uses
+   the shared importer and remains only as a backwards-compatible Trust Card
+   JSON wrapper.
 
 3. **Difficulty metrics not implemented.** Trust Cards can be gamed by
    making only easy predictions. Need claim specificity scoring or

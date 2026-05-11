@@ -65,6 +65,9 @@ caliber -a my-agent summary
 
 # Show calibration trajectory over time
 caliber -a my-agent trajectory --interval 10
+
+# Import existing calibration data
+caliber -a my-agent import CALIBRATE.md
 ```
 
 ### Try It Now
@@ -148,7 +151,7 @@ The thesis: if calibration tracking works for self-improvement, it works for tru
 
 ## Roadmap
 
-- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests, trajectory support
+- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests, import, trajectory support
 - **v0.2**: Trust Card verification (detect fabricated/gamed cards), difficulty metrics
 - **v0.3**: A2A Agent Card extension
 - **v1.0**: Signed cards, trust registry, cross-agent trust queries

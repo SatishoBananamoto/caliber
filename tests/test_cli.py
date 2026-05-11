@@ -179,3 +179,44 @@ def test_cli_multi_agent_workflow_keeps_cards_separate(tmp_path):
 
     assert (tmp_path / "agent%20alpha.json").exists()
     assert (tmp_path / "agent%2Falpha.json").exists()
+
+
+def test_import_command_imports_calibrate_md(tmp_path):
+    runner = CliRunner()
+    source = tmp_path / "CALIBRATE.md"
+    source.write_text(
+        """\
+# CALIBRATE.md
+
+### [P-001] 2026-03-24 — codebase
+
+**Prediction:** Project has fewer than 15 files.
+**Confidence:** 75%
+**Actual:** 10 files.
+**Result:** correct
+"""
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "import-agent",
+            "--store",
+            str(tmp_path),
+            "import",
+            str(source),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Imported 1 predictions" in result.output
+
+    card = runner.invoke(
+        cli,
+        ["--agent", "import-agent", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert card.exit_code == 0
+    data = json.loads(card.output)
+    assert data["agent_name"] == "import-agent"
+    assert data["calibration"]["total_verified"] == 1
