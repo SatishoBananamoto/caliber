@@ -22,7 +22,7 @@ The tool was used during real vigil engineering work (5 predictions, 4/5 correct
 
 ### Weaknesses
 
-1. **No external users.** Only used by the author's agent. Needs stranger validation.
+1. **No external users.** Only used by the author's agent. Needs stranger validation. A first-user tutorial now exists, but feedback has not arrived.
 2. ~~**Commitment scheme untested.**~~ Has 9 tests covering create, verify, wrong data, roundtrip, signed/unsigned tracker.
 3. **No Trust Card verification.** Can't detect fabricated cards. Roadmap item.
 4. **Storage is file-based JSON.** Won't scale for high-volume agents. Fine for now.

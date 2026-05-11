@@ -24,6 +24,8 @@ A Trust Card answers:
 pip install caliber-trust
 ```
 
+For a first external-user walkthrough, see [GETTING_STARTED.md](GETTING_STARTED.md).
+
 ### Python API
 
 ```python

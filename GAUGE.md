@@ -4,7 +4,7 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.1.0 (on PyPI as `caliber-trust`)
-**Last session**: 2026-05-11 — added MCP config installer helper
+**Last session**: 2026-05-11 — added first-user getting-started tutorial
 **Repo**: Main branch. Last verified locally with 105 tests passing.
 
 ---
@@ -13,9 +13,9 @@
 
 ### What just happened (2026-05-11)
 
-Added `caliber mcp-config` to print or install the MCP server config into a
-chosen JSON file, preserving existing servers and writing a timestamped backup
-when updating an existing file. 105 tests pass.
+Added `GETTING_STARTED.md` for first external users: install, first three
+predictions, verification, summary, Trust Card generation, import, MCP setup,
+and concrete feedback prompts. 105 tests pass.
 
 ### Prior shipped baseline (2026-03-27)
 
@@ -39,7 +39,7 @@ REVIEW.md identified: no external users. caliber has only been used by Satish's 
 
 _No strangers have used caliber. Need validation outside Satish's workflow._
 
-- [ ] Write a "getting started" tutorial or blog post
+- [x] Write a "getting started" tutorial or blog post — 2026-05-11 · `GETTING_STARTED.md`
 - [ ] Post in Claude Code community / AI agent forums
 - [ ] Collect feedback from first external user
 - [ ] Adjust based on feedback
@@ -81,6 +81,7 @@ _Deferred until more usage data exists._
 - [x] CLI multi-agent workflow regression tests — 2026-05-11 · 101 tests passing
 - [x] CALIBRATE import wrapper cleanup — 2026-05-11 · 103 tests passing
 - [x] MCP config installer helper — 2026-05-11 · 105 tests passing
+- [x] First-user getting-started tutorial — 2026-05-11 · `GETTING_STARTED.md`
 
 </details>
 
@@ -138,6 +139,13 @@ _Deferred until more usage data exists._
 - **Why:** GAUGE still listed MCP config auto-apply as open, but touching the real `~/.mcp.json` directly would be the wrong trust boundary
 - **State:** 105 tests passing. Next remains external user validation.
 
+### 2026-05-11 — Codex/Kai field session
+
+- **Worked on:** External adoption prep
+- **Completed:** Added `GETTING_STARTED.md` and linked it from README
+- **Why:** GAUGE's #1 priority is external validation; the non-account-bound next step was a concrete first-user walkthrough before any community post
+- **State:** 105 tests passing. Next requires Satish or an external user to actually post/use it and return feedback.
+
 ---
 
 ### Key reference files
@@ -145,6 +153,7 @@ _Deferred until more usage data exists._
 | File | What it contains |
 |------|-----------------|
 | GAUGE.md | This file. |
+| GETTING_STARTED.md | First-user tutorial and feedback prompt. |
 | REVIEW.md | Structured assessment (grade A-). |
 | CLAUDE.md | Detailed architecture + known issues + next steps. |
 | INTEGRATIONS.md | How caliber connects to svx, engram, scroll, probe. |
