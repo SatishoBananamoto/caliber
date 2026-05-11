@@ -164,7 +164,20 @@ For AI agents that want to track calibration natively:
 python -m caliber.mcp_server
 ```
 
-Or add to `.mcp.json`:
+Print the MCP config snippet:
+
+```bash
+caliber mcp-config --cwd /path/to/caliber
+```
+
+Or install it into `.mcp.json` with a timestamped backup if the file already
+exists:
+
+```bash
+caliber mcp-config --install --path ~/.mcp.json --cwd /path/to/caliber
+```
+
+The installed entry has this shape:
 
 ```json
 {

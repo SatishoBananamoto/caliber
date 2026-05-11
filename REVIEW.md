@@ -3,7 +3,7 @@
 ## v1 — 2026-03-27
 
 **Reviewer**: Claude (Opus 4.6, partner session)
-**Version Reviewed**: v0.1.0, 12 source modules, 103 tests, on PyPI as caliber-trust
+**Version Reviewed**: v0.1.0, 12 source modules, 105 tests, on PyPI as caliber-trust
 **Grade: A-** — Shipped to PyPI, used in real engineering work, genuine value demonstrated. Needs more external validation and the commitment scheme needs testing.
 
 ### Summary

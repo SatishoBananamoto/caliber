@@ -4,8 +4,8 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.1.0 (on PyPI as `caliber-trust`)
-**Last session**: 2026-05-11 — cleaned up CALIBRATE import wrapper
-**Repo**: Main branch. Last verified locally with 103 tests passing.
+**Last session**: 2026-05-11 — added MCP config installer helper
+**Repo**: Main branch. Last verified locally with 105 tests passing.
 
 ---
 
@@ -13,9 +13,9 @@
 
 ### What just happened (2026-05-11)
 
-Converted `extract_calibrate_md.py` from a duplicate parser into a compatibility
-wrapper around `caliber.importer.import_calibrate_md`, and added CLI import
-coverage for CALIBRATE.md. 103 tests pass.
+Added `caliber mcp-config` to print or install the MCP server config into a
+chosen JSON file, preserving existing servers and writing a timestamped backup
+when updating an existing file. 105 tests pass.
 
 ### Prior shipped baseline (2026-03-27)
 
@@ -48,7 +48,7 @@ _No strangers have used caliber. Need validation outside Satish's workflow._
 
 _MCP server works but integration points need polish._
 
-- [ ] MCP config auto-apply — currently needs manual addition to ~/.mcp.json
+- [x] MCP config auto-apply — 2026-05-11 · `caliber mcp-config --install` merges the server entry with backup coverage
 - [x] Test multi-agent workflows (two agents with different Trust Cards) — 2026-05-11 · CLI regression covers shared-store separation and collision-prone agent names
 - [x] Add `caliber trajectory` CLI command — verified 2026-05-10 · `tests/test_cli.py`
 - [x] Clean up extract_calibrate_md.py (standalone script → use `caliber import` command) — 2026-05-11 · wrapper now reuses shared importer; CLI import has regression coverage
@@ -80,6 +80,7 @@ _Deferred until more usage data exists._
 - [x] CLI trajectory regression tests — 2026-05-10 · 98 tests passing
 - [x] CLI multi-agent workflow regression tests — 2026-05-11 · 101 tests passing
 - [x] CALIBRATE import wrapper cleanup — 2026-05-11 · 103 tests passing
+- [x] MCP config installer helper — 2026-05-11 · 105 tests passing
 
 </details>
 
@@ -129,6 +130,13 @@ _Deferred until more usage data exists._
 - **Completed:** Archived the previous standalone parser, converted `extract_calibrate_md.py` into a compatibility wrapper around the shared importer, and added CLI import coverage
 - **Why:** GAUGE still listed the standalone script cleanup as open, and duplicate parser logic could drift from the maintained import path
 - **State:** 103 tests passing. Next remains external user validation.
+
+### 2026-05-11 — Codex/Kai field session
+
+- **Worked on:** MCP config friction
+- **Completed:** Added `caliber mcp-config` with print and `--install` modes; install preserves existing servers and writes a timestamped backup before updating an existing config
+- **Why:** GAUGE still listed MCP config auto-apply as open, but touching the real `~/.mcp.json` directly would be the wrong trust boundary
+- **State:** 105 tests passing. Next remains external user validation.
 
 ---
 

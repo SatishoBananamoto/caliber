@@ -10,7 +10,9 @@ Usage:
 
 from __future__ import annotations
 
+import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import click
@@ -23,6 +25,14 @@ DEFAULT_STORE = Path.home() / ".caliber"
 
 def _get_tracker(agent: str, store: str) -> TrustTracker:
     return TrustTracker(agent, storage=FileStorage(store))
+
+
+def _mcp_server_config(python_cmd: str, cwd: str) -> dict:
+    return {
+        "command": python_cmd,
+        "args": ["-m", "caliber.mcp_server"],
+        "cwd": cwd,
+    }
 
 
 @click.group()
@@ -255,6 +265,63 @@ def trajectory(ctx, interval: int, as_json: bool):
         click.echo(json.dumps(traj.to_dict(), indent=2))
     else:
         click.echo(traj.summary())
+
+
+@cli.command("mcp-config")
+@click.option("--install", is_flag=True, help="Write the config into an MCP JSON file.")
+@click.option(
+    "--path",
+    "config_path",
+    default=str(Path.home() / ".mcp.json"),
+    help="MCP JSON config path used with --install.",
+)
+@click.option("--server-name", default="caliber", help="MCP server name.")
+@click.option("--python", "python_cmd", default="python3", help="Python command.")
+@click.option(
+    "--cwd",
+    default=None,
+    help="Working directory for the MCP server. Defaults to the current directory.",
+)
+def mcp_config(
+    install: bool,
+    config_path: str,
+    server_name: str,
+    python_cmd: str,
+    cwd: str | None,
+):
+    """Print or install the caliber MCP server config."""
+    server_cwd = Path(cwd).expanduser().resolve() if cwd else Path.cwd().resolve()
+    server_config = _mcp_server_config(python_cmd, str(server_cwd))
+    snippet = {"mcpServers": {server_name: server_config}}
+
+    if not install:
+        click.echo(json.dumps(snippet, indent=2))
+        return
+
+    path = Path(config_path).expanduser()
+    if path.exists():
+        existing = json.loads(path.read_text())
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        backup_path = path.with_name(f"{path.name}.{timestamp}.bak")
+        backup_path.write_text(path.read_text())
+    else:
+        existing = {}
+        backup_path = None
+
+    if not isinstance(existing, dict):
+        raise click.ClickException(f"{path} must contain a JSON object")
+
+    servers = existing.setdefault("mcpServers", {})
+    if not isinstance(servers, dict):
+        raise click.ClickException(f"{path} field 'mcpServers' must be an object")
+
+    servers[server_name] = server_config
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(existing, indent=2) + "\n")
+
+    click.echo(f"Installed MCP server '{server_name}' in {path}")
+    if backup_path is not None:
+        click.echo(f"Backup saved: {backup_path}")
 
 
 def main():

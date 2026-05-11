@@ -220,3 +220,60 @@ def test_import_command_imports_calibrate_md(tmp_path):
     data = json.loads(card.output)
     assert data["agent_name"] == "import-agent"
     assert data["calibration"]["total_verified"] == 1
+
+
+def test_mcp_config_prints_json(tmp_path):
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli,
+        [
+            "mcp-config",
+            "--cwd",
+            str(tmp_path),
+            "--python",
+            "python3.12",
+        ],
+    )
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    config = data["mcpServers"]["caliber"]
+    assert config["command"] == "python3.12"
+    assert config["args"] == ["-m", "caliber.mcp_server"]
+    assert config["cwd"] == str(tmp_path)
+
+
+def test_mcp_config_install_merges_existing_config_and_keeps_backup(tmp_path):
+    runner = CliRunner()
+    config_path = tmp_path / ".mcp.json"
+    config_path.write_text(json.dumps({
+        "mcpServers": {
+            "other": {
+                "command": "node",
+                "args": ["server.js"],
+            }
+        }
+    }) + "\n")
+
+    result = runner.invoke(
+        cli,
+        [
+            "mcp-config",
+            "--install",
+            "--path",
+            str(config_path),
+            "--cwd",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    data = json.loads(config_path.read_text())
+    assert data["mcpServers"]["other"]["command"] == "node"
+    assert data["mcpServers"]["caliber"] == {
+        "command": "python3",
+        "args": ["-m", "caliber.mcp_server"],
+        "cwd": str(tmp_path),
+    }
+    assert list(tmp_path.glob(".mcp.json.*.bak"))

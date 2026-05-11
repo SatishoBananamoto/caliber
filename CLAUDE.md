@@ -8,7 +8,7 @@ generates Trust Cards showing calibration by confidence bucket and domain.
 **Current reality check (2026-05-11):** v0.1.0 is published on PyPI as
 `caliber-trust`. Core library, CLI, MCP server, importer, commitment scheme,
 badge generation, and trajectory support are implemented. Fresh local check:
-103 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
+105 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
 
 The original status snapshot below is retained as history, not current state.
 
@@ -31,6 +31,7 @@ python3 extract_calibrate_md.py
 python3 -m caliber.cli -a agent-name predict "claim" -c 80 -d domain
 python3 -m caliber.cli -a agent-name verify <id> --correct
 python3 -m caliber.cli -a agent-name card [--json]
+python3 -m caliber.cli mcp-config --install --path ~/.mcp.json --cwd ~/caliber
 ```
 
 ## Architecture
@@ -50,8 +51,9 @@ caliber/
 
 ## Known Issues / Remaining Work
 
-1. **MCP config not auto-applied.** Needs manual addition to ~/.mcp.json.
-   Config is already added for this machine.
+1. ~~**MCP config not auto-applied.**~~ `caliber mcp-config --install`
+   now merges the MCP server entry into a chosen JSON config and keeps a
+   timestamped backup when updating an existing file.
 
 2. ~~**extract_calibrate_md.py is still standalone.**~~ The script now uses
    the shared importer and remains only as a backwards-compatible Trust Card

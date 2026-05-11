@@ -7,7 +7,10 @@ trail (observability as a side effect of calibration).
 Usage:
     python -m caliber.mcp_server
 
-Or add to Claude Code MCP config:
+Or install the Claude Code MCP config entry:
+    caliber mcp-config --install --path ~/.mcp.json --cwd /path/to/caliber
+
+Installed config shape:
     {
         "mcpServers": {
             "caliber": {
