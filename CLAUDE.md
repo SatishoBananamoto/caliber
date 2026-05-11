@@ -5,6 +5,13 @@
 Trust protocol for AI agents. Tracks predictions with confidence levels,
 generates Trust Cards showing calibration by confidence bucket and domain.
 
+**Current reality check (2026-05-11):** v0.1.0 is published on PyPI as
+`caliber-trust`. Core library, CLI, MCP server, importer, commitment scheme,
+badge generation, and trajectory support are implemented. Fresh local check:
+98 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
+
+The original status snapshot below is retained as history, not current state.
+
 **Status:** v0.1.0. Core library + CLI working. 46 tests passing. First
 Trust Card generated from 51 real predictions.
 
@@ -55,8 +62,14 @@ caliber/
    Phase 2 problem.
 
 5. **No PyPI package.** Local install only. Need to publish.
+   - 2026-05-11 update: superseded. The package is published as
+     `caliber-trust`; remaining adoption work is external-user validation.
 
 ## Next Steps
+
+The original list below is retained as a historical snapshot. Current priority
+is external-user validation, plus multi-agent workflow testing and Phase 2
+Trust Card verification after more usage data.
 
 1. **PyPI publishing** — `pip install caliber`
 2. **Difficulty metrics** — detect trivial prediction farming
