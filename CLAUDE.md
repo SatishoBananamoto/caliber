@@ -8,7 +8,7 @@ generates Trust Cards showing calibration by confidence bucket and domain.
 **Current reality check (2026-05-11):** v0.1.0 is published on PyPI as
 `caliber-trust`. Core library, CLI, MCP server, importer, commitment scheme,
 badge generation, and trajectory support are implemented. Fresh local check:
-98 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
+101 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
 
 The original status snapshot below is retained as history, not current state.
 
@@ -68,8 +68,9 @@ caliber/
 ## Next Steps
 
 The original list below is retained as a historical snapshot. Current priority
-is external-user validation, plus multi-agent workflow testing and Phase 2
-Trust Card verification after more usage data.
+is external-user validation plus Phase 2 Trust Card verification after more
+usage data. Multi-agent CLI workflows now have regression coverage for
+separate Trust Cards in a shared store.
 
 1. **PyPI publishing** — `pip install caliber`
 2. **Difficulty metrics** — detect trivial prediction farming

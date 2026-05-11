@@ -78,7 +78,25 @@ class TestFileStorage:
     def test_sanitizes_name(self, tmp_path):
         s = FileStorage(tmp_path)
         s.save("my agent/v2", [_make_prediction()])
-        assert (tmp_path / "my_agent_v2.json").exists()
+        assert (tmp_path / "my%20agent%2Fv2.json").exists()
+
+    def test_distinguishes_collision_prone_agent_names(self, tmp_path):
+        s = FileStorage(tmp_path)
+        s.save("my agent/v2", [_make_prediction("space-slash")])
+        s.save("my_agent_v2", [_make_prediction("underscore")])
+
+        assert s.load("my agent/v2")[0].id == "space-slash"
+        assert s.load("my_agent_v2")[0].id == "underscore"
+
+    def test_loads_legacy_sanitized_name(self, tmp_path):
+        legacy_path = tmp_path / "my_agent_v2.json"
+        legacy_path.write_text(json.dumps({
+            "agent_name": "my agent/v2",
+            "predictions": [_make_prediction("legacy").to_dict()],
+        }))
+
+        s = FileStorage(tmp_path)
+        assert s.load("my agent/v2")[0].id == "legacy"
 
     def test_overwrite(self, tmp_path):
         s = FileStorage(tmp_path)

@@ -9,6 +9,7 @@ import json
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import quote
 
 if TYPE_CHECKING:
     from caliber.tracker import Prediction
@@ -32,6 +33,10 @@ class FileStorage(Storage):
         self.directory.mkdir(parents=True, exist_ok=True)
 
     def _path_for(self, agent_name: str) -> Path:
+        safe_name = quote(agent_name, safe="")
+        return self.directory / f"{safe_name}.json"
+
+    def _legacy_path_for(self, agent_name: str) -> Path:
         safe_name = agent_name.replace("/", "_").replace(" ", "_")
         return self.directory / f"{safe_name}.json"
 
@@ -47,6 +52,10 @@ class FileStorage(Storage):
         from caliber.tracker import Prediction
 
         path = self._path_for(agent_name)
+        if not path.exists():
+            legacy_path = self._legacy_path_for(agent_name)
+            if legacy_path.exists():
+                path = legacy_path
         if not path.exists():
             return []
         data = json.loads(path.read_text())

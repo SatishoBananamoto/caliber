@@ -4,14 +4,21 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.1.0 (on PyPI as `caliber-trust`)
-**Last session**: 2026-05-10 — verified trajectory CLI, added CLI tests, fixed tracking drift
-**Repo**: Main branch. Last verified locally with 98 tests passing.
+**Last session**: 2026-05-11 — tested multi-agent CLI workflows and fixed storage name collisions
+**Repo**: Main branch. Last verified locally with 101 tests passing.
 
 ---
 
 ## NEXT SESSION — START HERE
 
-### What just happened (2026-03-27)
+### What just happened (2026-05-11)
+
+Added a public CLI regression for two agents sharing one store and generating
+separate Trust Cards. While testing that boundary, fixed `FileStorage` agent
+filename collisions by URL-encoding agent names and retaining legacy load
+fallback for older sanitized files. 101 tests pass.
+
+### Prior shipped baseline (2026-03-27)
 
 Shipped v0.1.0 to PyPI. MCP server working (6 tools: predict, verify, card, summary, list, trajectory). Used during real vigil engineering work (5 predictions, 4/5 correct). Added Trust Card badge generator. REVIEW.md grade A-. 96 tests. CI green. Commitment scheme has 9 tests including tamper detection.
 
@@ -43,7 +50,7 @@ _No strangers have used caliber. Need validation outside Satish's workflow._
 _MCP server works but integration points need polish._
 
 - [ ] MCP config auto-apply — currently needs manual addition to ~/.mcp.json
-- [ ] Test multi-agent workflows (two agents with different Trust Cards)
+- [x] Test multi-agent workflows (two agents with different Trust Cards) — 2026-05-11 · CLI regression covers shared-store separation and collision-prone agent names
 - [x] Add `caliber trajectory` CLI command — verified 2026-05-10 · `tests/test_cli.py`
 - [ ] Clean up extract_calibrate_md.py (standalone script → use `caliber import` command)
 
@@ -72,6 +79,7 @@ _Deferred until more usage data exists._
 - [x] Tamper tests for commitment scheme — `commit:4593e14`
 - [x] CI — `commit:fdf9ee8`
 - [x] CLI trajectory regression tests — 2026-05-10 · 98 tests passing
+- [x] CLI multi-agent workflow regression tests — 2026-05-11 · 101 tests passing
 
 </details>
 
@@ -107,6 +115,13 @@ _Deferred until more usage data exists._
 - **Completed:** Added CLI regression tests for `trajectory`; updated README, REVIEW, and GAUGE to reflect that trajectory support is already in v0.1
 - **Why:** GAUGE/REVIEW still listed trajectory CLI as open even though `caliber/cli.py` and `caliber/mcp_server.py` already exposed it
 - **State:** 98 tests passing. Next remains external user validation.
+
+### 2026-05-11 — Codex/Kai field session
+
+- **Worked on:** Multi-agent workflow hardening
+- **Completed:** Added CLI regression for two agents sharing one store and generating separate Trust Cards; fixed URL-safe agent filenames with legacy load fallback
+- **Why:** REVIEW and GAUGE still listed multi-agent workflows as untested, and the old storage sanitizer could collide for distinct agent names
+- **State:** 101 tests passing. Next remains external user validation.
 
 ---
 

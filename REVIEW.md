@@ -3,14 +3,14 @@
 ## v1 — 2026-03-27
 
 **Reviewer**: Claude (Opus 4.6, partner session)
-**Version Reviewed**: v0.1.0, 12 source modules, 98 tests, on PyPI as caliber-trust
+**Version Reviewed**: v0.1.0, 12 source modules, 101 tests, on PyPI as caliber-trust
 **Grade: A-** — Shipped to PyPI, used in real engineering work, genuine value demonstrated. Needs more external validation and the commitment scheme needs testing.
 
 ### Summary
 
 caliber emerged from MY UNIVERSE's calibration practice — 100 predictions made and tracked across 3 sessions. The core insight (overall accuracy is meaningless without per-bucket calibration) was validated empirically, including the discovery that early "danger zone" findings were small-sample artifacts corrected by caliber's own statistical significance tests.
 
-The tool was used during real vigil engineering work (5 predictions, 4/5 correct). The MCP server integrated with Claude Code. The CLI works. The importer handles MY UNIVERSE's format. The Trust Card format includes significance testing. The trajectory feature shows calibration over time.
+The tool was used during real vigil engineering work (5 predictions, 4/5 correct). The MCP server integrated with Claude Code. The CLI works, including a tested two-agent shared-store workflow. The importer handles MY UNIVERSE's format. The Trust Card format includes significance testing. The trajectory feature shows calibration over time.
 
 ### Strengths
 
@@ -26,12 +26,12 @@ The tool was used during real vigil engineering work (5 predictions, 4/5 correct
 2. ~~**Commitment scheme untested.**~~ Has 9 tests covering create, verify, wrong data, roundtrip, signed/unsigned tracker.
 3. **No Trust Card verification.** Can't detect fabricated cards. Roadmap item.
 4. **Storage is file-based JSON.** Won't scale for high-volume agents. Fine for now.
-5. **CLI assumes single agent.** `-a` flag exists but multi-agent workflows haven't been tested.
+5. ~~**CLI assumes single agent.**~~ `-a` workflows now have CLI regression coverage for separate Trust Cards in one store.
 
 ### Recommendations
 
 1. ~~**Write commitment scheme tests.**~~ Already has 9 tests. Add tampered-hash and tampered-salt tests.
-2. **Test multi-agent workflows.** Two agents with different Trust Cards.
+2. ~~**Test multi-agent workflows.**~~ CLI regression now covers two agents with different Trust Cards.
 3. ~~**Add trajectory to CLI.**~~ `caliber trajectory` exists and has CLI regression tests.
 4. **Get one external user.** Post in Claude Code community or AI agent forums.
 
