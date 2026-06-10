@@ -162,7 +162,9 @@ The core is the Murphy decomposition of the Brier score (`reliability - resoluti
 
 Supporting signals: confidence concentration in the top bucket, domain concentration (Herfindahl index), duplicate claims, predict→verify latency (instant verification suggests the answer was already known), and batch-import share (history without witnessed timing).
 
-Findings are advisory flags with evidence, gated on minimum sample sizes. There is deliberately no aggregate integrity score — a single number would itself become the gaming target.
+There is also a too-good-to-be-true check: a forger who *fabricates* outcomes to match stated confidence evades every behavioral signal, but real binomial outcomes scatter — observed accuracy that tracks confidence more tightly than chance permits raises `SUSPICIOUSLY_PERFECT` (the same lower-tail test that exposed Mendel's pea data). The adversarial strategies and their countermeasures are encoded in `tests/test_integrity_adversarial.py`.
+
+Findings are advisory flags with evidence, gated on minimum sample sizes. There is deliberately no aggregate integrity score — a single number would itself become the gaming target. Signals that cannot distinguish gaming from honest bulk use (e.g. templated claims) are reported as metrics, never flags.
 
 ## Origin
 

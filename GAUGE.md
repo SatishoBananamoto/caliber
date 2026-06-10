@@ -191,6 +191,25 @@ single score._
   131 tests passing. Next: bump version + publish to PyPI when Satish says
   go; remaining Phase 2 items are card verification and A2A extension.
 
+### 2026-06-10 — Red-team iteration (Fable session, direct on master)
+
+- **Worked on:** Adversarial probing of the new detector — gaming strategies
+  as test cases (`tests/test_integrity_adversarial.py`).
+- **Completed:** Mendel test (SUSPICIOUSLY_PERFECT: lower-tail chi-square via
+  Wilson–Hilferty catches outcomes fabricated to match confidence — the one
+  strategy that evades all behavioral flags); `template_claim_ratio` metric
+  (deliberately not a flag — honest bulk workloads are equally templated).
+  Residual gaps documented as tests: patient farmer beats any fixed latency
+  window; synthetic import timestamps beat the equality heuristic (only the
+  commitment scheme closes that). Commits 100752c, b3527ba. 143 tests passing.
+- **False-positive checks:** real CALIBRATE corpus mendel_p_low=0.66 (clean);
+  real claims template ratio 0.0. My first "honest bulk user" fixture was
+  correctly flagged NO_DISCRIMINATION — its confidence carried no information;
+  the detector outed my own bad test data.
+- **State:** Detector hardened against the strongest known evasion. Next:
+  PyPI publish on Satish's go; card verification remains locked per
+  "What NOT to do".
+
 ---
 
 ### Key reference files
