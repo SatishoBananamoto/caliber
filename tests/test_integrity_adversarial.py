@@ -142,11 +142,12 @@ class TestCalibratedForger:
 class TestKnownResidualLimitations:
     """Strategies that still evade detection — documented, not hidden."""
 
-    def test_templated_claims_evade_exact_duplicate_check(self):
+    def test_templated_claims_measured_not_flagged(self):
         # Strategy C: template farming. "file N exists" with a varying N
-        # defeats the exact-match duplicate detector. The all-true outcome
-        # set is still caught by LOW_OUTCOME_VARIANCE, so the template
-        # itself is the residual gap, not the farming.
+        # defeats the exact-match duplicate detector. The template ratio
+        # metric exposes it, but deliberately does NOT flag: honest bulk
+        # workloads are equally templated. The farming itself is still
+        # caught by LOW_OUTCOME_VARIANCE.
         preds = [
             make_pred(
                 i, 0.95, outcome=True, domain="filesystem",
@@ -156,9 +157,33 @@ class TestKnownResidualLimitations:
         ]
         report = IntegrityReport.from_predictions("templater", preds)
         codes = {f.code for f in report.flags}
-        assert report.duplicate_claim_ratio == 0.0  # the gap
-        assert "DUPLICATE_CLAIMS" not in codes  # the gap
-        assert "LOW_OUTCOME_VARIANCE" in codes  # still caught
+        assert report.duplicate_claim_ratio == 0.0  # exact-match gap remains
+        assert report.template_claim_ratio > 0.9  # but templating is visible
+        assert "LOW_OUTCOME_VARIANCE" in codes  # farming still caught
+
+    def test_honest_bulk_user_not_punished_for_templates(self):
+        # The reason template ratio is a metric, not a flag: an honest
+        # agent scanning 30 packages produces templated claims with real
+        # outcome variance and honest calibration. No flag may fire.
+        # Confidence must actually discriminate outcomes (else
+        # NO_DISCRIMINATION fires, correctly): 5/10 at 55%, 8/10 at 75%,
+        # 10/10 at 92% — calibrated with honest scatter.
+        preds = []
+        i = 0
+        for conf, correct_count in [(0.55, 5), (0.75, 8), (0.92, 10)]:
+            for j in range(10):
+                preds.append(
+                    make_pred(
+                        i, conf, outcome=j < correct_count,
+                        domain=["pypi", "github", "security"][i % 3],
+                        claim=f"package number {i} is maintained upstream",
+                        verify_after_hours=2.0,
+                    )
+                )
+                i += 1
+        report = IntegrityReport.from_predictions("bulk-scanner", preds)
+        assert report.template_claim_ratio > 0.9  # fully templated
+        assert report.flags == []  # and entirely unflagged
 
     def test_patient_farmer_evades_latency_check(self):
         # Strategy D: wait out the instant-verification window. Any fixed

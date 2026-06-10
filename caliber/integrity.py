@@ -106,6 +106,48 @@ def _normalize_claim(claim: str) -> str:
     return " ".join(claim.lower().split())
 
 
+def _template_tokens(claim: str) -> frozenset[str]:
+    """Token set with digit-bearing tokens collapsed to a placeholder.
+
+    "file 17 exists" and "file 42 exists" produce identical sets — the
+    most common template variable is a number.
+    """
+    tokens = []
+    for tok in claim.lower().split():
+        tokens.append("#" if any(ch.isdigit() for ch in tok) else tok)
+    return frozenset(tokens)
+
+
+def _template_cluster_ratio(claims: list[str]) -> float:
+    """Share of claims that are template-variants of an earlier claim.
+
+    Greedy clustering on digit-normalized token sets: claims join a
+    cluster when Jaccard similarity with its representative is >= 0.7
+    (short claims, under 3 tokens, must match exactly). Deterministic,
+    order-stable, O(n * clusters).
+
+    This is reported as a METRIC only, never a flag: honest bulk
+    workloads (scanning 50 packages, checking 30 endpoints) are
+    legitimately templated. Template form does not distinguish farming
+    from honest repetitive work — outcome variance does.
+    """
+    representatives: list[frozenset[str]] = []
+    for claim in claims:
+        tokens = _template_tokens(claim)
+        for rep in representatives:
+            if len(tokens) < 3 or len(rep) < 3:
+                if tokens == rep:
+                    break
+            else:
+                union = len(tokens | rep)
+                if union and len(tokens & rep) / union >= 0.7:
+                    break
+        else:
+            representatives.append(tokens)
+    n = len(claims)
+    return (n - len(representatives)) / n if n else 0.0
+
+
 def _murphy_decomposition(
     forecasts: list[float], outcomes: list[int]
 ) -> tuple[float, float, float, float]:
@@ -215,6 +257,7 @@ class IntegrityReport:
     confidence_entropy: Optional[float] = None
     domain_hhi: Optional[float] = None
     duplicate_claim_ratio: Optional[float] = None
+    template_claim_ratio: Optional[float] = None
     import_share: Optional[float] = None
     instant_verify_share: Optional[float] = None
     median_verify_latency_seconds: Optional[float] = None
@@ -280,6 +323,11 @@ class IntegrityReport:
         # Duplicate claims (normalized exact matches)
         normalized = [_normalize_claim(p.claim) for p in verified]
         report.duplicate_claim_ratio = (n - len(set(normalized))) / n
+
+        # Template variants (metric only — see _template_cluster_ratio)
+        report.template_claim_ratio = _template_cluster_ratio(
+            [p.claim for p in verified]
+        )
 
         # Predict->verify latency. Exact timestamp equality means the
         # prediction arrived with its outcome (batch import / add_completed):
@@ -535,6 +583,7 @@ class IntegrityReport:
             "confidence_entropy",
             "domain_hhi",
             "duplicate_claim_ratio",
+            "template_claim_ratio",
             "import_share",
             "instant_verify_share",
             "median_verify_latency_seconds",
