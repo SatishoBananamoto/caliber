@@ -89,8 +89,10 @@ def verify(ctx, prediction_id: str, correct: bool, notes: str):
 
 @cli.command()
 @click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.option("--with-integrity", "with_integrity", is_flag=True,
+              help="Attach the gaming-signature analysis to the card.")
 @click.pass_context
-def card(ctx, as_json: bool):
+def card(ctx, as_json: bool, with_integrity: bool):
     """Generate a Trust Card from accumulated predictions."""
     tracker = _get_tracker(ctx.obj["agent"], ctx.obj["store"])
     if not tracker.verified:
@@ -98,10 +100,23 @@ def card(ctx, as_json: bool):
         sys.exit(1)
 
     trust_card = tracker.generate_card()
+    report = None
+    if with_integrity:
+        from caliber.integrity import IntegrityReport
+        report = IntegrityReport.from_predictions(
+            ctx.obj["agent"], tracker.predictions
+        )
+
     if as_json:
-        click.echo(trust_card.to_json())
+        card_dict = trust_card.to_dict()
+        if report is not None:
+            card_dict["integrity"] = report.to_dict()
+        click.echo(json.dumps(card_dict, indent=2))
     else:
         click.echo(trust_card.summary())
+        if report is not None:
+            click.echo()
+            click.echo(report.summary())
 
 
 @cli.command()

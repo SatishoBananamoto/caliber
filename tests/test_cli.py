@@ -320,3 +320,42 @@ def test_integrity_command_json(tmp_path):
     codes = [f["code"] for f in data["flags"]]
     assert "LOW_OUTCOME_VARIANCE" in codes
     assert "metrics" in data
+
+
+def test_card_with_integrity(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), 25)
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path),
+         "card", "--with-integrity", "--json"],
+    )
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert "calibration" in data
+    assert "integrity" in data
+    assert data["integrity"]["n_verified"] == 25
+    assert data["integrity"]["flags"]
+
+    text = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path),
+         "card", "--with-integrity"],
+    )
+    assert text.exit_code == 0
+    assert "Trust Card: cli-test" in text.output
+    assert "Integrity Report: cli-test" in text.output
+
+
+def test_card_without_integrity_unchanged(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), 25)
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert "integrity" not in data
