@@ -267,6 +267,28 @@ def trajectory(ctx, interval: int, as_json: bool):
         click.echo(traj.summary())
 
 
+@cli.command()
+@click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.pass_context
+def integrity(ctx, as_json: bool):
+    """Check the prediction record for gaming signatures.
+
+    Runs deterministic statistics (Brier decomposition, concentration,
+    duplicate claims, verification latency) and reports advisory flags
+    with evidence. Calibration can be farmed; these signals cannot.
+    """
+    from caliber.integrity import IntegrityReport
+
+    tracker = _get_tracker(ctx.obj["agent"], ctx.obj["store"])
+    report = IntegrityReport.from_predictions(
+        ctx.obj["agent"], tracker.predictions
+    )
+    if as_json:
+        click.echo(json.dumps(report.to_dict(), indent=2))
+    else:
+        click.echo(report.summary())
+
+
 @cli.command("mcp-config")
 @click.option("--install", is_flag=True, help="Write the config into an MCP JSON file.")
 @click.option(

@@ -277,3 +277,46 @@ def test_mcp_config_install_merges_existing_config_and_keeps_backup(tmp_path):
         "cwd": str(tmp_path),
     }
     assert list(tmp_path.glob(".mcp.json.*.bak"))
+
+
+def test_integrity_command_insufficient_data(tmp_path):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "integrity"],
+    )
+    assert result.exit_code == 0
+    assert "nothing to analyze" in result.output
+
+
+def test_integrity_command_flags_farming(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), 25)
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "integrity"],
+    )
+    assert result.exit_code == 0
+    assert "Integrity Report: cli-test" in result.output
+    # All-correct single-domain instant-verified record must be flagged
+    assert "LOW_OUTCOME_VARIANCE" in result.output
+    assert "DOMAIN_CONCENTRATION" in result.output
+    assert "INSTANT_VERIFICATION" in result.output
+
+
+def test_integrity_command_json(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), 25)
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "integrity", "--json"],
+    )
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["agent_name"] == "cli-test"
+    assert data["n_verified"] == 25
+    codes = [f["code"] for f in data["flags"]]
+    assert "LOW_OUTCOME_VARIANCE" in codes
+    assert "metrics" in data

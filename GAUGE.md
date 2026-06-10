@@ -72,7 +72,7 @@ minimum N (LRN-021/LRN-022). Output: advisory flags with evidence, never a
 single score._
 
 - [x] `caliber/integrity.py` — IntegrityReport with Murphy decomposition + farming signals — 2026-06-10 · 18 tests, real-data smoke test flagged the imported corpus as UNWITNESSED_HISTORY (correct)
-- [ ] CLI command `caliber integrity`
+- [x] CLI command `caliber integrity` — 2026-06-10 · text + `--json`, 3 CLI regressions; suite 126 passing
 - [ ] MCP tool `caliber_integrity`
 - [ ] Embed integrity section in Trust Card output (opt-in)
 - [ ] Trust Card verification — chi-square on distributions, consistency checks
