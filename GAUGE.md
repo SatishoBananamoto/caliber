@@ -3,15 +3,24 @@
 > Trust protocol for AI agents. Tracks predictions, measures calibration.
 > Updated before every commit. Single source of truth.
 
-**Current version**: v0.1.0 (on PyPI as `caliber-trust`)
-**Last session**: 2026-05-11 — added first-user getting-started tutorial
-**Repo**: Main branch. Last verified locally with 105 tests passing.
+**Current version**: v0.1.0 (on PyPI as `caliber-trust`; gaming detection not yet published)
+**Last session**: 2026-06-10 — gaming-signature detection (integrity module, CLI, MCP, card embedding)
+**Repo**: Main branch. Last verified locally with 131 tests passing.
 
 ---
 
 ## NEXT SESSION — START HERE
 
-### What just happened (2026-05-11)
+### What just happened (2026-06-10)
+
+Built Phase 2 gaming detection end to end: `caliber/integrity.py` (Murphy
+decomposition + 7 advisory flags), `caliber integrity` CLI, `caliber_integrity`
+MCP tool, `caliber card --with-integrity`. 131 tests pass. Real-data check
+flagged the imported CALIBRATE corpus as UNWITNESSED_HISTORY and the live
+`default` store as LOW_OUTCOME_VARIANCE + INSTANT_VERIFICATION — both correct
+and informative. Not yet published to PyPI (still v0.1.0 there).
+
+### Prior session (2026-05-11)
 
 Added `GETTING_STARTED.md` for first external users: install, first three
 predictions, verification, summary, Trust Card generation, import, MCP setup,
@@ -175,8 +184,10 @@ single score._
 - **Real-data check:** imported CALIBRATE corpus correctly flagged
   UNWITNESSED_HISTORY; live `default` store flagged LOW_OUTCOME_VARIANCE +
   INSTANT_VERIFICATION (the LRN-041 signature in the field).
-- **State:** Core module done on branch. Next: CLI command, MCP tool, card
-  embedding, then merge to master.
+- **State:** Complete and merged to master. Commits 96e6795 (module),
+  03d0205 (CLI), d9cac12 (MCP), ef14c20 (card embedding), d1bab8c (docs).
+  131 tests passing. Next: bump version + publish to PyPI when Satish says
+  go; remaining Phase 2 items are card verification and A2A extension.
 
 ---
 
