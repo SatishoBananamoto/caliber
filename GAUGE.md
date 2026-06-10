@@ -84,6 +84,8 @@ single score._
 - [x] CLI command `caliber integrity` — 2026-06-10 · text + `--json`, 3 CLI regressions; suite 126 passing
 - [x] MCP tool `caliber_integrity` — 2026-06-10 · 7th server tool; test proves in-session farming via MCP gets caught (incl. INSTANT_VERIFICATION); suite 129 passing
 - [x] Embed integrity section in Trust Card output (opt-in) — 2026-06-10 · `caliber card --with-integrity` attaches the report to the shared artifact; default output unchanged; suite 131 passing
+- [x] Red-team the detector + Mendel test — 2026-06-10 · `tests/test_integrity_adversarial.py` encodes evasion strategies; SUSPICIOUSLY_PERFECT catches the calibrated forger (outcomes fabricated to match confidence — evades all behavioral flags, fails lower-tail chi-square); real CALIBRATE corpus p_low=0.66, no false positive; suite 142 passing
+- [ ] Template-claim detection — near-duplicate clustering ("file N exists" defeats exact-match dup check; documented in adversarial tests)
 - [ ] Trust Card verification — chi-square on distributions, consistency checks
 - [ ] A2A Agent Card extension — add calibration data to Agent Cards
 

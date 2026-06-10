@@ -77,6 +77,14 @@ INSTANT_SHARE_THRESHOLD = 0.50
 # (timestamp == verified_at, no witnessed prediction window).
 IMPORT_SHARE_THRESHOLD = 0.80
 
+# Too-good-to-be-true test (the Mendel test). Real binomial outcomes are
+# noisy; fabricated outcomes track stated confidence too closely. We flag
+# when the per-bucket goodness-of-fit statistic falls in the extreme LOW
+# tail of its chi-square distribution.
+MENDEL_P_LOW_THRESHOLD = 0.01
+MENDEL_MIN_BUCKET_N = 10
+MENDEL_MIN_BUCKETS = 3
+
 
 @dataclass
 class IntegrityFlag:
@@ -130,6 +138,63 @@ def _murphy_decomposition(
     return brier, reliability, resolution, uncertainty
 
 
+def _norm_cdf(x: float) -> float:
+    """Standard normal CDF using math.erfc (no scipy needed)."""
+    return 0.5 * math.erfc(-x / math.sqrt(2))
+
+
+def _chi2_cdf(x: float, k: int) -> float:
+    """Chi-square CDF via the Wilson-Hilferty cube-root approximation.
+
+    Accurate to a few percent for small k — adequate for an advisory
+    threshold, not for reporting precise p-values.
+    """
+    if x <= 0:
+        return 0.0
+    c = 2.0 / (9.0 * k)
+    z = ((x / k) ** (1.0 / 3.0) - (1.0 - c)) / math.sqrt(c)
+    return _norm_cdf(z)
+
+
+def _mendel_test(
+    forecasts: list[float], outcomes: list[int]
+) -> Optional[tuple[float, float, int]]:
+    """Lower-tail goodness-of-fit test for fabricated outcomes.
+
+    For each confidence bucket with enough data, compare observed accuracy
+    to mean stated confidence in binomial standard-error units. Honest
+    outcomes scatter around expectation (chi-square with one dof per
+    bucket); outcomes fabricated to match confidence sit in the extreme
+    low tail — the same signature that exposed Mendel's pea data.
+
+    Returns (p_low, chi2, n_buckets), or None when fewer than
+    MENDEL_MIN_BUCKETS buckets have MENDEL_MIN_BUCKET_N+ predictions.
+    """
+    buckets: dict[str, list[tuple[float, int]]] = {}
+    for f, o in zip(forecasts, outcomes):
+        for low, high, label in BUCKET_RANGES:
+            if low <= f <= high:
+                buckets.setdefault(label, []).append((f, o))
+                break
+
+    chi2 = 0.0
+    dof = 0
+    for group in buckets.values():
+        n_k = len(group)
+        if n_k < MENDEL_MIN_BUCKET_N:
+            continue
+        f_bar = sum(f for f, _ in group) / n_k
+        o_bar = sum(o for _, o in group) / n_k
+        se = math.sqrt(f_bar * (1 - f_bar) / n_k)
+        z = (o_bar - f_bar) / se
+        chi2 += z * z
+        dof += 1
+
+    if dof < MENDEL_MIN_BUCKETS:
+        return None
+    return _chi2_cdf(chi2, dof), chi2, dof
+
+
 @dataclass
 class IntegrityReport:
     """Gaming-signature analysis of a verified prediction set.
@@ -153,6 +218,9 @@ class IntegrityReport:
     import_share: Optional[float] = None
     instant_verify_share: Optional[float] = None
     median_verify_latency_seconds: Optional[float] = None
+    mendel_p_low: Optional[float] = None
+    mendel_chi2: Optional[float] = None
+    mendel_buckets: Optional[int] = None
     flags: list[IntegrityFlag] = field(default_factory=list)
 
     @property
@@ -184,6 +252,12 @@ class IntegrityReport:
         report.resolution = res
         report.uncertainty = unc
         report.outcome_base_rate = sum(outcomes) / n
+
+        mendel = _mendel_test(forecasts, outcomes)
+        if mendel is not None:
+            report.mendel_p_low = mendel[0]
+            report.mendel_chi2 = mendel[1]
+            report.mendel_buckets = mendel[2]
 
         # Confidence distribution shape over the standard buckets
         bucket_counts: list[int] = []
@@ -304,6 +378,28 @@ class IntegrityReport:
                                 self.confidence_entropy, 3
                             ),
                             "threshold": TOP_BUCKET_SHARE_THRESHOLD,
+                        },
+                    )
+                )
+
+            if (
+                self.mendel_p_low is not None
+                and self.mendel_p_low < MENDEL_P_LOW_THRESHOLD
+            ):
+                flags.append(
+                    IntegrityFlag(
+                        code="SUSPICIOUSLY_PERFECT",
+                        message=(
+                            "Observed accuracy tracks stated confidence more "
+                            "tightly than binomial noise permits — real "
+                            "outcomes scatter; fabricated ones match. (The "
+                            "test that exposed Mendel's pea data.)"
+                        ),
+                        evidence={
+                            "p_low": round(self.mendel_p_low, 5),
+                            "chi2": round(self.mendel_chi2, 3),
+                            "buckets_tested": self.mendel_buckets,
+                            "threshold": MENDEL_P_LOW_THRESHOLD,
                         },
                     )
                 )
@@ -442,6 +538,9 @@ class IntegrityReport:
             "import_share",
             "instant_verify_share",
             "median_verify_latency_seconds",
+            "mendel_p_low",
+            "mendel_chi2",
+            "mendel_buckets",
         ):
             value = getattr(self, name)
             if value is not None:
