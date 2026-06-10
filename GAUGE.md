@@ -3,9 +3,9 @@
 > Trust protocol for AI agents. Tracks predictions, measures calibration.
 > Updated before every commit. Single source of truth.
 
-**Current version**: v0.1.0 (on PyPI as `caliber-trust`; gaming detection not yet published)
-**Last session**: 2026-06-10 — gaming-signature detection (integrity module, CLI, MCP, card embedding)
-**Repo**: Main branch. Last verified locally with 131 tests passing.
+**Current version**: v0.2.0 (on PyPI as `caliber-trust` — gaming detection release)
+**Last session**: 2026-06-10 — gaming-signature detection built, red-teamed, shipped as v0.2.0
+**Repo**: Main branch, pushed to origin. Last verified locally with 143 tests passing.
 
 ---
 
