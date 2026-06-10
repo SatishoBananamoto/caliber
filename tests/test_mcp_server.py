@@ -111,3 +111,46 @@ class TestMCPTools:
         card_b = caliber_card(agent="agent-b")
         assert card_a["calibration"]["overall_accuracy"] == 1.0
         assert card_b["calibration"]["overall_accuracy"] == 0.0
+
+
+class TestIntegrityTool:
+    def test_empty_store(self):
+        from caliber.mcp_server import caliber_integrity
+
+        result = caliber_integrity()
+        assert result["n_verified"] == 0
+        assert "nothing to analyze" in result["verdict"]
+
+    def test_flags_farming_pattern(self):
+        from caliber.mcp_server import caliber_integrity
+
+        # In-session farming: high confidence, instant verify, one domain
+        for i in range(25):
+            out = caliber_predict(
+                f"trivial fact {i % 8}", 95, "filesystem",
+                prediction_id=f"m{i}",
+            )
+            assert "recorded" in out
+            caliber_verify(f"m{i}", correct=True)
+
+        result = caliber_integrity()
+        assert result["n_verified"] == 25
+        codes = [f["code"] for f in result["flags"]]
+        assert "LOW_OUTCOME_VARIANCE" in codes
+        assert "CONFIDENCE_CONCENTRATION" in codes
+        assert "DOMAIN_CONCENTRATION" in codes
+        assert "DUPLICATE_CLAIMS" in codes
+        assert "INSTANT_VERIFICATION" in codes
+        assert "gaming signature" in result["verdict"]
+
+    def test_includes_metrics(self):
+        from caliber.mcp_server import caliber_integrity
+
+        for i in range(12):
+            caliber_predict(f"claim {i}", 70 + (i % 3) * 10, "codebase",
+                            prediction_id=f"x{i}")
+            caliber_verify(f"x{i}", correct=(i % 4 != 0))
+
+        result = caliber_integrity()
+        assert "brier_score" in result["metrics"]
+        assert "uncertainty" in result["metrics"]

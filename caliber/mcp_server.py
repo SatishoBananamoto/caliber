@@ -192,5 +192,26 @@ def caliber_trajectory(
     return traj.to_dict()
 
 
+@server.tool()
+def caliber_integrity(agent: str = DEFAULT_AGENT) -> dict:
+    """Check the prediction record for gaming signatures.
+
+    Calibration alone can be farmed with easy predictions. This runs
+    deterministic statistics — Brier score decomposition (reliability /
+    resolution / uncertainty), confidence and domain concentration,
+    duplicate claims, predict->verify latency, batch-import share — and
+    returns advisory flags with evidence. There is deliberately no
+    aggregate score.
+
+    Args:
+        agent: Agent name.
+    """
+    from caliber.integrity import IntegrityReport
+
+    tracker = _get_tracker(agent)
+    report = IntegrityReport.from_predictions(agent, tracker.predictions)
+    return report.to_dict()
+
+
 if __name__ == "__main__":
     server.run()

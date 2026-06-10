@@ -73,7 +73,7 @@ single score._
 
 - [x] `caliber/integrity.py` — IntegrityReport with Murphy decomposition + farming signals — 2026-06-10 · 18 tests, real-data smoke test flagged the imported corpus as UNWITNESSED_HISTORY (correct)
 - [x] CLI command `caliber integrity` — 2026-06-10 · text + `--json`, 3 CLI regressions; suite 126 passing
-- [ ] MCP tool `caliber_integrity`
+- [x] MCP tool `caliber_integrity` — 2026-06-10 · 7th server tool; test proves in-session farming via MCP gets caught (incl. INSTANT_VERIFICATION); suite 129 passing
 - [ ] Embed integrity section in Trust Card output (opt-in)
 - [ ] Trust Card verification — chi-square on distributions, consistency checks
 - [ ] A2A Agent Card extension — add calibration data to Agent Cards
