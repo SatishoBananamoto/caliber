@@ -206,9 +206,13 @@ single score._
   real claims template ratio 0.0. My first "honest bulk user" fixture was
   correctly flagged NO_DISCRIMINATION — its confidence carried no information;
   the detector outed my own bad test data.
-- **State:** Detector hardened against the strongest known evasion. Next:
-  PyPI publish on Satish's go; card verification remains locked per
-  "What NOT to do".
+- **Docs follow-up:** f1ee24a (README Mendel + metric-vs-flag policy),
+  b391a19 (INTEGRATIONS.md integrity notes incl. svx instant-verify
+  exemption constraint; GETTING_STARTED.md integrity step).
+- **State:** Detector hardened against the strongest known evasion; docs
+  current. Autonomous runway exhausted — remaining items need Satish:
+  PyPI publish (v0.2.0 bump), GitHub push, community post for external
+  users, or unlocking card verification ("What NOT to do").
 
 ---
 
