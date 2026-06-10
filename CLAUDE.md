@@ -5,10 +5,11 @@
 Trust protocol for AI agents. Tracks predictions with confidence levels,
 generates Trust Cards showing calibration by confidence bucket and domain.
 
-**Current reality check (2026-05-11):** v0.1.0 is published on PyPI as
+**Current reality check (2026-06-10):** v0.1.0 is published on PyPI as
 `caliber-trust`. Core library, CLI, MCP server, importer, commitment scheme,
-badge generation, and trajectory support are implemented. Fresh local check:
-105 tests passing with `python3 -B -m pytest -q -p no:cacheprovider`.
+badge generation, trajectory support, and gaming-signature detection
+(`caliber integrity`) are implemented. Fresh local check: 131 tests passing
+with `python3 -B -m pytest -q -p no:cacheprovider`.
 
 The original status snapshot below is retained as history, not current state.
 
@@ -41,9 +42,10 @@ caliber/
 ├── tracker.py      # TrustTracker + Prediction (core)
 ├── card.py         # TrustCard (buckets, significance, danger/strength zones)
 ├── storage.py      # FileStorage (JSON) + MemoryStorage (tests)
-├── cli.py          # Click CLI (predict, verify, card, summary, list, import, trajectory)
-├── mcp_server.py   # FastMCP server (6 tools)
+├── cli.py          # Click CLI (predict, verify, card, summary, list, import, trajectory, integrity)
+├── mcp_server.py   # FastMCP server (7 tools)
 ├── trajectory.py   # Trajectory analysis (snapshots, trends)
+├── integrity.py    # Gaming-signature detection (Murphy decomposition + behavioral flags)
 ├── commitment.py   # SHA-256 prediction anchoring
 ├── importer.py     # Import from CALIBRATE.md and CSV
 └── __init__.py     # Public API
@@ -59,9 +61,12 @@ caliber/
    the shared importer and remains only as a backwards-compatible Trust Card
    JSON wrapper.
 
-3. **Difficulty metrics not implemented.** Trust Cards can be gamed by
-   making only easy predictions. Need claim specificity scoring or
-   cross-agent comparison. Phase 2 problem.
+3. ~~**Difficulty metrics not implemented.**~~ `caliber/integrity.py`
+   (2026-06-10) detects trivial-prediction farming via Murphy decomposition
+   of the Brier score plus behavioral signals (concentration, duplicates,
+   verify latency, import share). Deliberately behavioral statistics, not
+   claim-text NLP — claim scoring is itself gameable (GAUGE D-003).
+   Cross-agent difficulty comparison remains future work.
 
 4. **Verification subjectivity unaddressed.** Who decides "correct"?
    For filesystem checks: objective. For code review: subjective.

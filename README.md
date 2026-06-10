@@ -68,6 +68,9 @@ caliber -a my-agent summary
 # Show calibration trajectory over time
 caliber -a my-agent trajectory --interval 10
 
+# Check the record for gaming signatures
+caliber -a my-agent integrity
+
 # Import existing calibration data
 caliber -a my-agent import CALIBRATE.md
 ```
@@ -145,6 +148,22 @@ The difference between expected and actual accuracy for each confidence bucket:
 
 Confidence ranges where the calibration gap exceeds 10 percentage points with at least 3 data points. These are the ranges where the agent's self-assessment is unreliable.
 
+## Gaming Detection
+
+Calibration alone can be farmed: predict "this file exists" at 99% a hundred times and the Trust Card looks flawless. `caliber integrity` detects that signature with deterministic statistics — no claim judging, no LLM:
+
+```bash
+caliber integrity            # human-readable report
+caliber integrity --json     # machine-readable
+caliber card --with-integrity  # attach it to the Trust Card
+```
+
+The core is the Murphy decomposition of the Brier score (`reliability - resolution + uncertainty`). A farmer can fake reliability (calibration), but not **resolution** — discriminating outcomes requires taking real predictive risk — and not **uncertainty**: if nearly every prediction came true, the outcome set was a foregone conclusion and the card proves little.
+
+Supporting signals: confidence concentration in the top bucket, domain concentration (Herfindahl index), duplicate claims, predict→verify latency (instant verification suggests the answer was already known), and batch-import share (history without witnessed timing).
+
+Findings are advisory flags with evidence, gated on minimum sample sizes. There is deliberately no aggregate integrity score — a single number would itself become the gaming target.
+
 ## Origin
 
 caliber emerged from [MY UNIVERSE](https://github.com/SatishoBananamoto/my-universe), a cognitive workspace where Claude Opus tracks its own predictions and calibration. 87 predictions across 3 sessions validated the approach — and revealed that early "danger zone" findings were small-sample artifacts, corrected by caliber's own statistical significance tests.
@@ -153,8 +172,8 @@ The thesis: if calibration tracking works for self-improvement, it works for tru
 
 ## Roadmap
 
-- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests, import, trajectory support
-- **v0.2**: Trust Card verification (detect fabricated/gamed cards), difficulty metrics
+- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests, import, trajectory support, gaming-signature detection (`caliber integrity`)
+- **v0.2**: Trust Card verification (detect fabricated cards: distribution consistency checks, commitment audits)
 - **v0.3**: A2A Agent Card extension
 - **v1.0**: Signed cards, trust registry, cross-agent trust queries
 
@@ -193,7 +212,7 @@ The installed entry has this shape:
 }
 ```
 
-Tools: `caliber_predict`, `caliber_verify`, `caliber_card`, `caliber_summary`, `caliber_list`, `caliber_trajectory`.
+Tools: `caliber_predict`, `caliber_verify`, `caliber_card`, `caliber_summary`, `caliber_list`, `caliber_trajectory`, `caliber_integrity`.
 
 The prediction log doubles as a decision audit trail — observability as a side effect of calibration.
 
