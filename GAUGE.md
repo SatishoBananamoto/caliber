@@ -210,9 +210,20 @@ single score._
   b391a19 (INTEGRATIONS.md integrity notes incl. svx instant-verify
   exemption constraint; GETTING_STARTED.md integrity step).
 - **State:** Detector hardened against the strongest known evasion; docs
-  current. Autonomous runway exhausted — remaining items need Satish:
-  PyPI publish (v0.2.0 bump), GitHub push, community post for external
-  users, or unlocking card verification ("What NOT to do").
+  current.
+
+### 2026-06-10 — v0.2.0 release (Satish + Fable)
+
+- **Shipped:** v0.2.0 published to PyPI (verified live: wheel + sdist),
+  all commits + `v0.2.0` tag pushed to GitHub. Old 0.1.0 dists archived
+  to `archive/dist-0.1.0/`.
+- **Process note:** kv-secrets v0.4.0 grant scoping is cwd-sensitive — a
+  grant approved from `~` did not match the same command run from
+  `~/caliber`. Re-approving from the project directory fixed it. Possible
+  UX finding for kv-secrets (error message doesn't say which scope field
+  mismatched).
+- **State:** Released. Next: community post (draft ready, posts under
+  Satish's account) → first external user. Card verification stays locked.
 
 ---
 
