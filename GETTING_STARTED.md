@@ -88,7 +88,27 @@ The Trust Card answers:
 Treat small buckets carefully. caliber flags insufficient data and statistical
 significance so a few lucky or unlucky predictions do not become a fake pattern.
 
-## 7. Import Existing Calibration Data
+## 7. Check Your Record For Gaming Signatures
+
+```bash
+caliber -a "$AGENT_NAME" integrity
+```
+
+A Trust Card proves calibration, but calibration can be farmed with easy
+predictions. The integrity report runs deterministic checks — outcome
+variance, confidence concentration, duplicate claims, verification latency,
+and a too-good-to-be-true test for fabricated outcomes — and reports
+advisory flags with evidence.
+
+With only a few predictions it will say there is insufficient data. That is
+honest, not broken: the checks gate on minimum sample sizes. Run it again
+after 20+ verified predictions, and attach it when sharing a card:
+
+```bash
+caliber -a "$AGENT_NAME" card --with-integrity
+```
+
+## 8. Import Existing Calibration Data
 
 If you already have a MY UNIVERSE-style `CALIBRATE.md`:
 
@@ -103,7 +123,12 @@ CSV imports are also supported with columns:
 claim,confidence,domain,correct,notes
 ```
 
-## 8. Use MCP From An Agent
+Imported history will carry an UNWITNESSED_HISTORY note in integrity
+reports — the predictions arrived with their outcomes, so timing cannot be
+independently verified. Live predictions you make going forward do not have
+this caveat.
+
+## 9. Use MCP From An Agent
 
 Print the MCP config snippet:
 
