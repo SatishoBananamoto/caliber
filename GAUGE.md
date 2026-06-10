@@ -27,9 +27,14 @@ REVIEW.md identified: no external users. caliber has only been used by Satish's 
 
 ### What NOT to do
 
-- Don't add difficulty metrics yet — Phase 2 problem, needs more usage data first
 - Don't rewrite storage — file-based JSON is fine for current scale
 - Don't build verification for Trust Cards yet — needs the commitment scheme tested more first
+- Don't reduce integrity findings to a single score — a lone number is itself gameable; report flags with evidence
+
+> 2026-06-10: removed "don't add difficulty metrics yet" — Satish directed
+> work on the difficulty/gaming problem (D-003). The original deferral reason
+> (needs usage data) is partly satisfied: ~94 verified predictions exist from
+> the CALIBRATE corpus and real vigil field use.
 
 ---
 
@@ -53,11 +58,23 @@ _MCP server works but integration points need polish._
 - [x] Add `caliber trajectory` CLI command — verified 2026-05-10 · `tests/test_cli.py`
 - [x] Clean up extract_calibrate_md.py (standalone script → use `caliber import` command) — 2026-05-11 · wrapper now reuses shared importer; CLI import has regression coverage
 
-### Phase 2: Trust Card integrity (future)
+### Phase 2: Trust Card integrity (ACTIVE as of 2026-06-10)
 
-_Deferred until more usage data exists._
+_Unlocked by Satish's direction. Approach: gaming detection via deterministic
+statistics on the prediction stream — no LLM judge. Core: Murphy decomposition
+of the Brier score (reliability/resolution/uncertainty). A trivial-prediction
+farmer shows near-zero uncertainty (outcome base rate ≈ 1.0) and near-zero
+resolution — calibration is gameable, discrimination is not. Supporting
+signals: confidence concentration, domain concentration (Herfindahl), duplicate
+claims, predict→verify latency (LRN-041: instant verification ≈ post-hoc
+prediction), batch-import share (unwitnessed history). Every signal gates on
+minimum N (LRN-021/LRN-022). Output: advisory flags with evidence, never a
+single score._
 
-- [ ] Difficulty metrics — detect trivial prediction farming
+- [x] `caliber/integrity.py` — IntegrityReport with Murphy decomposition + farming signals — 2026-06-10 · 18 tests, real-data smoke test flagged the imported corpus as UNWITNESSED_HISTORY (correct)
+- [ ] CLI command `caliber integrity`
+- [ ] MCP tool `caliber_integrity`
+- [ ] Embed integrity section in Trust Card output (opt-in)
 - [ ] Trust Card verification — chi-square on distributions, consistency checks
 - [ ] A2A Agent Card extension — add calibration data to Agent Cards
 
@@ -93,6 +110,7 @@ _Deferred until more usage data exists._
 |----|------|----------|-----|
 | D-001 | 2026-03-26 | Published as caliber-trust (not caliber) | Name taken by existing ML library. |
 | D-002 | 2026-03-26 | SHA-256 commitment scheme for prediction anchoring | Cryptographic proof of timing without external services. Standard, simple. |
+| D-003 | 2026-06-10 | Gaming detection = behavioral statistics, not claim NLP | Claim-text "specificity scoring" is itself gameable and language-dependent. Distributional signals (Brier resolution, outcome variance, latency, concentration) can't be faked without taking real predictive risk. Advisory flags with evidence, never one aggregate score. |
 
 ---
 
@@ -145,6 +163,20 @@ _Deferred until more usage data exists._
 - **Completed:** Added `GETTING_STARTED.md` and linked it from README
 - **Why:** GAUGE's #1 priority is external validation; the non-account-bound next step was a concrete first-user walkthrough before any community post
 - **State:** 105 tests passing. Next requires Satish or an external user to actually post/use it and return feedback.
+
+### 2026-06-10 — Integrity / gaming detection (Fable session, branch `integrity-metrics`)
+
+- **Worked on:** Phase 2 unlock — trivial-prediction-farming detection
+- **Completed:** `caliber/integrity.py` (IntegrityReport: Murphy decomposition
+  of Brier score + 7 advisory flags with evidence and min-N gates) and
+  `tests/test_integrity.py` (18 tests). Full suite 123 passing.
+- **Why:** Satish directed work on the difficulty/gaming problem (D-003).
+  Calibration is gameable; resolution and outcome variance are not.
+- **Real-data check:** imported CALIBRATE corpus correctly flagged
+  UNWITNESSED_HISTORY; live `default` store flagged LOW_OUTCOME_VARIANCE +
+  INSTANT_VERIFICATION (the LRN-041 signature in the field).
+- **State:** Core module done on branch. Next: CLI command, MCP tool, card
+  embedding, then merge to master.
 
 ---
 
