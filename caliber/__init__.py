@@ -1,6 +1,6 @@
-"""caliber — Trust protocol for AI agents.
+"""caliber — calibration instrument for AI agents.
 
-Prove capability through calibration, not claims.
+Measure calibration, stress-test records, and verify cards.
 """
 
 __version__ = "0.2.0"

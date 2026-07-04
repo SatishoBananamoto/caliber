@@ -1,4 +1,4 @@
-"""CLI for caliber — Trust protocol for AI agents.
+"""CLI for caliber — calibration instrument for AI agents.
 
 Usage:
     caliber predict "claim" --confidence 80 --domain codebase
@@ -86,7 +86,7 @@ def _first_mismatch(expected, actual, path: str = "$") -> str | None:
 @click.option("--store", "-s", default=str(DEFAULT_STORE), help="Storage directory.")
 @click.pass_context
 def cli(ctx, agent: str, store: str):
-    """caliber — Trust protocol for AI agents."""
+    """caliber — calibration instrument for AI agents."""
     ctx.ensure_object(dict)
     ctx.obj["agent"] = agent
     ctx.obj["store"] = store

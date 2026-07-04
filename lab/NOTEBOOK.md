@@ -2033,3 +2033,62 @@ Phase 3 gate audit:
 
 Decision: Phase 3 gate evidence is complete. Update `GAUGE.md` and commit.
 Next phase is Phase 4 honest repositioning and fresh-venv getting-started.
+
+## EXP-026 - Phase 4 honest public positioning
+
+Hypothesis: the README and package metadata still overclaim by calling Caliber
+a "trust protocol" and saying Trust Cards prove more than the current code can
+demonstrate. The first Phase 4 chunk should change the public identity to a
+calibration instrument, keep registries/A2A as motivation, and make the threat
+model visible from the README.
+
+Mini-plan:
+
+1. Replace remaining "Trust protocol" identity text in README, pyproject, and
+   package docstring.
+2. Soften "prove capability" wording to measured calibration, stress testing,
+   and tamper evidence at stated evidence levels.
+3. Reframe registry/Agent Card language as motivation rather than a current
+   protocol claim.
+4. Keep the existing Trust Card example and Phase 3 command docs intact unless
+   they make a claim the code cannot support.
+5. Run claim-grep checks and the full suite.
+
+Result:
+
+Updated public identity surfaces:
+
+- README subtitle now says "Calibration instrument for AI agents -- measure
+  it, stress-test it, prove it."
+- README problem/solution language now frames registries and Agent Cards as
+  motivation, not current protocol capability.
+- README threat model lists record-only, event-log, anchored-head, and external
+  adjudication evidence levels.
+- `pyproject.toml` description now says "Calibration instrument for AI agents:
+  measure calibration, stress-test records, and verify cards."
+- `caliber/__init__.py` and CLI help no longer call Caliber a trust protocol.
+
+Claim-grep:
+
+```text
+$ rg -n "Trust protocol|trust protocol|Prove capability|prove capability|Trust Card verification \\(detect fabricated|github.com/SatishoBananamoto/my-universe" README.md pyproject.toml caliber/__init__.py caliber/cli.py
+<no matches>
+```
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_cli.py tests/test_commitment.py -q
+...................................                                      [100%]
+35 passed in 2.07s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 71%]
+..........................................................               [100%]
+202 passed in 15.09s
+```
+
+Decision: public identity claims are now materially more honest. Next Phase 4
+chunk should run `GETTING_STARTED.md` end-to-end in a clean venv and paste the
+transcript.

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "caliber-trust"
 version = "0.2.0"
-description = "Trust protocol for AI agents. Prove capability through calibration, not claims."
+description = "Calibration instrument for AI agents: measure calibration, stress-test records, and verify cards."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"

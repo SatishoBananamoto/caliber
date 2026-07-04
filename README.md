@@ -1,22 +1,29 @@
 # caliber
 
-Trust protocol for AI agents. Prove capability through calibration, not claims.
+Calibration instrument for AI agents — measure it, stress-test it, prove it.
 
 ## The Problem
 
-Every agent registry — Google's A2A, Microsoft's Entra, Salesforce's MuleSoft — faces the same problem: agents describe what they *can* do, not how *well* they do it. Agent Cards are LinkedIn profiles with no work history.
+Agent registries, model cards, and tool manifests describe what an agent *can*
+do, not how well it does the work over time. Capability claims need measured
+history.
 
 When Agent A asks Agent B for help, there's no way to know if B is actually good at the task. B says it can review code. Can it? With what accuracy? Is it overconfident? Does it know its own blind spots?
 
 ## The Solution
 
-caliber tracks predictions with confidence levels and generates **Trust Cards** — machine-readable credentials that prove an agent's calibration through accumulated evidence.
+caliber tracks predictions with confidence levels and generates **Trust Cards**
+— machine-readable calibration records backed by accumulated outcomes,
+uncertainty estimates, adversarial stress tests, and tamper-evident logs.
 
 A Trust Card answers:
 - **Overall:** How accurate is this agent?
 - **By confidence:** When it says "80% sure," is it right 80% of the time?
 - **By domain:** Where is it strong? Where is it weak?
 - **Danger zones:** Confidence ranges where the agent is systematically overconfident.
+
+A Trust Card is not a universal proof of competence. It is evidence about the
+record it was generated from, with explicit limits documented below.
 
 ## Quick Start
 
@@ -188,7 +195,17 @@ There is also a too-good-to-be-true check: a forger who *fabricates* outcomes to
 
 Findings are advisory flags with evidence, gated on minimum sample sizes. There is deliberately no aggregate integrity score — a single number would itself become the gaming target. Signals that cannot distinguish gaming from honest bulk use (e.g. templated claims) are reported as metrics, never flags.
 
-## Tamper Evidence And Verification
+## Threat Model And Verification
+
+Caliber proves different things at different evidence levels:
+
+- **Record only:** calibration, confidence-bucket behavior, domain breakdowns,
+  and advisory gaming signatures over the stored predictions.
+- **Event log:** edited, deleted, or reordered history breaks the hash chain.
+- **Anchored head:** anyone with the saved head can detect later rewrites from
+  that anchor forward.
+- **External adjudication:** semantic task difficulty and outcome judgment
+  still need domain review outside Caliber.
 
 New stores write an append-only JSONL event log beside the JSON snapshot. The
 event log is the source of truth; the JSON file remains a derived cache for
@@ -216,7 +233,10 @@ head, for example the `New head` printed by `caliber anchor`.
 
 caliber emerged from a local MY UNIVERSE calibration practice where Claude Opus tracked its own predictions and calibration. The current source corpus parses to 94 verified predictions — and revealed that early "danger zone" findings were small-sample artifacts, corrected by caliber's own statistical significance tests.
 
-The thesis: if calibration tracking works for self-improvement, it works for trust between agents. caliber includes the statistical honesty features because we learned the hard way that small samples lie.
+The thesis: if calibration tracking improves one agent's self-assessment, the
+same evidence can help humans and agent systems decide when to rely on that
+agent. caliber includes the statistical honesty features because we learned the
+hard way that small samples lie.
 
 ## Roadmap
 
