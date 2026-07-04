@@ -8,10 +8,12 @@ from caliber.tracker import TrustTracker, Prediction
 from caliber.card import (
     TrustCard,
     BucketStats,
+    AdaptiveBucketStats,
     DomainStats,
     BUCKET_RANGES,
     _exact_binomial_p_two_sided,
     _murphy_decomposition,
+    _build_adaptive_buckets,
 )
 from caliber.storage import MemoryStorage
 
@@ -81,6 +83,24 @@ class TestDomainStats:
         assert out["avg_confidence"] == 0.75
 
 
+class TestAdaptiveBucketStats:
+    def test_to_dict(self):
+        bucket = AdaptiveBucketStats(
+            index=1,
+            predictions=10,
+            correct=7,
+            min_confidence=0.55,
+            max_confidence=0.75,
+            mean_confidence=0.65,
+        )
+        d = bucket.to_dict()
+        assert d["index"] == 1
+        assert d["confidence_range"] == [0.55, 0.75]
+        assert d["mean_confidence"] == 0.65
+        assert d["accuracy"] == 0.7
+        assert "ci95" in d
+
+
 class TestTrustCard:
     def _make_predictions(self, specs: list[tuple]) -> list[Prediction]:
         """Make predictions from (confidence, domain, correct) tuples."""
@@ -126,6 +146,26 @@ class TestTrustCard:
         assert card.confidence_buckets["50-59"].predictions == 1
         assert card.confidence_buckets["60-69"].predictions == 1
         assert card.confidence_buckets["90-99"].accuracy == 1.0
+
+    def test_adaptive_buckets_equal_mass(self):
+        preds = self._make_predictions([
+            (0.50 + (i * 0.004), "a", i % 2 == 0)
+            for i in range(88)
+        ])
+        buckets = _build_adaptive_buckets(preds)
+        assert len(buckets) == 4
+        assert [b.predictions for b in buckets] == [22, 22, 22, 22]
+        assert buckets[0].max_confidence <= buckets[1].min_confidence
+
+    def test_adaptive_buckets_in_card_json(self):
+        preds = self._make_predictions([(0.70, "a", True)] * 30)
+        card = TrustCard.from_predictions("adaptive", preds)
+        data = json.loads(card.to_json())
+        adaptive = data["calibration"]["adaptive_buckets"]
+        assert len(adaptive) == 3
+        assert adaptive[0]["predictions"] == 10
+        assert adaptive[0]["confidence_range"] == [0.7, 0.7]
+        assert "ci95" in adaptive[0]
 
     def test_domain_breakdown(self):
         preds = self._make_predictions([
@@ -204,6 +244,7 @@ class TestTrustCard:
         assert "95% CI" in summary
         assert "Brier score" in summary
         assert "Calibration Z" in summary
+        assert "Adaptive buckets" in summary
 
     def test_perfect_calibration(self):
         """Agent that's right exactly as often as confidence implies."""

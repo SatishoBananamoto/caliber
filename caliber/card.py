@@ -109,6 +109,23 @@ BUCKET_RANGES = [
 WILSON_Z_95 = 1.959963984540054
 
 
+def _wilson_ci(correct: int, n: int) -> Optional[tuple[float, float]]:
+    """Wilson 95% confidence interval for a binomial proportion."""
+    if n == 0:
+        return None
+    p_hat = correct / n
+    z = WILSON_Z_95
+    z2 = z * z
+    denom = 1 + z2 / n
+    center = (p_hat + z2 / (2 * n)) / denom
+    margin = (
+        z
+        * math.sqrt((p_hat * (1 - p_hat) / n) + (z2 / (4 * n * n)))
+        / denom
+    )
+    return (max(0.0, center - margin), min(1.0, center + margin))
+
+
 @dataclass
 class BucketStats:
     """Statistics for one confidence bucket."""
@@ -152,20 +169,7 @@ class BucketStats:
     @property
     def ci95(self) -> Optional[tuple[float, float]]:
         """Wilson 95% confidence interval for bucket accuracy."""
-        if self.predictions == 0:
-            return None
-        n = self.predictions
-        p_hat = self.correct / n
-        z = WILSON_Z_95
-        z2 = z * z
-        denom = 1 + z2 / n
-        center = (p_hat + z2 / (2 * n)) / denom
-        margin = (
-            z
-            * math.sqrt((p_hat * (1 - p_hat) / n) + (z2 / (4 * n * n)))
-            / denom
-        )
-        return (max(0.0, center - margin), min(1.0, center + margin))
+        return _wilson_ci(self.correct, self.predictions)
 
     @property
     def significant(self) -> Optional[bool]:
@@ -229,6 +233,53 @@ class DomainStats:
 
 
 @dataclass
+class AdaptiveBucketStats:
+    """Statistics for one equal-mass adaptive confidence bucket."""
+
+    index: int
+    predictions: int
+    correct: int
+    min_confidence: float
+    max_confidence: float
+    mean_confidence: float
+
+    @property
+    def accuracy(self) -> Optional[float]:
+        if self.predictions == 0:
+            return None
+        return self.correct / self.predictions
+
+    @property
+    def calibration_gap(self) -> Optional[float]:
+        if self.accuracy is None:
+            return None
+        return self.mean_confidence - self.accuracy
+
+    @property
+    def ci95(self) -> Optional[tuple[float, float]]:
+        return _wilson_ci(self.correct, self.predictions)
+
+    def to_dict(self) -> dict:
+        d = {
+            "index": self.index,
+            "predictions": self.predictions,
+            "correct": self.correct,
+            "confidence_range": [
+                round(self.min_confidence, 3),
+                round(self.max_confidence, 3),
+            ],
+            "mean_confidence": round(self.mean_confidence, 3),
+        }
+        if self.accuracy is not None:
+            d["accuracy"] = round(self.accuracy, 3)
+            ci95 = self.ci95
+            if ci95 is not None:
+                d["ci95"] = [round(ci95[0], 3), round(ci95[1], 3)]
+            d["calibration_gap"] = round(self.calibration_gap, 3)
+        return d
+
+
+@dataclass
 class TrustCard:
     """A verifiable trust credential for an AI agent.
 
@@ -254,6 +305,7 @@ class TrustCard:
     calibration_z: Optional[float] = None
     calibration_p: Optional[float] = None
     confidence_buckets: dict[str, BucketStats] = field(default_factory=dict)
+    adaptive_buckets: list[AdaptiveBucketStats] = field(default_factory=list)
     domains: dict[str, DomainStats] = field(default_factory=dict)
     danger_zones: list[str] = field(default_factory=list)
     strength_zones: list[str] = field(default_factory=list)
@@ -301,6 +353,8 @@ class TrustCard:
                 mean_confidence=bucket_mean_confidence,
             )
 
+        adaptive_buckets = _build_adaptive_buckets(verified)
+
         # Build domain stats
         domain_groups: dict[str, list[Prediction]] = {}
         for p in verified:
@@ -318,8 +372,7 @@ class TrustCard:
             )
 
         # Identify danger zones (overconfident) and strength zones (underconfident).
-        # Uses both threshold (gap > 0.10) and statistical test when available.
-        # A zone is flagged if: gap exceeds threshold AND (significant OR insufficient data for test).
+        # A zone requires both a large gap and a completed significant test.
         danger_zones = []
         strength_zones = []
         for label, bucket in buckets.items():
@@ -362,6 +415,7 @@ class TrustCard:
             calibration_z=calibration_z,
             calibration_p=calibration_p,
             confidence_buckets=buckets,
+            adaptive_buckets=adaptive_buckets,
             domains=domains,
             danger_zones=danger_zones,
             strength_zones=strength_zones,
@@ -400,6 +454,11 @@ class TrustCard:
                 label: bucket.to_dict()
                 for label, bucket in self.confidence_buckets.items()
             }
+
+        if self.adaptive_buckets:
+            cal["adaptive_buckets"] = [
+                bucket.to_dict() for bucket in self.adaptive_buckets
+            ]
 
         if self.domains:
             cal["domains"] = {
@@ -477,6 +536,22 @@ class TrustCard:
                         f"{marker}{sig_note}"
                     )
 
+        if self.adaptive_buckets:
+            lines.append("\nAdaptive buckets:")
+            for bucket in self.adaptive_buckets:
+                ci95 = bucket.ci95
+                ci_note = (
+                    f", 95% CI {ci95[0]:.1%}-{ci95[1]:.1%}"
+                    if ci95 is not None
+                    else ""
+                )
+                lines.append(
+                    f"  #{bucket.index}: {bucket.accuracy:.1%} accurate "
+                    f"({bucket.predictions} predictions, "
+                    f"conf {bucket.min_confidence:.0%}-{bucket.max_confidence:.0%}, "
+                    f"mean {bucket.mean_confidence:.1%}{ci_note})"
+                )
+
         if self.domains:
             lines.append("\nDomains:")
             for name, stats in self.domains.items():
@@ -496,3 +571,30 @@ class TrustCard:
             )
 
         return "\n".join(lines)
+
+
+def _build_adaptive_buckets(predictions: list[Prediction]) -> list[AdaptiveBucketStats]:
+    """Build near-equal-count buckets sorted by confidence."""
+    n = len(predictions)
+    if n == 0:
+        return []
+    bucket_count = min(n, max(3, math.ceil(n / 25)))
+    ordered = sorted(predictions, key=lambda p: p.confidence)
+    buckets: list[AdaptiveBucketStats] = []
+    for i in range(bucket_count):
+        start = i * n // bucket_count
+        end = (i + 1) * n // bucket_count
+        group = ordered[start:end]
+        correct = sum(1 for p in group if p.outcome)
+        confidences = [p.confidence for p in group]
+        buckets.append(
+            AdaptiveBucketStats(
+                index=i + 1,
+                predictions=len(group),
+                correct=correct,
+                min_confidence=min(confidences),
+                max_confidence=max(confidences),
+                mean_confidence=sum(confidences) / len(confidences),
+            )
+        )
+    return buckets

@@ -612,3 +612,49 @@ Real-corpus smoke:
 Decision: card-level proper-score fields are surfaced on Trust Cards. This
 makes the card more comparable to the integrity report and gives a
 binning-free calibration test alongside the bucket table.
+
+## EXP-006 - Phase 1 Adaptive Equal-Mass Buckets
+
+Hypothesis: fixed buckets are useful for compatibility, but they can hide or
+exaggerate calibration patterns when data clusters unevenly. Equal-mass
+adaptive buckets expose calibration with less binning bias while leaving the
+fixed buckets intact for existing consumers.
+
+Mini-plan:
+
+1. Add an adaptive bucket stats type with confidence range, mean confidence,
+   accuracy, and Wilson interval.
+2. Build adaptive buckets by sorting verified predictions by confidence and
+   cutting them into `max(3, ceil(n/25))` near-equal non-empty groups.
+3. Emit `adaptive_buckets` in Trust Card JSON and render them in the summary.
+4. Add tests for bucket count, equal-mass shape, JSON fields, and summary text.
+5. Run targeted card tests and the full suite.
+
+Result:
+
+```text
+$ python3 -m pytest tests/test_card.py -q
+.......................................                                  [100%]
+39 passed in 0.19s
+```
+
+```text
+$ python3 -m pytest -q
+........................................................................ [ 46%]
+........................................................................ [ 92%]
+...........                                                              [100%]
+155 passed in 1.99s
+```
+
+Real-corpus smoke:
+
+- Current `test` corpus now emits four adaptive buckets of 22 predictions each.
+- The adaptive view exposes a clearer low-confidence underperformance/upper
+  confidence underconfidence pattern:
+  - bucket 1: 50.0% accuracy, mean confidence 59.5%;
+  - bucket 2: 77.3% accuracy, mean confidence 67.3%;
+  - bucket 3: 90.9% accuracy, mean confidence 72.7%;
+  - bucket 4: 90.9% accuracy, mean confidence 83.2%.
+
+Decision: adaptive buckets are added as a second view without removing or
+renaming the fixed five-bucket table, preserving compatibility.
