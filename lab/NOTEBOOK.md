@@ -1346,3 +1346,74 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: post-change threshold artifacts are current. Next chunk should rerun
 the full adversarial bench at the current SHA so `lab/REPORT.md` reflects
 duplicate_spammer and the changed thresholds.
+
+## EXP-016 - Phase 2 Post-Threshold Full Bench
+
+Hypothesis: after adding duplicate_spammer and applying measured thresholds,
+the full adversarial bench should still run under 5 minutes and should show
+improved template/no-discrimination detection plus duplicate-spammer coverage.
+
+Mini-plan:
+
+1. Run the full `lab/run_bench.py` grid at current SHA `08b2cff`.
+2. Save `lab/results/bench-08b2cff.json` and refresh `lab/REPORT.md`.
+3. Compare headline rates against the earlier `bench-e9b87f6.json`.
+4. Run the full dev-venv suite after artifact generation.
+
+Result:
+
+```text
+Wrote /home/satishocoin/caliber/lab/results/bench-08b2cff.json
+Wrote /home/satishocoin/caliber/lab/REPORT.md
+elapsed_seconds=278.26
+```
+
+Artifacts:
+
+- `lab/results/bench-08b2cff.json` (37,107 bytes)
+- `lab/REPORT.md` (4,817 bytes)
+- 48 rows = 12 populations x 4 sample sizes
+- 500 deterministic replicates per cell
+
+Headline comparison against `lab/results/bench-e9b87f6.json`:
+
+```text
+honest@n=50 any 2.8% (old 0.2%); honest@n=100 any 1.0% (old 0.4%)
+smart_fabricator@n=50 any 4.6% (old 1.2%); smart_fabricator@n=100 any 1.4% (old 0.4%)
+farmer@n=50/100 any 100% / 100% (unchanged)
+patient_farmer@n=50/100 any 100% / 100% (unchanged)
+naive_fabricator@n=50/100 any 100% / 100% (unchanged)
+template_spammer@n=50 any 100% (old 30.8%); n=100 any 100% (old 31.8%)
+duplicate_spammer@n=50/100 any 100% / 100% (new population)
+domain_camper@n=50/100 any 100% / 100% (unchanged)
+bulk_importer@n=50/100 any 100% / 100% (unchanged)
+```
+
+Failure/weakness found:
+
+- `overconfident@n=50` now has `any_flag_rate = 7.2%`, above the 5% clean
+  budget used by the threshold analyzer. Split: `LOW_OUTCOME_VARIANCE = 3.0%`
+  and `CONFIDENCE_CONCENTRATION = 4.4%`.
+- `underconfident@n=300` has `NO_DISCRIMINATION = 35.0%`. This is arguably a
+  real low-resolution behavior, but it means the "clean populations" category
+  is not homogeneous; future tests must distinguish "honest calibrated",
+  "honest but biased", and "honest but uninformative" instead of treating all
+  non-attack streams as equivalent false positives.
+- Small n remains noisy: `honest@n=20` any-flag is 18.4%, almost entirely
+  `LOW_OUTCOME_VARIANCE`. This should be documented as a sample-size limit,
+  not hidden.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+................................                                         [100%]
+176 passed in 4.45s
+```
+
+Decision: commit this bench artifact because it is valid evidence, not because
+it is flattering. Next chunk should convert the bench into fast regression
+tests and use those tests to make the clean/biased/uninformative distinction
+explicit before writing `lab/THREATMODEL.md`.
