@@ -43,6 +43,46 @@ class FileStorage(Storage):
         safe_name = agent_name.replace("/", "_").replace(" ", "_")
         return self.directory / f"{safe_name}.json"
 
+    def migrate_snapshot(self, agent_name: str) -> dict:
+        """Convert a legacy JSON snapshot into an unwitnessed event log.
+
+        Migration marks every existing prediction as ``imported`` with
+        ``origin: migrated``. This is honest: the chain proves future ordering,
+        not that pre-migration events were witnessed when they happened.
+        """
+        event_path = self._event_log.path_for(agent_name)
+        if event_path.exists():
+            raise ValueError(f"event log already exists: {event_path}")
+
+        snapshot_path = self._path_for(agent_name)
+        legacy_path = self._legacy_path_for(agent_name)
+        if not snapshot_path.exists() and not legacy_path.exists():
+            raise FileNotFoundError(f"no JSON snapshot found for {agent_name!r}")
+
+        predictions = self._load_from_snapshot(agent_name)
+        if not predictions:
+            event_path.touch()
+        for prediction in predictions:
+            self._event_log.append(
+                agent_name,
+                "imported",
+                {
+                    "origin": "migrated",
+                    "prediction": prediction.to_dict(),
+                },
+            )
+
+        # Rewrite the canonical JSON snapshot as a derived cache.
+        self.save(agent_name, predictions)
+        verification = self._event_log.verify(agent_name)
+        return {
+            "agent_name": agent_name,
+            "snapshot_path": str(snapshot_path if snapshot_path.exists() else legacy_path),
+            "event_log_path": str(event_path),
+            "migrated_count": len(predictions),
+            "head_hash": verification.head_hash,
+        }
+
     def save(self, agent_name: str, predictions: list[Prediction]) -> None:
         self._append_events_for_delta(agent_name, predictions)
         path = self._path_for(agent_name)

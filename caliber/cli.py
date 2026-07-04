@@ -430,6 +430,35 @@ def anchor(ctx, label: str | None, as_json: bool):
         click.echo("Use the new head with: caliber verify-log --head <new-head>")
 
 
+@cli.command("migrate")
+@click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.pass_context
+def migrate(ctx, as_json: bool):
+    """Migrate a legacy JSON snapshot into an event log."""
+    storage = FileStorage(ctx.obj["store"])
+    try:
+        result = storage.migrate_snapshot(ctx.obj["agent"])
+    except (FileNotFoundError, ValueError) as exc:
+        if as_json:
+            click.echo(json.dumps({
+                "agent_name": ctx.obj["agent"],
+                "ok": False,
+                "error": str(exc),
+            }, indent=2))
+        else:
+            click.echo(f"Error: {exc}", err=True)
+        sys.exit(1)
+
+    result = {"ok": True, **result}
+    if as_json:
+        click.echo(json.dumps(result, indent=2))
+    else:
+        click.echo(f"Migrated {result['migrated_count']} prediction(s)")
+        click.echo(f"Event log: {result['event_log_path']}")
+        click.echo(f"Head:      {result['head_hash']}")
+        click.echo("Migration marks existing records as imported/unwitnessed history.")
+
+
 @cli.command("mcp-config")
 @click.option("--install", is_flag=True, help="Write the config into an MCP JSON file.")
 @click.option(

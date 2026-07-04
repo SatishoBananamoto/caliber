@@ -1801,3 +1801,65 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 
 Decision: anchored-head workflow now exists locally. Next chunk should add
 explicit `caliber migrate` for legacy JSON stores, then `verify-card`.
+
+## EXP-023 - Phase 3 legacy JSON migration
+
+Hypothesis: legacy JSON stores can be converted into event logs without
+pretending their history was witnessed. Migration should create `imported`
+events marked `origin: migrated`, refuse to run when an event log already
+exists, and preserve card statistics after replay.
+
+Mini-plan:
+
+1. Add a `FileStorage` migration helper that reads the JSON snapshot fallback
+   and writes imported/migrated events.
+2. Add `caliber migrate` with text and JSON output.
+3. Refuse migration when the event log already exists or no JSON snapshot is
+   present.
+4. Add tests for migrated event payloads, legacy sanitized names, duplicate
+   migration refusal, and card-stat round-trip.
+5. Run storage/CLI/card tests, then the full suite.
+
+Result:
+
+Added `FileStorage.migrate_snapshot()` and `caliber migrate`:
+
+- reads the current JSON snapshot fallback, including legacy sanitized names;
+- refuses to run if an event log already exists;
+- writes one `imported` event per migrated prediction with
+  `origin: migrated`;
+- rewrites the canonical JSON snapshot as a derived cache after migration;
+- reports migrated count and resulting head hash.
+
+Tests added:
+
+- CLI migration preserves Trust Card calibration stats before/after migration;
+- migrated events carry `origin: migrated`;
+- `verify-log --head <migration_head>` succeeds after migration;
+- duplicate migration is refused.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_cli.py -q
+...................                                                      [100%]
+19 passed in 2.91s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_storage.py -q
+................                                                         [100%]
+16 passed in 0.97s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_event_log.py -q
+.......                                                                  [100%]
+7 passed in 0.92s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 36%]
+........................................................................ [ 72%]
+......................................................                   [100%]
+198 passed in 13.22s
+```
+
+Decision: legacy JSON migration exists and is explicit about unwitnessed
+history. Next chunk should implement `verify-card` by recomputing a card from
+the event-log-backed store and comparing every card statistic.

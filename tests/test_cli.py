@@ -7,6 +7,35 @@ from click.testing import CliRunner
 from caliber.cli import cli
 
 
+def _write_legacy_snapshot(store, agent_name="legacy agent") -> None:
+    path = store / "legacy_agent.json"
+    path.write_text(json.dumps({
+        "agent_name": agent_name,
+        "predictions": [
+            {
+                "id": "legacy-1",
+                "claim": "legacy claim one",
+                "confidence": 0.8,
+                "domain": "codebase",
+                "timestamp": "2026-03-24T00:00:00+00:00",
+                "outcome": True,
+                "verified_at": "2026-03-24T00:01:00+00:00",
+                "notes": None,
+            },
+            {
+                "id": "legacy-2",
+                "claim": "legacy claim two",
+                "confidence": 0.6,
+                "domain": "behavior",
+                "timestamp": "2026-03-25T00:00:00+00:00",
+                "outcome": False,
+                "verified_at": "2026-03-25T00:01:00+00:00",
+                "notes": "missed",
+            },
+        ],
+    }) + "\n")
+
+
 def _record_verified_predictions(runner: CliRunner, store: str, count: int) -> None:
     """Create and verify predictions through the CLI."""
     for i in range(count):
@@ -362,6 +391,69 @@ def test_anchor_command_fails_on_invalid_log(tmp_path):
 
     assert result.exit_code == 1
     assert "Error: event log invalid" in result.output
+
+
+def test_migrate_command_converts_legacy_json_and_preserves_card_stats(tmp_path):
+    runner = CliRunner()
+    _write_legacy_snapshot(tmp_path)
+
+    before = runner.invoke(
+        cli,
+        ["--agent", "legacy agent", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert before.exit_code == 0
+    before_card = json.loads(before.output)
+
+    migrated = runner.invoke(
+        cli,
+        ["--agent", "legacy agent", "--store", str(tmp_path), "migrate", "--json"],
+    )
+
+    assert migrated.exit_code == 0
+    migration = json.loads(migrated.output)
+    assert migration["ok"] is True
+    assert migration["migrated_count"] == 2
+    assert len(migration["head_hash"]) == 64
+
+    event_path = tmp_path / "legacy%20agent.events.jsonl"
+    events = [json.loads(line) for line in event_path.read_text().splitlines()]
+    assert [event["type"] for event in events] == ["imported", "imported"]
+    assert events[0]["payload"]["origin"] == "migrated"
+
+    verify = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "legacy agent",
+            "--store",
+            str(tmp_path),
+            "verify-log",
+            "--head",
+            migration["head_hash"],
+        ],
+    )
+    assert verify.exit_code == 0
+
+    after = runner.invoke(
+        cli,
+        ["--agent", "legacy agent", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert after.exit_code == 0
+    after_card = json.loads(after.output)
+    assert after_card["calibration"] == before_card["calibration"]
+
+
+def test_migrate_command_refuses_existing_event_log(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "migrate"],
+    )
+
+    assert result.exit_code == 1
+    assert "event log already exists" in result.output
 
 
 def test_mcp_config_prints_json(tmp_path):
