@@ -4,8 +4,8 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.2.0 (on PyPI as `caliber-trust` — gaming detection release)
-**Last session**: 2026-07-04 — northstar Phase 1 statistical core completed; Phase 2 adversarial lab is next
-**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 161 tests passing.
+**Last session**: 2026-07-04 — northstar Phase 2 adversarial lab completed; Phase 3 tamper evidence is next
+**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 179 tests passing.
 
 ---
 
@@ -50,8 +50,23 @@ Phase 1 statistical core is complete:
   small-n grid cell" was false by exact enumeration. The tests now pin the
   true coverage table and use Monte Carlo only as a smoke check.
 
-Next concrete work: Phase 2 Adversarial Lab. Start with `lab/simulate.py` and
-the deterministic population zoo, then `lab/run_bench.py` for FPR/power tables.
+Phase 2 adversarial lab is complete:
+
+- Built deterministic simulators for 12 populations in `lab/simulate.py`.
+- Built `lab/run_bench.py`; full bench artifact
+  `lab/results/bench-08b2cff.json` has 48 rows (12 populations x sample sizes
+  20, 50, 100, 300), 500 replicates per cell, and runtime under 5 minutes.
+- Re-derived every integrity threshold at n=50 with measured clean FPR and
+  target attacker power; `caliber/integrity.py` carries operating-point
+  comments for each threshold.
+- Added fast bench regression coverage in `tests/test_lab_bench.py`; current
+  full suite is `179 passed`.
+- Wrote `lab/THREATMODEL.md`: patient farmer is caught without latency;
+  smart fabrication and synthetic import timestamps are explicit record-only
+  limits; Phase 3 must add anchored event history.
+
+Next concrete work: Phase 3 Tamper Evidence. Start with the append-only JSONL
+event log design and compatibility tests before changing storage behavior.
 
 ### What just happened (2026-06-10)
 
@@ -168,6 +183,22 @@ single score._
 ---
 
 ## Session Log
+
+### 2026-07-04 — Northstar Phase 2 adversarial lab (Codex/Kai)
+
+- **Worked on:** Phase 2 from `NORTHSTAR.md`: simulator zoo, full FPR/power
+  bench, threshold re-derivation, fast regression tests, and threat model.
+- **Completed:** `lab/simulate.py`, `lab/run_bench.py`,
+  `lab/analyze_thresholds.py`, `lab/REPORT.md`, `lab/THRESHOLDS.md`,
+  `lab/THREATMODEL.md`, `tests/test_lab_bench.py`, and measured threshold
+  comments in `caliber/integrity.py`.
+- **Evidence:** `lab/results/bench-08b2cff.json` (48 rows, 500 replicates per
+  cell); `lab/results/thresholds-c31299f.json` (8 threshold analyses);
+  `/tmp/caliber-northstar-p1-properties/bin/python -m pytest -q` ->
+  179 passed.
+- **State:** Phase 2 gate accepted locally on `northstar`, not pushed. Next:
+  Phase 3 tamper evidence: append-only hash-chained event log, `verify-log`,
+  `anchor`, `verify-card`, and migration/compatibility proof.
 
 ### 2026-07-04 — Northstar Phase 1 statistical core (Codex/Kai)
 

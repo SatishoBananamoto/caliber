@@ -1482,3 +1482,65 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: the fast bench regression now protects the core Phase 2 claims in
 normal CI-scale tests. Remaining Phase 2 gate work: write `lab/THREATMODEL.md`
 and explicitly classify the record-only impossibility boundaries.
+
+## EXP-018 - Phase 2 Threat Model
+
+Hypothesis: Phase 2 is only honest if it states the boundary of record-only
+integrity analysis. The threat model should separate attacks detected from a
+stored prediction record, attacks that require witnessed timing or anchoring,
+and attacks that no statistical detector can distinguish from honest Bernoulli
+outcomes.
+
+Mini-plan:
+
+1. Ground the document in `lab/REPORT.md`, `lab/THRESHOLDS.md`,
+   `tests/test_lab_bench.py`, and the residual-evasion tests.
+2. Summarize measured power for detected attacks at n=50/n=100 without
+   overclaiming the small-n results.
+3. Explicitly classify smart fabrication and synthetic timestamp forgery as
+   record-only limits, not detector bugs hidden in prose.
+4. Run the full suite after adding the document, then update the Phase 2 gate
+   state if the evidence is complete.
+
+Result:
+
+Added `lab/THREATMODEL.md`, grounded in:
+
+- `lab/results/bench-08b2cff.json` / `lab/REPORT.md`
+- `lab/results/thresholds-c31299f.json` / `lab/THRESHOLDS.md`
+- `tests/test_lab_bench.py`
+- `tests/test_integrity_adversarial.py`
+
+Key classifications:
+
+- Detected from current record-only evidence: farmer, patient farmer, naive
+  fabricator, template spammer via low discrimination, duplicate spammer,
+  domain camper, and timestamp-equal bulk importer.
+- Not detectable from record alone: smart fabrication whose outcomes are
+  statistically sampled from stated confidence.
+- Not fixable from mutable JSON alone: synthetic import timestamps that invent
+  plausible non-equal `verified_at` offsets.
+- Required next evidence level: Phase 3 append-only hash-chained event log,
+  event origins, anchors, `verify-log`, and `verify-card`.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 40%]
+........................................................................ [ 80%]
+...................................                                      [100%]
+179 passed in 8.92s
+```
+
+Phase 2 gate audit:
+
+```text
+bench rows 48 populations 12 sizes [20, 50, 100, 300] reps 500
+threshold analyses 8 n 50 reps 500
+threshold names ['LOW_UNCERTAINTY_THRESHOLD', 'LOW_RESOLUTION_RATIO', 'TOP_BUCKET_SHARE_THRESHOLD', 'DOMAIN_HHI_THRESHOLD', 'DUPLICATE_RATIO_THRESHOLD', 'INSTANT_SHARE_THRESHOLD', 'IMPORT_SHARE_THRESHOLD', 'MENDEL_P_LOW_THRESHOLD']
+threatmodel exists True bench test exists True
+```
+
+Decision: Phase 2 gate evidence is complete. Update `GAUGE.md` at the phase
+gate and commit the threat-model chunk. Next phase is Phase 3 tamper evidence.
