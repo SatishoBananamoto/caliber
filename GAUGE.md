@@ -4,12 +4,36 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.2.0 (on PyPI as `caliber-trust` — gaming detection release)
-**Last session**: 2026-06-10 — gaming-signature detection built, red-teamed, shipped as v0.2.0
-**Repo**: Main branch, pushed to origin. Last verified locally with 143 tests passing.
+**Last session**: 2026-07-04 — northstar branch opened for statistical rigor, adversarial lab, and tamper-evidence work
+**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing.
 
 ---
 
 ## NEXT SESSION — START HERE
+
+### Active northstar run (2026-07-04)
+
+Read `NORTHSTAR.md` first. It supersedes the older "external user first" and
+"don't rewrite storage" guidance for this branch. Current branch: `northstar`.
+Branch rules: never push, never publish to PyPI, keep runtime dependencies
+stdlib-only, and update `lab/NOTEBOOK.md` plus this file at phase gates.
+
+Phase 0 baseline is complete:
+
+- deleted merged local branch `integrity-metrics`;
+- created branch `northstar`;
+- read `GAUGE.md`, `REVIEW.md`, all modules under `caliber/`, and
+  `tests/test_integrity_adversarial.py`;
+- ran `python3 -m pytest -q` -> 143 passed;
+- recorded baseline `card` and `integrity` outputs for `default`, `test`, and
+  `claude-trader` in `lab/NOTEBOOK.md`;
+- observed drift: local `test` corpus has 88 verified predictions, and
+  `trust-card-claude-opus.json` has 59 verified predictions plus the D1
+  insufficient-data `strength_zones` bug.
+
+Next concrete work: Phase 1 statistical core. Start with D1/D2 in `card.py`:
+zone flags must require a completed significant test, and calibration gaps
+must use mean stated confidence instead of bucket midpoints.
 
 ### What just happened (2026-06-10)
 
