@@ -4,6 +4,9 @@
 operating directive for this repo: mission, verified defect list, phase plan
 with acceptance gates, formulas, process rules, and handoff format.
 
+Round two active directive: read `NORTHSTAR2.md`; its Phase A docs are
+`docs/METHOD.md` and `docs/SPEC.md`.
+
 Quick constraints (duplicated from NORTHSTAR §4 because they are absolute):
 
 - Work on branch `northstar`. Never push. Never publish to PyPI. Never touch

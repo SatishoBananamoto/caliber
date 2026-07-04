@@ -2,8 +2,9 @@
 
 ## What This Is
 
-Trust protocol for AI agents. Tracks predictions with confidence levels,
-generates Trust Cards showing calibration by confidence bucket and domain.
+Calibration instrument for AI agents. Tracks predictions with confidence
+levels, generates Trust Cards showing calibration by confidence bucket and
+domain.
 
 **Current reality check (2026-06-10):** v0.1.0 is published on PyPI as
 `caliber-trust`. Core library, CLI, MCP server, importer, commitment scheme,

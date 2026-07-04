@@ -32,6 +32,8 @@ pip install caliber-trust
 ```
 
 For a first external-user walkthrough, see [GETTING_STARTED.md](GETTING_STARTED.md).
+For the citable method and executable record format, see
+[docs/METHOD.md](docs/METHOD.md) and [docs/SPEC.md](docs/SPEC.md).
 
 ### Python API
 
