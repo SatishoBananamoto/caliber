@@ -1157,3 +1157,66 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: threshold-analysis implementation is ready to commit. Next chunk is
 the full n=50, 500-replicate threshold analysis artifact, followed by
 integrity constant comments/changes.
+
+## EXP-013 - Phase 2 Full Threshold Analysis Run
+
+Hypothesis: running the threshold analyzer at n=50 with 500 replicates will
+identify which current constants survive the FPR/power criterion and which
+need threshold changes or threat-model notes.
+
+Mini-plan:
+
+1. Run `lab/analyze_thresholds.py` with default n=50, 500 replicates from
+   committed analyzer SHA `78508b1`.
+2. Save JSON under `lab/results/thresholds-78508b1.json` and Markdown at
+   `lab/THRESHOLDS.md`.
+3. Inspect recommended thresholds vs current constants.
+4. Record immediate decisions in the notebook.
+5. Run the full dev-venv suite after artifact generation.
+
+Result:
+
+```text
+Wrote /home/satishocoin/caliber/lab/results/thresholds-78508b1.json
+Wrote /home/satishocoin/caliber/lab/THRESHOLDS.md
+elapsed_seconds=19.18
+```
+
+Artifacts:
+
+- `lab/results/thresholds-78508b1.json` (8K)
+- `lab/THRESHOLDS.md` (4K)
+- n=50, 500 replicates, clean populations:
+  `honest`, `overconfident`, `underconfident`, `noisy`, `smart_fabricator`.
+
+Recommendations:
+
+```text
+LOW_UNCERTAINTY_THRESHOLD current 0.09 -> recommended 0.13
+  clean FPR 3.64%, farmer power 99.2%, patient_farmer power 99.8%
+
+LOW_RESOLUTION_RATIO current 0.10 -> recommended 0.494476
+  clean FPR 0.4%, naive_fabricator power 100%, template_spammer power 100%
+
+TOP_BUCKET_SHARE_THRESHOLD current 0.60 survives
+DOMAIN_HHI_THRESHOLD current 0.60 survives
+DUPLICATE_RATIO_THRESHOLD current 0.20 survives
+INSTANT_SHARE_THRESHOLD current 0.50 survives
+IMPORT_SHARE_THRESHOLD current 0.80 survives
+MENDEL_P_LOW_THRESHOLD current 0.01 survives
+```
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+................................                                         [100%]
+176 passed in 5.37s
+```
+
+Decision: threshold artifacts are ready to commit. Next chunk should update
+`integrity.py` constants/comments for the two recommended changes and measured
+operating-point comments for all surviving constants, then rerun the bench
+slice that proves the changed thresholds behave as expected.
