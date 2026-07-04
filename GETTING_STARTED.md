@@ -103,8 +103,8 @@ significance so a few lucky or unlucky predictions do not become a fake pattern.
 caliber -a "$AGENT_NAME" integrity
 ```
 
-A Trust Card proves calibration, but calibration can be farmed with easy
-predictions. The integrity report runs deterministic checks — outcome
+A Trust Card summarizes recorded calibration evidence, but that evidence
+can be farmed with easy predictions. The integrity report runs deterministic checks — outcome
 variance, confidence concentration, duplicate claims, verification latency,
 and a too-good-to-be-true test for fabricated outcomes — and reports
 advisory flags with evidence.

@@ -1,6 +1,6 @@
 """Trust Card integrity analysis — trivial-prediction-farming detection.
 
-A Trust Card proves calibration, but calibration alone is gameable: an agent
+A Trust Card summarizes calibration evidence, but calibration alone is gameable: an agent
 can farm easy predictions ("this file exists", 99%, correct) and present a
 flawless card. This module detects that signature using deterministic
 statistics on the prediction stream — no claim-text judging, no LLM.

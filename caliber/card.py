@@ -1,8 +1,9 @@
 """Trust Card generation.
 
-A Trust Card is a machine-readable credential that proves an agent's
-calibration through accumulated evidence. It answers: "When this agent
-says it's 80% confident, how often is it actually right?"
+A Trust Card is a machine-readable summary of an agent's recorded
+calibration evidence. It answers: "When this agent says it's 80%
+confident, how often is it actually right?" What a card can and cannot
+demonstrate at each evidence level is documented in docs/METHOD.md.
 """
 
 from __future__ import annotations

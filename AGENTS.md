@@ -9,8 +9,9 @@ Round two active directive: read `NORTHSTAR2.md`; its Phase A docs are
 
 Quick constraints (duplicated from NORTHSTAR §4 because they are absolute):
 
-- Work on branch `northstar`. Never push. Never publish to PyPI. Never touch
-  `master`.
+- Work only on the active round branch (`northstar2` as recorded in
+  GAUGE.md's latest entry — check there, it is the source of truth). Never
+  push. Never publish to PyPI. Never touch `master`.
 - No new runtime dependencies (stdlib only). `hypothesis` allowed as dev dep.
 - No LLM calls in the package. No aggregate integrity score. No network in
   core paths.
