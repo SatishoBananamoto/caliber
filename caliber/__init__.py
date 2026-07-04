@@ -3,7 +3,7 @@
 Measure calibration, stress-test records, and verify cards.
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from caliber.tracker import TrustTracker, Prediction
 from caliber.card import TrustCard

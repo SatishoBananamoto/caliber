@@ -2247,3 +2247,40 @@ Decision: `GETTING_STARTED.md` now has a verified local-checkout path for a
 network-restricted environment. The guide's prediction, verification, summary,
 card, integrity, import, and MCP config commands all ran against a temporary
 `HOME` without mutating the user's real store.
+
+## EXP-028 - Phase 4 v0.3.0 changelog and version bump
+
+Hypothesis: v0.3.0 is the first northstar release candidate, so the changelog
+must plainly explain statistical corrections that change reported numbers,
+adversarial-lab evidence, and hash-chain verification without implying a PyPI
+release has happened.
+
+Mini-plan:
+
+1. Create `CHANGELOG.md` with a dated v0.3.0 entry.
+2. Call out D1/D2 as corrections that can change existing Trust Card output.
+3. Summarize Phase 2 lab bench and Phase 3 tamper-evidence commands.
+4. Bump `pyproject.toml` and `caliber/__init__.py` from 0.2.0 to 0.3.0.
+5. Run the full suite and commit only after green tests.
+
+Result:
+
+- Created `CHANGELOG.md` with a v0.3.0 entry covering statistical
+  corrections, adversarial lab evidence, tamper-evidence commands, packaging,
+  and the explicit "Satish publishes" release boundary.
+- Bumped local package metadata and `caliber.__version__` to `0.3.0`.
+- Updated README roadmap wording so v0.2 is "current on PyPI" and v0.3 is the
+  local northstar release candidate, not yet published.
+
+Verification:
+
+```text
+$ . /tmp/caliber-northstar-p1-properties/bin/activate && python3 -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 71%]
+..........................................................               [100%]
+202 passed in 34.49s
+```
+
+Decision: v0.3.0 release surfaces are ready locally, with no push and no PyPI
+publication.

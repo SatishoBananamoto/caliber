@@ -241,8 +241,8 @@ hard way that small samples lie.
 ## Roadmap
 
 - **v0.1**: Core tracker, CLI, MCP server, Trust Card generation, import, trajectory support
-- **v0.2** (current): Statistical Trust Cards plus gaming-signature detection (`caliber integrity`)
-- **v0.3** (northstar branch, not yet published): Hash-chained event logs, `verify-log`, `anchor`, `migrate`, and `verify-card`
+- **v0.2** (current on PyPI): Statistical Trust Cards plus gaming-signature detection (`caliber integrity`)
+- **v0.3** (local northstar release candidate, not yet published): Statistical corrections, adversarial lab, hash-chained event logs, `verify-log`, `anchor`, `migrate`, and `verify-card`
 - **v0.4**: A2A Agent Card extension
 - **v1.0**: Signed cards, trust registry, cross-agent trust queries
 
