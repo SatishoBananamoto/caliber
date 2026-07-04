@@ -22,6 +22,15 @@ class TestBucketStats:
         b = BucketStats(label="70-79", predictions=1, correct=1)
         assert b.expected_accuracy == 0.745
 
+    def test_expected_accuracy_uses_mean_confidence_when_available(self):
+        b = BucketStats(
+            label="70-79",
+            predictions=10,
+            correct=7,
+            mean_confidence=0.70,
+        )
+        assert b.expected_accuracy == 0.70
+
     def test_calibration_gap_overconfident(self):
         # Expected ~74.5%, actual 50% → overconfident (positive gap)
         b = BucketStats(label="70-79", predictions=10, correct=5)
@@ -33,10 +42,11 @@ class TestBucketStats:
         assert b.calibration_gap < 0
 
     def test_to_dict(self):
-        b = BucketStats(label="80-89", predictions=5, correct=4)
+        b = BucketStats(label="80-89", predictions=5, correct=4, mean_confidence=0.82)
         d = b.to_dict()
         assert d["predictions"] == 5
         assert d["correct"] == 4
+        assert d["mean_confidence"] == 0.82
         assert d["accuracy"] == 0.8
         assert "calibration_gap" in d
 
@@ -186,6 +196,17 @@ class TestTrustCard:
         card = TrustCard.from_predictions("perfect", preds)
         bucket = card.confidence_buckets["80-89"]
         assert abs(bucket.calibration_gap) < 0.06  # close to 0
+
+    def test_bucket_gap_uses_mean_stated_confidence_not_midpoint(self):
+        specs = [(0.70, "x", i < 7) for i in range(10)]
+        preds = self._make_predictions(specs)
+        card = TrustCard.from_predictions("mean-confidence", preds)
+        bucket = card.confidence_buckets["70-79"]
+        assert abs(bucket.mean_confidence - 0.70) < 1e-12
+        assert bucket.accuracy == 0.70
+        assert abs(bucket.calibration_gap) < 1e-12
+        data = json.loads(card.to_json())
+        assert data["calibration"]["confidence_buckets"]["70-79"]["mean_confidence"] == 0.7
 
     def test_real_data_volume(self):
         """Simulate MY UNIVERSE scale — 36 predictions."""

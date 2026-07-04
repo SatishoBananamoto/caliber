@@ -41,6 +41,7 @@ class BucketStats:
     label: str
     predictions: int
     correct: int
+    mean_confidence: Optional[float] = None
 
     @property
     def accuracy(self) -> Optional[float]:
@@ -50,7 +51,14 @@ class BucketStats:
 
     @property
     def expected_accuracy(self) -> float:
-        """Midpoint of the bucket range — what accuracy should be."""
+        """Expected accuracy from stated confidence.
+
+        Trust Cards generated from prediction streams use the mean stated
+        confidence inside the bucket. A midpoint fallback is retained for
+        manually constructed BucketStats in tests and compatibility code.
+        """
+        if self.mean_confidence is not None:
+            return self.mean_confidence
         low = int(self.label.split("-")[0]) / 100
         high = int(self.label.split("-")[1]) / 100
         return (low + high) / 2
@@ -90,6 +98,8 @@ class BucketStats:
 
     def to_dict(self) -> dict:
         d = {"predictions": self.predictions, "correct": self.correct}
+        if self.mean_confidence is not None:
+            d["mean_confidence"] = round(self.mean_confidence, 3)
         if self.accuracy is not None:
             d["accuracy"] = round(self.accuracy, 3)
             d["calibration_gap"] = round(self.calibration_gap, 3)
@@ -173,10 +183,16 @@ class TrustCard:
         for low, high, label in BUCKET_RANGES:
             in_bucket = [p for p in verified if low <= p.confidence <= high]
             bucket_correct = sum(1 for p in in_bucket if p.outcome)
+            bucket_mean_confidence = (
+                sum(p.confidence for p in in_bucket) / len(in_bucket)
+                if in_bucket
+                else None
+            )
             buckets[label] = BucketStats(
                 label=label,
                 predictions=len(in_bucket),
                 correct=bucket_correct,
+                mean_confidence=bucket_mean_confidence,
             )
 
         # Build domain stats

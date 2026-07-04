@@ -440,3 +440,47 @@ Decision: D1 fixed as a narrow chunk. `TrustCard.from_predictions` now only
 creates a danger/strength zone when `BucketStats.significant is True`; an
 untestable gap (`None`) is no longer enough. Added explicit 4-sample
 regressions for both danger and strength zones.
+
+## EXP-002 - Phase 1 D2 Mean Stated Confidence Per Bucket
+
+Hypothesis: fixed confidence buckets should use the actual mean stated
+confidence of predictions inside each bucket as the expected accuracy. Bucket
+midpoints are only bin labels; using them as the expectation injects binning
+bias into `calibration_gap` and `significant`.
+
+Mini-plan:
+
+1. Add per-bucket `mean_confidence` to `BucketStats`.
+2. Make `expected_accuracy` use `mean_confidence` when available.
+3. Populate `mean_confidence` in `TrustCard.from_predictions`.
+4. Add a regression where a 70% bucket is perfectly calibrated at 0.70 but
+   would look miscalibrated against the 0.745 midpoint.
+5. Run targeted card tests, real-card smoke commands, then the full suite.
+
+Result:
+
+```text
+$ python3 -m pytest tests/test_card.py -q
+...............................                                          [100%]
+31 passed in 0.14s
+```
+
+```text
+$ python3 -m pytest -q
+........................................................................ [ 48%]
+........................................................................ [ 97%]
+...                                                                      [100%]
+147 passed in 1.75s
+```
+
+Real-corpus smoke deltas:
+
+- `default` mean calibration gap changed from `-0.105` to `-0.125`.
+- `test` mean calibration gap changed from `-0.046` to `-0.066`.
+- Fixed-bucket JSON now carries `mean_confidence` per bucket.
+- No new danger/strength zones appeared in either current real corpus.
+
+Decision: D2 fixed for fixed-bucket card generation. Bucket labels remain the
+same for compatibility, but `calibration_gap` and `significant` now use the
+bucket's observed mean stated confidence when the card is generated from
+predictions.
