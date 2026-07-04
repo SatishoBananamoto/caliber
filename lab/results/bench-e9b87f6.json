@@ -1,0 +1,1197 @@
+{
+  "generated_utc": "2026-07-04T08:50:23.949214+00:00",
+  "git_sha": "e9b87f6",
+  "replicates": 500,
+  "sample_sizes": [
+    20,
+    50,
+    100,
+    300
+  ],
+  "base_seed": 1701,
+  "flag_codes": [
+    "LOW_OUTCOME_VARIANCE",
+    "NO_DISCRIMINATION",
+    "CONFIDENCE_CONCENTRATION",
+    "SUSPICIOUSLY_PERFECT",
+    "DOMAIN_CONCENTRATION",
+    "DUPLICATE_CLAIMS",
+    "INSTANT_VERIFICATION",
+    "UNWITNESSED_HISTORY"
+  ],
+  "rows": [
+    {
+      "population": "honest",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 0.074,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.074,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0249,
+        "resolution": 0.1786,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.0842,
+        "uncertainty": 0.1827
+      }
+    },
+    {
+      "population": "honest",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 0.002,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.002,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0224,
+        "mendel_p_low": 0.5059,
+        "resolution": 0.1761,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.089,
+        "uncertainty": 0.1866
+      }
+    },
+    {
+      "population": "honest",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 0.004,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.004,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0229,
+        "mendel_p_low": 0.4782,
+        "resolution": 0.1667,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.093,
+        "uncertainty": 0.1868
+      }
+    },
+    {
+      "population": "honest",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 0.01,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.01,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0219,
+        "mendel_p_low": 0.4936,
+        "resolution": 0.1376,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.0895,
+        "uncertainty": 0.19
+      }
+    },
+    {
+      "population": "overconfident",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 0.172,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.078,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.108,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0229,
+        "resolution": 0.1605,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.4845,
+        "uncertainty": 0.1797
+      }
+    },
+    {
+      "population": "overconfident",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 0.046,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.002,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.044,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0224,
+        "mendel_p_low": 0.9649,
+        "resolution": 0.1592,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.4839,
+        "uncertainty": 0.1888
+      }
+    },
+    {
+      "population": "overconfident",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 0.01,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.01,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0229,
+        "mendel_p_low": 0.9911,
+        "resolution": 0.1496,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.483,
+        "uncertainty": 0.1882
+      }
+    },
+    {
+      "population": "overconfident",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 0.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.022,
+        "mendel_p_low": 1.0,
+        "resolution": 0.1218,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.4866,
+        "uncertainty": 0.1903
+      }
+    },
+    {
+      "population": "underconfident",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 0.068,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.068,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0228,
+        "resolution": 0.1374,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.0,
+        "uncertainty": 0.1838
+      }
+    },
+    {
+      "population": "underconfident",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 0.002,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.002,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0214,
+        "mendel_p_low": 0.7667,
+        "resolution": 0.1298,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.0,
+        "uncertainty": 0.1875
+      }
+    },
+    {
+      "population": "underconfident",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 0.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0211,
+        "mendel_p_low": 0.9083,
+        "resolution": 0.122,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.0,
+        "uncertainty": 0.1888
+      }
+    },
+    {
+      "population": "underconfident",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 0.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0226,
+        "mendel_p_low": 0.9986,
+        "resolution": 0.0962,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.0,
+        "uncertainty": 0.1891
+      }
+    },
+    {
+      "population": "noisy",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 0.084,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.084,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0233,
+        "resolution": 0.16,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.2026,
+        "uncertainty": 0.1789
+      }
+    },
+    {
+      "population": "noisy",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 0.014,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.014,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0215,
+        "mendel_p_low": 0.7544,
+        "resolution": 0.1518,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.2061,
+        "uncertainty": 0.1848
+      }
+    },
+    {
+      "population": "noisy",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 0.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0218,
+        "mendel_p_low": 0.8846,
+        "resolution": 0.1454,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.2063,
+        "uncertainty": 0.1879
+      }
+    },
+    {
+      "population": "noisy",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 0.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0215,
+        "mendel_p_low": 0.9938,
+        "resolution": 0.1224,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.2072,
+        "uncertainty": 0.1885
+      }
+    },
+    {
+      "population": "farmer",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.912,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 1.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.73,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.8526,
+        "resolution": 0.0509,
+        "template_claim_ratio": 0.8,
+        "top_bucket_share": 0.8644,
+        "uncertainty": 0.0554
+      }
+    },
+    {
+      "population": "farmer",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.938,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 1.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.7112,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.843,
+        "resolution": 0.0463,
+        "template_claim_ratio": 0.82,
+        "top_bucket_share": 0.8532,
+        "uncertainty": 0.0544
+      }
+    },
+    {
+      "population": "farmer",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.986,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 1.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.727,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.8535,
+        "resolution": 0.0397,
+        "template_claim_ratio": 0.84,
+        "top_bucket_share": 0.8626,
+        "uncertainty": 0.051
+      }
+    },
+    {
+      "population": "farmer",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 1.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 1.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.727,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.8535,
+        "mendel_p_low": 0.6443,
+        "resolution": 0.0353,
+        "template_claim_ratio": 0.8467,
+        "top_bucket_share": 0.8634,
+        "uncertainty": 0.0514
+      }
+    },
+    {
+      "population": "patient_farmer",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.906,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.73,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0037,
+        "resolution": 0.0466,
+        "template_claim_ratio": 0.8,
+        "top_bucket_share": 0.8643,
+        "uncertainty": 0.0504
+      }
+    },
+    {
+      "population": "patient_farmer",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.956,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.7112,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0039,
+        "resolution": 0.0466,
+        "template_claim_ratio": 0.82,
+        "top_bucket_share": 0.8541,
+        "uncertainty": 0.0543
+      }
+    },
+    {
+      "population": "patient_farmer",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.984,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.727,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0038,
+        "resolution": 0.0401,
+        "template_claim_ratio": 0.84,
+        "top_bucket_share": 0.864,
+        "uncertainty": 0.0514
+      }
+    },
+    {
+      "population": "patient_farmer",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 1.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 1.0,
+        "SUSPICIOUSLY_PERFECT": 0.002,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.727,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0034,
+        "mendel_p_low": 0.6403,
+        "resolution": 0.0364,
+        "template_claim_ratio": 0.8467,
+        "top_bucket_share": 0.8632,
+        "uncertainty": 0.0529
+      }
+    },
+    {
+      "population": "naive_fabricator",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 1.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.335,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0213,
+        "resolution": 0.0075,
+        "template_claim_ratio": 0.95,
+        "top_bucket_share": 0.25,
+        "uncertainty": 0.1875
+      }
+    },
+    {
+      "population": "naive_fabricator",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 1.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 1.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.3336,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0244,
+        "mendel_p_low": 0.0061,
+        "resolution": 0.0169,
+        "template_claim_ratio": 0.98,
+        "top_bucket_share": 0.26,
+        "uncertainty": 0.1824
+      }
+    },
+    {
+      "population": "naive_fabricator",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 1.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 1.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.3334,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0215,
+        "mendel_p_low": 0.0052,
+        "resolution": 0.0107,
+        "template_claim_ratio": 0.99,
+        "top_bucket_share": 0.25,
+        "uncertainty": 0.1875
+      }
+    },
+    {
+      "population": "naive_fabricator",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 1.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 1.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.3333,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0224,
+        "mendel_p_low": 0.0013,
+        "resolution": 0.0132,
+        "template_claim_ratio": 0.9967,
+        "top_bucket_share": 0.25,
+        "uncertainty": 0.1875
+      }
+    },
+    {
+      "population": "smart_fabricator",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 0.092,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.092,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0256,
+        "resolution": 0.1757,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.1816,
+        "uncertainty": 0.1786
+      }
+    },
+    {
+      "population": "smart_fabricator",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 0.012,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.012,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0232,
+        "mendel_p_low": 0.5277,
+        "resolution": 0.1774,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.1845,
+        "uncertainty": 0.1851
+      }
+    },
+    {
+      "population": "smart_fabricator",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 0.004,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.004,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0213,
+        "mendel_p_low": 0.4926,
+        "resolution": 0.1713,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.1873,
+        "uncertainty": 0.1872
+      }
+    },
+    {
+      "population": "smart_fabricator",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 0.006,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.006,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0216,
+        "mendel_p_low": 0.5164,
+        "resolution": 0.1472,
+        "template_claim_ratio": 0.0,
+        "top_bucket_share": 0.1832,
+        "uncertainty": 0.1902
+      }
+    },
+    {
+      "population": "template_spammer",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 0.24,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.032,
+        "NO_DISCRIMINATION": 0.208,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.335,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0206,
+        "resolution": 0.0409,
+        "template_claim_ratio": 0.95,
+        "top_bucket_share": 0.3,
+        "uncertainty": 0.1907
+      }
+    },
+    {
+      "population": "template_spammer",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 0.308,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.004,
+        "NO_DISCRIMINATION": 0.304,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.3336,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0212,
+        "mendel_p_low": 0.4749,
+        "resolution": 0.0291,
+        "template_claim_ratio": 0.98,
+        "top_bucket_share": 0.32,
+        "uncertainty": 0.1894
+      }
+    },
+    {
+      "population": "template_spammer",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 0.318,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.316,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.002,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.3334,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0235,
+        "mendel_p_low": 0.5113,
+        "resolution": 0.0262,
+        "template_claim_ratio": 0.99,
+        "top_bucket_share": 0.33,
+        "uncertainty": 0.192
+      }
+    },
+    {
+      "population": "template_spammer",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 0.226,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.216,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.01,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.3333,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0228,
+        "mendel_p_low": 0.4804,
+        "resolution": 0.0244,
+        "template_claim_ratio": 0.9967,
+        "top_bucket_share": 0.3333,
+        "uncertainty": 0.1919
+      }
+    },
+    {
+      "population": "domain_camper",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.078,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 1.0,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0196,
+        "resolution": 0.1816,
+        "template_claim_ratio": 0.95,
+        "top_bucket_share": 0.087,
+        "uncertainty": 0.1854
+      }
+    },
+    {
+      "population": "domain_camper",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.006,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 1.0,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.022,
+        "mendel_p_low": 0.5246,
+        "resolution": 0.1779,
+        "template_claim_ratio": 0.98,
+        "top_bucket_share": 0.0871,
+        "uncertainty": 0.1883
+      }
+    },
+    {
+      "population": "domain_camper",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.008,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 1.0,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0218,
+        "mendel_p_low": 0.5173,
+        "resolution": 0.168,
+        "template_claim_ratio": 0.99,
+        "top_bucket_share": 0.0913,
+        "uncertainty": 0.1887
+      }
+    },
+    {
+      "population": "domain_camper",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.01,
+        "DOMAIN_CONCENTRATION": 1.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 0.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 1.0,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.0,
+        "instant_verify_share": 0.0216,
+        "mendel_p_low": 0.4792,
+        "resolution": 0.1364,
+        "template_claim_ratio": 0.9967,
+        "top_bucket_share": 0.0897,
+        "uncertainty": 0.1885
+      }
+    },
+    {
+      "population": "bulk_importer",
+      "n": 20,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.058,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 1.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.85,
+        "instant_verify_share": 0.0267,
+        "resolution": 0.1803,
+        "template_claim_ratio": 0.95,
+        "top_bucket_share": 0.1273,
+        "uncertainty": 0.1837
+      }
+    },
+    {
+      "population": "bulk_importer",
+      "n": 50,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.006,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.0,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 1.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.84,
+        "instant_verify_share": 0.023,
+        "mendel_p_low": 0.5,
+        "resolution": 0.1769,
+        "template_claim_ratio": 0.98,
+        "top_bucket_share": 0.13,
+        "uncertainty": 0.1869
+      }
+    },
+    {
+      "population": "bulk_importer",
+      "n": 100,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.008,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 1.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.85,
+        "instant_verify_share": 0.0203,
+        "mendel_p_low": 0.48,
+        "resolution": 0.1687,
+        "template_claim_ratio": 0.99,
+        "top_bucket_share": 0.1247,
+        "uncertainty": 0.1873
+      }
+    },
+    {
+      "population": "bulk_importer",
+      "n": 300,
+      "replicates": 500,
+      "any_flag_rate": 1.0,
+      "flag_rates": {
+        "LOW_OUTCOME_VARIANCE": 0.0,
+        "NO_DISCRIMINATION": 0.0,
+        "CONFIDENCE_CONCENTRATION": 0.0,
+        "SUSPICIOUSLY_PERFECT": 0.01,
+        "DOMAIN_CONCENTRATION": 0.0,
+        "DUPLICATE_CLAIMS": 0.0,
+        "INSTANT_VERIFICATION": 0.0,
+        "UNWITNESSED_HISTORY": 1.0
+      },
+      "mean_metrics": {
+        "domain_hhi": 0.2,
+        "duplicate_claim_ratio": 0.0,
+        "import_share": 0.85,
+        "instant_verify_share": 0.0242,
+        "mendel_p_low": 0.5002,
+        "resolution": 0.1424,
+        "template_claim_ratio": 0.9967,
+        "top_bucket_share": 0.1274,
+        "uncertainty": 0.1895
+      }
+    }
+  ]
+}

@@ -999,3 +999,95 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: benchmark harness chunk is ready to commit. It can emit JSON and
 Markdown artifacts, but the full 500-replicate bench is intentionally the next
 chunk so the result can cite this committed harness SHA.
+
+## EXP-011 - Phase 2 Full 500-Replicate Benchmark Run
+
+Hypothesis: the committed benchmark harness can run the full NORTHSTAR grid
+(required populations x n={20,50,100,300} x 500 replicates) within the target
+runtime and emit durable JSON/Markdown artifacts for threshold analysis.
+
+Mini-plan:
+
+1. Run `lab/run_bench.py` with default 500 replicates from committed harness
+   SHA `e9b87f6`.
+2. Save JSON under `lab/results/bench-e9b87f6.json` and update
+   `lab/REPORT.md`.
+3. Inspect headline honest false-positive and attacker detection rates.
+4. Record runtime, result paths, and immediate failures/threshold concerns in
+   the notebook.
+5. Run the full dev-venv suite after artifact generation.
+
+Result:
+
+First timing attempt:
+
+```text
+$ /usr/bin/time -f "elapsed_seconds=%e" /tmp/caliber-northstar-p1-properties/bin/python lab/run_bench.py
+/bin/bash: line 1: /usr/bin/time: No such file or directory
+```
+
+Rerun used a Python `time.perf_counter()` wrapper around the committed harness.
+
+```text
+Wrote /home/satishocoin/caliber/lab/results/bench-e9b87f6.json
+Wrote /home/satishocoin/caliber/lab/REPORT.md
+elapsed_seconds=234.98
+```
+
+Artifacts:
+
+- `lab/results/bench-e9b87f6.json` (36K)
+- `lab/REPORT.md` (8K)
+- 44 rows: 11 populations x 4 sample sizes.
+- 500 replicates per cell.
+
+Headline n=50/n=100 rates:
+
+```text
+honest n=50 any=0.002; n=100 any=0.004
+overconfident n=50 any=0.046; n=100 any=0.010
+underconfident n=50 any=0.002; n=100 any=0.000
+noisy n=50 any=0.014; n=100 any=0.000
+farmer n=50 any=1.000; n=100 any=1.000
+patient_farmer n=50 any=1.000; n=100 any=1.000
+naive_fabricator n=50 any=1.000; n=100 any=1.000
+smart_fabricator n=50 any=0.012; n=100 any=0.004
+template_spammer n=50 any=0.308; n=100 any=0.318
+domain_camper n=50 any=1.000; n=100 any=1.000
+bulk_importer n=50 any=1.000; n=100 any=1.000
+```
+
+Immediate interpretation:
+
+- The current constants meet the Phase 2 honest FPR target at n=50 for the
+  primary honest population (0.2%) and stay below 5% for overconfident,
+  underconfident, noisy, and smart-fabricator boundary streams at n=50.
+- Farmer and patient farmer are detected with 100% any-flag power at n=50 and
+  n=100. Patient farmer correctly avoids `INSTANT_VERIFICATION` but is caught
+  by distributional/domain concentration signals.
+- Naive fabrication is detected with 100% power at n>=50 by
+  `SUSPICIOUSLY_PERFECT` and `NO_DISCRIMINATION`.
+- Smart fabrication remains effectively indistinguishable from honest by
+  record-only statistics (1.2% any flag at n=50, 0.4% at n=100). This supports
+  the threat-model boundary rather than a threshold change.
+- Template spammer is not directly flagged for templating; any flags come
+  mostly from `NO_DISCRIMINATION`. This matches the current design that
+  `template_claim_ratio` is a metric, not a flag.
+- At n=20, honest-like populations can exceed 5% any-flag rate due to
+  `LOW_OUTCOME_VARIANCE`; Phase 2's threshold target is stated at n=50, but
+  the n=20 behavior should be mentioned in `lab/THREATMODEL.md`.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 41%]
+........................................................................ [ 83%]
+.............................                                            [100%]
+173 passed in 6.75s
+```
+
+Decision: the initial full bench is usable evidence for threshold
+re-derivation. Next chunk should convert these rates into threshold operating
+point comments in `integrity.py` and decide whether any current threshold
+actually changes.
