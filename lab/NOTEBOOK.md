@@ -931,3 +931,71 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: simulator zoo chunk is complete. It provides deterministic inputs
 for the next benchmark harness, but does not yet estimate FPR/power or change
 any integrity threshold.
+
+## EXP-010 - Phase 2 Benchmark Harness
+
+Hypothesis: a deterministic benchmark runner can convert the simulator zoo
+into measurable per-flag firing rates by population and sample size. The first
+chunk should add the harness and fast regression tests; the full 500-replicate
+bench should be run after the harness is committed so result files can cite a
+stable code SHA.
+
+Mini-plan:
+
+1. Add `lab/run_bench.py` with a reusable `run_bench()` function and CLI.
+2. Cover populations x n-grid x replicates, computing `any_flag` and per-flag
+   firing rates from `IntegrityReport`.
+3. Emit JSON under `lab/results/bench-<sha>.json` and Markdown summary at
+   `lab/REPORT.md` when requested.
+4. Add fast tests with small replicate counts to prove determinism and output
+   shape without running the full bench.
+5. Run harness tests and the full dev-venv suite; full 500-replicate bench is
+   the next chunk.
+
+Result:
+
+Added:
+
+- `lab/run_bench.py`
+- `tests/test_lab_run_bench.py`
+
+Smoke-test failures and fixes:
+
+- Direct execution failed first: `python lab/run_bench.py ...` could not import
+  `lab` because Python put `lab/` on `sys.path`. Fix: when run as a script,
+  prepend repo root to `sys.path`.
+- No-write CLI smoke exposed bad simulator baselines: honest streams initially
+  had high `template_claim_ratio`, then high `duplicate_claim_ratio`, because
+  claim text repeated too much. Fix: honest and smart-fabricator claims now use
+  varied nonnumeric marker/path tokens, leaving template spam visible only in
+  the intended populations.
+
+Tiny no-write CLI smoke:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python lab/run_bench.py --replicates 2 --sample-size 20 --no-write
+...
+honest: any_flag_rate=0.0, template_claim_ratio=0.0
+smart_fabricator: any_flag_rate=0.0, template_claim_ratio=0.0
+farmer: any_flag_rate=1.0
+```
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_lab_simulate.py tests/test_lab_run_bench.py -q
+............                                                             [100%]
+12 passed in 0.90s
+```
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 41%]
+........................................................................ [ 83%]
+.............................                                            [100%]
+173 passed in 6.15s
+```
+
+Decision: benchmark harness chunk is ready to commit. It can emit JSON and
+Markdown artifacts, but the full 500-replicate bench is intentionally the next
+chunk so the result can cite this committed harness SHA.

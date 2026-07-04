@@ -18,6 +18,54 @@ from caliber.tracker import Prediction
 
 T0 = datetime(2026, 7, 4, 12, 0, 0, tzinfo=timezone.utc)
 DOMAINS = ("codebase", "behavior", "architecture", "tooling", "facts")
+CLAIM_ADJECTIVES = (
+    "cached",
+    "parsed",
+    "remote",
+    "local",
+    "signed",
+    "queued",
+    "validated",
+    "indexed",
+    "rendered",
+    "compiled",
+)
+CLAIM_SUBJECTS = (
+    "module",
+    "route",
+    "schema",
+    "adapter",
+    "worker",
+    "command",
+    "fixture",
+    "policy",
+    "report",
+    "cache",
+)
+CLAIM_VERBS = (
+    "accepts",
+    "rejects",
+    "loads",
+    "persists",
+    "normalizes",
+    "sorts",
+    "streams",
+    "validates",
+    "summarizes",
+    "anchors",
+)
+CLAIM_OBJECTS = (
+    "payloads",
+    "settings",
+    "events",
+    "snapshots",
+    "tokens",
+    "records",
+    "messages",
+    "artifacts",
+    "headers",
+    "results",
+)
 
 Record = dict[str, Any]
 Simulator = Callable[[int, int], list[Record]]
@@ -72,6 +120,27 @@ def _latent_probability(rng: random.Random, sharpness: float) -> float:
     return 0.50 + 0.49 * rng.betavariate(sharpness, sharpness)
 
 
+def _letter_token(i: int) -> str:
+    letters = []
+    value = i
+    while True:
+        value, rem = divmod(value, 26)
+        letters.append(chr(ord("a") + rem))
+        if value == 0:
+            break
+    return "".join(reversed(letters))
+
+
+def _honest_claim(i: int, domain: str) -> str:
+    return (
+        f"{CLAIM_ADJECTIVES[i % len(CLAIM_ADJECTIVES)]} {domain} "
+        f"{CLAIM_SUBJECTS[(i * 3) % len(CLAIM_SUBJECTS)]} "
+        f"{CLAIM_VERBS[(i * 5 + 1) % len(CLAIM_VERBS)]} "
+        f"{CLAIM_OBJECTS[(i * 7 + 2) % len(CLAIM_OBJECTS)]} "
+        f"marker{_letter_token(i)} path{_letter_token(i * 7 + 3)}"
+    )
+
+
 def _honest_record(
     rng: random.Random,
     i: int,
@@ -88,7 +157,7 @@ def _honest_record(
     domain = DOMAINS[i % len(DOMAINS)]
     return _record(
         i,
-        claim=f"{domain} claim {i} resolves as expected",
+        claim=_honest_claim(i, domain),
         confidence=confidence,
         domain=domain,
         outcome=_bernoulli(rng, p),
@@ -251,7 +320,7 @@ def smart_fabricator(n: int, seed: int) -> list[Record]:
         records.append(
             _record(
                 i,
-                claim=f"smart fabricated claim {i}",
+                claim=_honest_claim(i, domain),
                 confidence=confidence,
                 domain=domain,
                 outcome=_bernoulli(rng, confidence),
