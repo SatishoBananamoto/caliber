@@ -11,6 +11,7 @@ from caliber.card import (
     DomainStats,
     BUCKET_RANGES,
     _exact_binomial_p_two_sided,
+    _murphy_decomposition,
 )
 from caliber.storage import MemoryStorage
 
@@ -201,6 +202,8 @@ class TestTrustCard:
         assert "Overall accuracy" in summary
         assert "code" in summary
         assert "95% CI" in summary
+        assert "Brier score" in summary
+        assert "Calibration Z" in summary
 
     def test_perfect_calibration(self):
         """Agent that's right exactly as often as confidence implies."""
@@ -214,6 +217,40 @@ class TestTrustCard:
         card = TrustCard.from_predictions("perfect", preds)
         bucket = card.confidence_buckets["80-89"]
         assert abs(bucket.calibration_gap) < 0.06  # close to 0
+
+    def test_card_level_proper_scores(self):
+        preds = self._make_predictions([
+            (0.80, "x", True),
+            (0.80, "x", True),
+            (0.80, "x", True),
+            (0.80, "x", True),
+            (0.80, "x", False),
+        ])
+        card = TrustCard.from_predictions("proper-score", preds)
+        assert abs(card.brier_score - 0.16) < 1e-12
+        assert abs(card.reliability) < 1e-12
+        assert abs(card.resolution) < 1e-12
+        assert abs(card.uncertainty - 0.16) < 1e-12
+        assert abs(card.calibration_z) < 1e-12
+        assert abs(card.calibration_p - 1.0) < 1e-12
+
+        data = json.loads(card.to_json())
+        cal = data["calibration"]
+        assert cal["brier_score"] == 0.16
+        assert cal["reliability"] == 0.0
+        assert cal["resolution"] == 0.0
+        assert cal["uncertainty"] == 0.16
+        assert cal["calibration_z"] == 0.0
+        assert cal["calibration_p"] == 1.0
+
+    def test_murphy_identity(self):
+        forecasts = [0.6, 0.7, 0.8, 0.9]
+        outcomes = [0, 1, 1, 1]
+        brier, reliability, resolution, uncertainty = _murphy_decomposition(
+            forecasts,
+            outcomes,
+        )
+        assert abs(brier - (reliability - resolution + uncertainty)) < 1e-12
 
     def test_bucket_gap_uses_mean_stated_confidence_not_midpoint(self):
         specs = [(0.70, "x", i < 7) for i in range(10)]

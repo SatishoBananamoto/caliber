@@ -59,6 +59,45 @@ def _exact_binomial_p_two_sided(k: int, n: int, p0: float) -> float:
     )
 
 
+def _murphy_decomposition(
+    forecasts: list[float],
+    outcomes: list[int],
+) -> tuple[float, float, float, float]:
+    """Brier score and exact Murphy decomposition."""
+    n = len(forecasts)
+    brier = sum((f - o) ** 2 for f, o in zip(forecasts, outcomes)) / n
+    base_rate = sum(outcomes) / n
+
+    groups: dict[float, list[int]] = {}
+    for f, o in zip(forecasts, outcomes):
+        groups.setdefault(f, []).append(o)
+
+    reliability = 0.0
+    resolution = 0.0
+    for f, group in groups.items():
+        n_k = len(group)
+        o_k = sum(group) / n_k
+        reliability += n_k * (f - o_k) ** 2
+        resolution += n_k * (o_k - base_rate) ** 2
+    reliability /= n
+    resolution /= n
+    uncertainty = base_rate * (1 - base_rate)
+    return brier, reliability, resolution, uncertainty
+
+
+def _spiegelhalter_z(
+    forecasts: list[float],
+    outcomes: list[int],
+) -> tuple[float, float] | None:
+    """Spiegelhalter's Z and two-sided p-value."""
+    variance = sum(f * (1 - f) for f in forecasts)
+    if variance <= 0:
+        return None
+    z = sum(o - f for f, o in zip(forecasts, outcomes)) / math.sqrt(variance)
+    p_two = 2 * (1 - _norm_cdf(abs(z)))
+    return z, p_two
+
+
 BUCKET_RANGES = [
     (0.50, 0.59, "50-59"),
     (0.60, 0.69, "60-69"),
@@ -208,6 +247,12 @@ class TrustCard:
     overall_accuracy: Optional[float] = None
     mean_confidence: Optional[float] = None
     mean_calibration_gap: Optional[float] = None
+    brier_score: Optional[float] = None
+    reliability: Optional[float] = None
+    resolution: Optional[float] = None
+    uncertainty: Optional[float] = None
+    calibration_z: Optional[float] = None
+    calibration_p: Optional[float] = None
     confidence_buckets: dict[str, BucketStats] = field(default_factory=dict)
     domains: dict[str, DomainStats] = field(default_factory=dict)
     danger_zones: list[str] = field(default_factory=list)
@@ -229,6 +274,15 @@ class TrustCard:
         correct = sum(1 for p in verified if p.outcome)
         overall_accuracy = correct / len(verified)
         mean_confidence = sum(p.confidence for p in verified) / len(verified)
+        forecasts = [p.confidence for p in verified]
+        outcomes = [1 if p.outcome else 0 for p in verified]
+        brier, reliability, resolution, uncertainty = _murphy_decomposition(
+            forecasts,
+            outcomes,
+        )
+        spiegelhalter = _spiegelhalter_z(forecasts, outcomes)
+        calibration_z = spiegelhalter[0] if spiegelhalter is not None else None
+        calibration_p = spiegelhalter[1] if spiegelhalter is not None else None
 
         # Build confidence buckets
         buckets: dict[str, BucketStats] = {}
@@ -301,6 +355,12 @@ class TrustCard:
             overall_accuracy=overall_accuracy,
             mean_confidence=mean_confidence,
             mean_calibration_gap=mean_gap,
+            brier_score=brier,
+            reliability=reliability,
+            resolution=resolution,
+            uncertainty=uncertainty,
+            calibration_z=calibration_z,
+            calibration_p=calibration_p,
             confidence_buckets=buckets,
             domains=domains,
             danger_zones=danger_zones,
@@ -326,6 +386,14 @@ class TrustCard:
             cal["mean_confidence"] = round(self.mean_confidence, 3)
         if self.mean_calibration_gap is not None:
             cal["mean_calibration_gap"] = round(self.mean_calibration_gap, 3)
+        if self.brier_score is not None:
+            cal["brier_score"] = round(self.brier_score, 4)
+            cal["reliability"] = round(self.reliability, 4)
+            cal["resolution"] = round(self.resolution, 4)
+            cal["uncertainty"] = round(self.uncertainty, 4)
+        if self.calibration_z is not None and self.calibration_p is not None:
+            cal["calibration_z"] = round(self.calibration_z, 4)
+            cal["calibration_p"] = round(self.calibration_p, 4)
 
         if self.confidence_buckets:
             cal["confidence_buckets"] = {
@@ -369,6 +437,18 @@ class TrustCard:
             direction = "overconfident" if self.mean_calibration_gap > 0 else "underconfident"
             lines.append(
                 f"Calibration gap: {abs(self.mean_calibration_gap):.1%} ({direction})"
+            )
+        if self.brier_score is not None:
+            lines.append(
+                f"Brier score: {self.brier_score:.4f} "
+                f"(reliability {self.reliability:.4f} - "
+                f"resolution {self.resolution:.4f} + "
+                f"uncertainty {self.uncertainty:.4f})"
+            )
+        if self.calibration_z is not None and self.calibration_p is not None:
+            lines.append(
+                f"Calibration Z: {self.calibration_z:.3f} "
+                f"(p={self.calibration_p:.3f})"
             )
 
         if self.confidence_buckets:

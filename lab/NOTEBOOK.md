@@ -567,3 +567,48 @@ Real-corpus smoke:
 Decision: D4 fixed for bucket significance. The public `significant` field is
 unchanged, but now comes from an exact binomial test for n >= 5 instead of the
 normal approximation.
+
+## EXP-005 - Phase 1 Card-Level Proper Scores
+
+Hypothesis: Trust Cards should expose card-level scoring and binning-free
+calibration statistics, not only bucket tables. Brier/Murphy decomposition
+shows reliability, resolution, and uncertainty; Spiegelhalter Z tests
+aggregate miscalibration without depending on buckets.
+
+Mini-plan:
+
+1. Add card-local helpers for Murphy decomposition and Spiegelhalter Z.
+2. Add `brier_score`, `reliability`, `resolution`, `uncertainty`,
+   `calibration_z`, and `calibration_p` fields to `TrustCard`.
+3. Emit these fields in Trust Card JSON and human summary.
+4. Add deterministic tests for a perfectly calibrated one-forecast stream.
+5. Run targeted card tests and the full suite.
+
+Result:
+
+```text
+$ python3 -m pytest tests/test_card.py -q
+....................................                                     [100%]
+36 passed in 0.15s
+```
+
+```text
+$ python3 -m pytest -q
+........................................................................ [ 47%]
+........................................................................ [ 94%]
+........                                                                 [100%]
+152 passed in 1.68s
+```
+
+Real-corpus smoke:
+
+- `test` Trust Card JSON now includes `brier_score`, `reliability`,
+  `resolution`, `uncertainty`, `calibration_z`, and `calibration_p`.
+- Current `test` values: Brier `0.1635`, reliability `0.0118`,
+  resolution `0.0239`, uncertainty `0.1756`, calibration_z `1.3861`,
+  calibration_p `0.1657`.
+- Human summary renders the same Brier decomposition and Z result.
+
+Decision: card-level proper-score fields are surfaced on Trust Cards. This
+makes the card more comparable to the integrity report and gives a
+binning-free calibration test alongside the bucket table.
