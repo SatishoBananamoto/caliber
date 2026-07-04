@@ -11,6 +11,27 @@
 
 ## NEXT SESSION — START HERE
 
+### External review response (2026-07-05)
+
+An external review of `1a54be2` (ranges f6fa44d..e127398 and e127398..1a54be2)
+found four issues; all are fixed on `northstar2`:
+
+1. **P1 — spec/implementation non-equivalence.** `verify-log` accepted events
+   that violated SPEC section 2's MUST table (wrong version, unknown type,
+   empty event_id, wrong agent, bad datetime, non-object payload). Fix:
+   `event_log.verify()` now enforces the full event-object table per line
+   (SPEC 3.2 step 4 added); new golden vector `log-structural/`; the
+   reviewer's six-probe set is a parametrized regression test. Independent
+   spec-only verifier re-run: agrees with the implementation on all three
+   vectors. Suite: 213 passing.
+2. **P2 — stale "proves calibration" wording** removed from
+   GETTING_STARTED.md, card.py, and integrity.py docstrings; repo-wide sweep
+   for proof-language came back clean.
+3. **P2 — AGENTS.md branch conflict** fixed: active-branch guidance now
+   defers to GAUGE.md instead of hardcoding `northstar`.
+4. **P3 — dirty worktree gate**: pre-existing untracked docs explainer
+   artifacts are now gitignored.
+
 ### Active northstar run (2026-07-04)
 
 Read `NORTHSTAR2.md` first, then the inherited constraints in `NORTHSTAR.md`.
