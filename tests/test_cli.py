@@ -293,6 +293,77 @@ def test_verify_log_command_fails_on_tampered_log(tmp_path):
     assert "Failed line: 2" in result.output
 
 
+def test_anchor_command_appends_anchor_and_keeps_card_replay_working(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+
+    anchor = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "anchor",
+            "--label",
+            "release-candidate",
+            "--json",
+        ],
+    )
+
+    assert anchor.exit_code == 0
+    data = json.loads(anchor.output)
+    assert data["event_count_before"] == 2
+    assert data["event_count_after"] == 3
+    assert data["label"] == "release-candidate"
+    assert data["anchored_head"] != data["new_head"]
+
+    event_path = tmp_path / "cli-test.events.jsonl"
+    events = [json.loads(line) for line in event_path.read_text().splitlines()]
+    assert events[-1]["type"] == "anchor"
+    assert events[-1]["payload"]["anchored_head"] == data["anchored_head"]
+
+    verify = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-log",
+            "--head",
+            data["new_head"],
+        ],
+    )
+    assert verify.exit_code == 0
+
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert card.exit_code == 0
+    assert json.loads(card.output)["calibration"]["total_verified"] == 1
+
+
+def test_anchor_command_fails_on_invalid_log(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+    event_path = tmp_path / "cli-test.events.jsonl"
+    lines = event_path.read_text().splitlines()
+    event = json.loads(lines[0])
+    event["payload"]["prediction"]["claim"] = "tampered"
+    lines[0] = json.dumps(event, sort_keys=True, separators=(",", ":"))
+    event_path.write_text("\n".join(lines) + "\n")
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "anchor"],
+    )
+
+    assert result.exit_code == 1
+    assert "Error: event log invalid" in result.output
+
+
 def test_mcp_config_prints_json(tmp_path):
     runner = CliRunner()
 

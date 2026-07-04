@@ -357,6 +357,79 @@ def verify_log(ctx, expected_head: str | None, as_json: bool):
         sys.exit(1)
 
 
+@cli.command("anchor")
+@click.option("--label", default=None, help="Optional local label for this anchor.")
+@click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.pass_context
+def anchor(ctx, label: str | None, as_json: bool):
+    """Append and print an anchor event for the current event-log head."""
+    from caliber.event_log import EventLog
+
+    log = EventLog(ctx.obj["store"])
+    path = log.path_for(ctx.obj["agent"])
+    if not path.exists():
+        result = {
+            "agent_name": ctx.obj["agent"],
+            "path": str(path),
+            "anchored_head": None,
+            "new_head": None,
+            "event_count_before": 0,
+            "event_count_after": 0,
+            "label": label,
+            "error": "No event log found.",
+        }
+        if as_json:
+            click.echo(json.dumps(result, indent=2))
+        else:
+            click.echo(f"Error: {result['error']} ({path})", err=True)
+        sys.exit(1)
+
+    verification = log.verify(ctx.obj["agent"])
+    if not verification.valid:
+        result = {
+            "agent_name": ctx.obj["agent"],
+            "path": str(path),
+            "anchored_head": None,
+            "new_head": verification.head_hash,
+            "event_count_before": verification.event_count,
+            "event_count_after": verification.event_count,
+            "label": label,
+            "error": verification.error,
+        }
+        if as_json:
+            click.echo(json.dumps(result, indent=2))
+        else:
+            click.echo(f"Error: event log invalid: {verification.error}", err=True)
+        sys.exit(1)
+
+    payload = {
+        "anchored_head": verification.head_hash,
+        "anchored_event_count": verification.event_count,
+        "label": label,
+    }
+    appended = log.append(ctx.obj["agent"], "anchor", payload)
+    result = {
+        "agent_name": ctx.obj["agent"],
+        "path": str(path),
+        "anchored_head": verification.head_hash,
+        "new_head": appended.line_hash,
+        "event_count_before": verification.event_count,
+        "event_count_after": verification.event_count + 1,
+        "label": label,
+        "error": None,
+    }
+    if as_json:
+        click.echo(json.dumps(result, indent=2))
+    else:
+        click.echo(f"Anchored head: {verification.head_hash}")
+        click.echo(f"New head:      {appended.line_hash}")
+        click.echo(f"Events:        {verification.event_count} -> {verification.event_count + 1}")
+        click.echo(f"Path:          {path}")
+        if label:
+            click.echo(f"Label:         {label}")
+        click.echo("Use the new head with: caliber verify-log --head <new-head>")
+
+
 @cli.command("mcp-config")
 @click.option("--install", is_flag=True, help="Write the config into an MCP JSON file.")
 @click.option(

@@ -1736,3 +1736,68 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: users can now verify event-log structure and compare an externally
 saved head. Next chunk should add `caliber anchor`, which records or prints the
 current head in a way `verify-log --head` can later use.
+
+## EXP-022 - Phase 3 anchor CLI
+
+Hypothesis: `caliber anchor` should make the current chain head easy to paste
+into an external record while also appending an internal `anchor` event. Because
+appending the anchor event changes the log head, the command must report both
+the pre-anchor head being anchored and the new post-anchor head to use with
+future `verify-log --head` checks.
+
+Mini-plan:
+
+1. Add `caliber anchor` with text and JSON output.
+2. Append an `anchor` event carrying the pre-anchor head, event count, and
+   optional label.
+3. Teach event-log replay in `FileStorage` to ignore `anchor` events for
+   prediction reconstruction while still verifying the chain structurally.
+4. Add tests that anchor prints both heads, `verify-log --head <new_head>`
+   succeeds, and normal card generation still works after an anchor event.
+5. Run CLI/storage/event-log tests, then the full suite.
+
+Result:
+
+Added `caliber anchor`:
+
+- verifies the current log before anchoring;
+- appends an `anchor` event with the pre-anchor head, event count, and optional
+  local label;
+- reports both `anchored_head` and `new_head`;
+- supports `--json`;
+- fails on missing or invalid logs.
+
+Storage replay now ignores `anchor` events for prediction reconstruction while
+the event-log verifier still validates their position in the chain.
+
+Tests added:
+
+- anchor appends an event and reports both heads;
+- `verify-log --head <new_head>` succeeds after anchoring;
+- card generation still works after an anchor event;
+- anchor fails on invalid logs.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_cli.py -q
+.................                                                        [100%]
+17 passed in 3.50s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_event_log.py -q
+.......                                                                  [100%]
+7 passed in 1.25s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_storage.py -q
+................                                                         [100%]
+16 passed in 0.89s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 36%]
+........................................................................ [ 73%]
+....................................................                     [100%]
+196 passed in 11.83s
+```
+
+Decision: anchored-head workflow now exists locally. Next chunk should add
+explicit `caliber migrate` for legacy JSON stores, then `verify-card`.

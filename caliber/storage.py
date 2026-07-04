@@ -81,6 +81,8 @@ class FileStorage(Storage):
             if event_type in {"predicted", "imported"}:
                 prediction = Prediction.from_dict(payload["prediction"])
                 predictions[prediction.id] = prediction
+            elif event_type == "anchor":
+                continue
             elif event_type == "verified":
                 prediction_id = payload["prediction_id"]
                 if prediction_id not in predictions:
