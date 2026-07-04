@@ -525,3 +525,45 @@ Real-corpus smoke:
 Decision: D3 fixed for fixed buckets. Wilson intervals make small-bucket
 uncertainty explicit, including visibly wide intervals such as the 1-sample
 `90-99` bucket (`20.7%-100.0%` in the current `test` corpus).
+
+## EXP-004 - Phase 1 D4 Exact Binomial Significance
+
+Hypothesis: the current normal approximation can misstate bucket significance
+near the small-sample threshold. An exact two-sided binomial test keeps the
+same public `significant` field but removes the approximation error. The D1
+minimum-data gate remains: buckets with fewer than 5 predictions still return
+`None`.
+
+Mini-plan:
+
+1. Add a stdlib-only exact two-sided binomial helper using `math.lgamma`.
+2. Replace the normal approximation inside `BucketStats.significant`.
+3. Add a known-value test for k=9, n=10, p0=0.5 -> p ~= 0.021484.
+4. Run targeted card tests and the full suite.
+
+Result:
+
+```text
+$ python3 -m pytest tests/test_card.py -q
+..................................                                       [100%]
+34 passed in 0.15s
+```
+
+```text
+$ python3 -m pytest -q
+........................................................................ [ 48%]
+........................................................................ [ 96%]
+......                                                                   [100%]
+150 passed in 1.54s
+```
+
+Real-corpus smoke:
+
+- `default` and `test` card significance flags stayed stable under the exact
+  test in current data.
+- Added known-value regression: `P(X as or more unlikely than 9 successes out
+  of 10 at p0=0.5) = 0.021484375`.
+
+Decision: D4 fixed for bucket significance. The public `significant` field is
+unchanged, but now comes from an exact binomial test for n >= 5 instead of the
+normal approximation.

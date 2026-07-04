@@ -25,6 +25,40 @@ def _norm_cdf(x: float) -> float:
     return 0.5 * math.erfc(-x / math.sqrt(2))
 
 
+def _binomial_pmf(k: int, n: int, p: float) -> float:
+    """Binomial probability mass in log-space."""
+    if p <= 0:
+        return 1.0 if k == 0 else 0.0
+    if p >= 1:
+        return 1.0 if k == n else 0.0
+    log_pmf = (
+        math.lgamma(n + 1)
+        - math.lgamma(k + 1)
+        - math.lgamma(n - k + 1)
+        + k * math.log(p)
+        + (n - k) * math.log1p(-p)
+    )
+    return math.exp(log_pmf)
+
+
+def _exact_binomial_p_two_sided(k: int, n: int, p0: float) -> float:
+    """Two-sided exact binomial p-value.
+
+    Sums every outcome whose PMF is no larger than the observed outcome's PMF,
+    matching the probability-ordering definition from NORTHSTAR.md.
+    """
+    observed = _binomial_pmf(k, n, p0)
+    tolerance = observed * (1 + 1e-9)
+    return min(
+        1.0,
+        sum(
+            _binomial_pmf(i, n, p0)
+            for i in range(n + 1)
+            if _binomial_pmf(i, n, p0) <= tolerance
+        ),
+    )
+
+
 BUCKET_RANGES = [
     (0.50, 0.59, "50-59"),
     (0.60, 0.69, "60-69"),
@@ -98,22 +132,17 @@ class BucketStats:
     def significant(self) -> Optional[bool]:
         """Is the calibration gap statistically significant (p < 0.05)?
 
-        Uses normal approximation to binomial test. Returns None if
-        insufficient data (< 5 predictions).
+        Uses an exact two-sided binomial test. Returns None if insufficient
+        data (< 5 predictions).
         """
         if self.predictions < 5 or self.accuracy is None:
             return None
         p0 = self.expected_accuracy
-        p_hat = self.accuracy
-        n = self.predictions
-        # Normal approximation to binomial
-        se = math.sqrt(p0 * (1 - p0) / n)
-        if se == 0:
-            return None
-        z = (p_hat - p0) / se
-        # Two-sided test: is the gap significantly different from zero?
-        # Using standard normal CDF approximation
-        p_value = 2 * (1 - _norm_cdf(abs(z)))
+        p_value = _exact_binomial_p_two_sided(
+            self.correct,
+            self.predictions,
+            p0,
+        )
         return p_value < 0.05
 
     def to_dict(self) -> dict:

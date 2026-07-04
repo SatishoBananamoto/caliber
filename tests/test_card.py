@@ -5,7 +5,13 @@ import pytest
 from datetime import datetime, timezone
 
 from caliber.tracker import TrustTracker, Prediction
-from caliber.card import TrustCard, BucketStats, DomainStats, BUCKET_RANGES
+from caliber.card import (
+    TrustCard,
+    BucketStats,
+    DomainStats,
+    BUCKET_RANGES,
+    _exact_binomial_p_two_sided,
+)
 from caliber.storage import MemoryStorage
 
 
@@ -266,6 +272,10 @@ class TestBucketSignificance:
         b = BucketStats(label="90-99", predictions=2, correct=2)
         d = b.to_dict()
         assert d.get("insufficient_data") is True
+
+    def test_exact_binomial_known_value(self):
+        p_value = _exact_binomial_p_two_sided(9, 10, 0.5)
+        assert abs(p_value - 0.021484375) < 1e-9
 
 
 class TestStrengthZones:
