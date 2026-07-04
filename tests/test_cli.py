@@ -456,6 +456,129 @@ def test_migrate_command_refuses_existing_event_log(tmp_path):
     assert "event log already exists" in result.output
 
 
+def test_verify_card_command_accepts_matching_card(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=3)
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert card.exit_code == 0
+    card_path = tmp_path / "card.json"
+    card_path.write_text(card.output)
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-card",
+            str(card_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert "Card verified:" in result.output
+    assert "Checked: calibration" in result.output
+
+
+def test_verify_card_command_accepts_matching_integrity_card(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=25)
+    card = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "card",
+            "--with-integrity",
+            "--json",
+        ],
+    )
+    assert card.exit_code == 0
+    card_path = tmp_path / "card-with-integrity.json"
+    card_path.write_text(card.output)
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-card",
+            str(card_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["valid"] is True
+    assert data["checked"] == ["calibration", "integrity"]
+
+
+def test_verify_card_command_rejects_tampered_statistic(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=3)
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert card.exit_code == 0
+    data = json.loads(card.output)
+    data["calibration"]["total_verified"] = 99
+    card_path = tmp_path / "tampered-card.json"
+    card_path.write_text(json.dumps(data) + "\n")
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-card",
+            str(card_path),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Card verification failed:" in result.output
+    assert "$.calibration.total_verified" in result.output
+
+
+def test_verify_card_command_rejects_agent_mismatch(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--json"],
+    )
+    assert card.exit_code == 0
+    card_path = tmp_path / "card.json"
+    card_path.write_text(card.output)
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "other-agent",
+            "--store",
+            str(tmp_path),
+            "verify-card",
+            str(card_path),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "does not match selected agent" in result.output
+
+
 def test_mcp_config_prints_json(tmp_path):
     runner = CliRunner()
 

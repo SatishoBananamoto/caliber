@@ -1863,3 +1863,66 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: legacy JSON migration exists and is explicit about unwitnessed
 history. Next chunk should implement `verify-card` by recomputing a card from
 the event-log-backed store and comparing every card statistic.
+
+## EXP-024 - Phase 3 verify-card CLI
+
+Hypothesis: a saved Trust Card can be verified by replaying the event log,
+recomputing the card, and comparing all non-timestamp statistics. If the card
+contains an integrity section, that section must be recomputed too.
+
+Mini-plan:
+
+1. Add `caliber verify-card <card.json>` with text and JSON output.
+2. Require the card's `agent_name` to match the selected agent and require a
+   valid event log before recomputing.
+3. Compare the recomputed card to the saved card while ignoring generated
+   timestamp fields only.
+4. Add tests for valid cards, valid cards with integrity, tampered card
+   statistics, and agent mismatch.
+5. Run CLI/card/event-log tests, then the full suite.
+
+Result:
+
+Added `caliber verify-card <card.json>`:
+
+- requires card `agent_name` to match the selected CLI agent;
+- requires an existing valid event log;
+- recomputes the Trust Card from the event-log-backed store;
+- ignores `generated` timestamp fields only;
+- compares calibration, and recomputes/compares integrity when the saved card
+  includes an integrity section;
+- reports the first mismatch path and exits non-zero on mismatch.
+
+Tests added:
+
+- matching card verifies;
+- matching card with integrity verifies;
+- tampered `calibration.total_verified` is rejected;
+- agent mismatch is rejected before store lookup ambiguity.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_cli.py -q
+.......................                                                  [100%]
+23 passed in 3.24s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_card.py tests/test_card_properties.py -q
+.............................................                            [100%]
+45 passed in 3.23s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_event_log.py tests/test_storage.py -q
+.......................                                                  [100%]
+23 passed in 0.92s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 71%]
+..........................................................               [100%]
+202 passed in 18.90s
+```
+
+Decision: `verify-card` now closes the core "card agrees with log" requirement
+for event-log-backed stores. Remaining Phase 3 gate work: real-corpus
+migration round-trip, commitment docstring/README honesty, and a phase-gate
+audit/update.

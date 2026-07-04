@@ -35,6 +35,52 @@ def _mcp_server_config(python_cmd: str, cwd: str) -> dict:
     }
 
 
+def _strip_generated_fields(value):
+    if isinstance(value, dict):
+        return {
+            key: _strip_generated_fields(item)
+            for key, item in value.items()
+            if key != "generated"
+        }
+    if isinstance(value, list):
+        return [_strip_generated_fields(item) for item in value]
+    return value
+
+
+def _first_mismatch(expected, actual, path: str = "$") -> str | None:
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        expected_keys = set(expected)
+        actual_keys = set(actual)
+        missing = sorted(expected_keys - actual_keys)
+        if missing:
+            return f"{path}.{missing[0]} missing from saved card"
+        unexpected = sorted(actual_keys - expected_keys)
+        if unexpected:
+            return f"{path}.{unexpected[0]} unexpected in saved card"
+        for key in sorted(expected):
+            mismatch = _first_mismatch(expected[key], actual[key], f"{path}.{key}")
+            if mismatch:
+                return mismatch
+        return None
+
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return f"{path} length expected {len(expected)}, got {len(actual)}"
+        for index, (expected_item, actual_item) in enumerate(zip(expected, actual)):
+            mismatch = _first_mismatch(
+                expected_item,
+                actual_item,
+                f"{path}[{index}]",
+            )
+            if mismatch:
+                return mismatch
+        return None
+
+    if expected != actual:
+        return f"{path} expected {expected!r}, got {actual!r}"
+    return None
+
+
 @click.group()
 @click.option("--agent", "-a", default="default", help="Agent name.")
 @click.option("--store", "-s", default=str(DEFAULT_STORE), help="Storage directory.")
@@ -457,6 +503,102 @@ def migrate(ctx, as_json: bool):
         click.echo(f"Event log: {result['event_log_path']}")
         click.echo(f"Head:      {result['head_hash']}")
         click.echo("Migration marks existing records as imported/unwitnessed history.")
+
+
+@cli.command("verify-card")
+@click.argument("card_path", type=click.Path(exists=True))
+@click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.pass_context
+def verify_card(ctx, card_path: str, as_json: bool):
+    """Verify a saved Trust Card against the event-log-backed store."""
+    from caliber.event_log import EventLog
+
+    path = Path(card_path)
+    try:
+        saved_card = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise click.ClickException(f"{path} is not valid JSON: {exc}") from exc
+
+    agent_name = ctx.obj["agent"]
+    card_agent = saved_card.get("agent_name")
+    if card_agent != agent_name:
+        result = {
+            "card_path": str(path),
+            "agent_name": agent_name,
+            "valid": False,
+            "error": (
+                f"card agent_name {card_agent!r} does not match selected "
+                f"agent {agent_name!r}"
+            ),
+        }
+        if as_json:
+            click.echo(json.dumps(result, indent=2))
+        else:
+            click.echo(f"Error: {result['error']}", err=True)
+        sys.exit(1)
+
+    log = EventLog(ctx.obj["store"])
+    event_path = log.path_for(agent_name)
+    if not event_path.exists():
+        result = {
+            "card_path": str(path),
+            "agent_name": agent_name,
+            "valid": False,
+            "error": f"No event log found for {agent_name!r}.",
+        }
+        if as_json:
+            click.echo(json.dumps(result, indent=2))
+        else:
+            click.echo(f"Error: {result['error']}", err=True)
+        sys.exit(1)
+
+    log_verification = log.verify(agent_name)
+    if not log_verification.valid:
+        result = {
+            "card_path": str(path),
+            "agent_name": agent_name,
+            "valid": False,
+            "error": f"event log invalid: {log_verification.error}",
+        }
+        if as_json:
+            click.echo(json.dumps(result, indent=2))
+        else:
+            click.echo(f"Error: {result['error']}", err=True)
+        sys.exit(1)
+
+    tracker = _get_tracker(agent_name, ctx.obj["store"])
+    recomputed = tracker.generate_card().to_dict()
+    checked = ["calibration"]
+    if "integrity" in saved_card:
+        from caliber.integrity import IntegrityReport
+
+        report = IntegrityReport.from_predictions(agent_name, tracker.predictions)
+        recomputed["integrity"] = report.to_dict()
+        checked.append("integrity")
+
+    expected = _strip_generated_fields(recomputed)
+    actual = _strip_generated_fields(saved_card)
+    mismatch = _first_mismatch(expected, actual)
+    result = {
+        "card_path": str(path),
+        "agent_name": agent_name,
+        "valid": mismatch is None,
+        "checked": checked,
+        "event_log_head": log_verification.head_hash,
+        "event_count": log_verification.event_count,
+        "error": mismatch,
+    }
+    if as_json:
+        click.echo(json.dumps(result, indent=2))
+    elif mismatch is None:
+        click.echo(f"Card verified: {path}")
+        click.echo(f"Checked: {', '.join(checked)}")
+        click.echo(f"Event log head: {log_verification.head_hash}")
+    else:
+        click.echo(f"Card verification failed: {mismatch}", err=True)
+
+    if mismatch is not None:
+        sys.exit(1)
 
 
 @cli.command("mcp-config")
