@@ -138,3 +138,89 @@ temp `HOME` boundary is being used.
 This handoff is a local release-candidate handoff, not a release. There was no
 `git push`, no tag, no PyPI upload, no `master` checkout, and no runtime
 dependency added.
+
+## Round Two Phase A Handoff - 2026-07-04
+
+Branch: `northstar2`
+Status: Phase A complete in the work tree. Supervisor will create commits.
+Phase B remains BLOCKED because `grep -n "R1-SIGNOFF" GAUGE.md` has no match.
+
+### Explanation To Me
+
+Round two made Caliber easier for an outsider to inspect. `docs/METHOD.md`
+explains the method, the benchmark, and the limits. `docs/SPEC.md` describes
+the exact record and verification format. The new vector files are small
+examples that another implementation can use to check whether it computes the
+same log hashes and the same card.
+
+Important terms:
+
+- Method paper: a written explanation of what Caliber measures and why.
+- Spec: a precise rulebook for records, logs, cards, and verification.
+- Golden vector: a fixed test example with an expected answer.
+- Head hash: the SHA-256 hash at the end of the event-log chain.
+- Standalone proof: a script that recomputes the hash without importing
+  Caliber's own code.
+
+### What Shipped
+
+- A1: `docs/METHOD.md`, including problem statement, related work, estimator
+  choices, adversarial benchmark tables, threat model, limitations,
+  reproduction commands, references, and numeric source map.
+- A2: `docs/SPEC.md` with `spec_version: 0.1`; `tests/vectors/` with valid
+  log, tampered log, manifest, card JSON, and card-producing store; and
+  `tests/test_spec_vectors.py`.
+- A3: permitted leftovers only: CLAUDE identity wording, one AGENTS pointer
+  line, and two README doc links.
+
+### METHOD.md Claims Audit
+
+- Numeric grep found 93 numeric lines in `docs/METHOD.md`.
+- The document's "Numeric Claim Source Map" covers benchmark numbers,
+  thresholds, estimator constants, formula terms, command literals, URL
+  identifiers, and illustrative examples.
+- Citation grep found only the `NORTHSTAR2.md` section 5 source set plus the
+  explicitly allowed estimator classics.
+
+### SPEC Version State
+
+- Current spec version is `0.1`.
+- Current Trust Card version remains `"0.1"`.
+- Current event-log entry version remains `1`.
+- Vector-validating test evidence: `tests/test_spec_vectors.py` -> 3 passed.
+- Standalone stdlib proof recomputed valid vector head
+  `ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442`.
+
+### Engram-Worthy Learnings
+
+- LRN: The spec must state that `verify-log` hashes raw stored line bytes, not
+  a reserialized JSON object. That is necessary for third-party
+  implementations to match Caliber's head hashes.
+- LRN: Last-line edits change the unanchored head but do not fail structural
+  verification unless an expected head is supplied. Specs and method wording
+  must keep that boundary explicit.
+- MST: During A3, the edits stayed inside the allowlist, but the notebook
+  mini-plan was appended immediately after instead of before the tiny edits.
+  Future sessions should add the notebook mini-plan before even small
+  directive-listed cleanups.
+
+### Decisions Needing Satish
+
+- Review whether `docs/METHOD.md` should make the "first tool in the empty
+  cell" claim as written, or soften it further before publication.
+- Decide whether `docs/SPEC.md` v0.1 should be treated as public protocol
+  language before a second implementation exists.
+- Add `R1-SIGNOFF` to `GAUGE.md` only if round-one review is accepted; until
+  then Phase B must stay blocked.
+
+### Remaining Gaps, Re-ranked
+
+1. Phase B is blocked pending explicit `R1-SIGNOFF`.
+2. No signed cards or external adjudication yet; self-adjudication remains the
+   largest trust boundary.
+3. `docs/SPEC.md` has one implementation and executable vectors, but no second
+   implementation has used it yet.
+4. Anchoring remains manual; no timestamping service or registry publish path
+   exists.
+5. External user validation is still open.
+6. No push, tag, PyPI publish, or `master` action happened in this run.

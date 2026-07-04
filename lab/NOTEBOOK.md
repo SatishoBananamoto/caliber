@@ -2344,3 +2344,255 @@ Meta-checkpoint:
 
 Decision: Phase 4 gate is complete locally on `northstar`. No push, no PyPI
 publish, and no `master` touch occurred.
+
+## EXP-030 - Round Two Phase A1 METHOD.md
+
+Hypothesis: `docs/METHOD.md` can make Caliber citable without changing runtime
+behavior if every quantitative claim is tied to existing lab artifacts, tests,
+or the citation list in `NORTHSTAR2.md` section 5.
+
+Mini-plan:
+
+1. Read the current estimator, event-log, benchmark, and threat-model sources.
+2. Draft `docs/METHOD.md` with the exact structure required by
+   `NORTHSTAR2.md` Phase A1.
+3. Keep citations limited to the sources enumerated in `NORTHSTAR2.md`
+   section 5 and keep limitation claims in the main text.
+4. Run a numeric claims audit before the A1 suite check and record the result.
+5. Run the full suite with `/tmp/caliber-northstar-p1-properties/bin/python -m pytest -q`.
+
+Result:
+
+- Added `docs/METHOD.md`.
+- The method paper covers the problem, related work, estimator choices,
+  adversarial benchmark, threat model, limitations, reproduction commands, and
+  a numeric claim source map.
+- External citations are limited to the source set in `NORTHSTAR2.md` section
+  5 plus the explicitly allowed estimator classics.
+- The smart-fabricator and self-adjudication boundaries are in the main text,
+  not footnotes.
+
+Claims audit:
+
+```text
+$ rg -n "https?://|Brier 1950|Murphy 1973|Wilson 1927|Spiegelhalter 1986|Fatebook|PredictionBook|Agentic Confidence Calibration|TrustBench|BayesTruth|mcp-confidence|Calibeating|Forecast hedging|Gneiting" docs/METHOD.md
+<matches were only the NORTHSTAR2 section 5 source labels/URLs and allowed classics>
+
+$ rg -n "[0-9]" docs/METHOD.md
+<every numeric claim is covered by docs/METHOD.md "Numeric Claim Source Map";
+command literals and URL identifiers are classified there separately>
+```
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 71%]
+..........................................................               [100%]
+202 passed in 20.74s
+```
+
+Decision: A1 is complete as a work-tree deliverable. No behavior files changed.
+
+## EXP-031 - Round Two Phase A2 SPEC.md and golden vectors
+
+Hypothesis: `docs/SPEC.md` is honest only if a second implementation can
+validate the included golden vectors without reading Caliber source. The repo
+test should validate the vectors through current code; the phase-gate notebook
+proof should recompute at least the vector head hash with a standalone stdlib
+script.
+
+Mini-plan:
+
+1. Draft `docs/SPEC.md` as a normative v0.1 spec covering only implemented
+   fields, event types, commitments, anchors, card JSON, and verification.
+2. Add `tests/vectors/` with a valid log, tampered log, manifest, card JSON,
+   and the event-log-backed store that produces the card.
+3. Add a pytest module that validates the event-log vector head, tamper
+   failure, and card-vs-store vector.
+4. Run the targeted vector test.
+5. Run the full suite with `/tmp/caliber-northstar-p1-properties/bin/python -m pytest -q`.
+
+Result:
+
+- Added `docs/SPEC.md` with `spec_version: 0.1`.
+- Added executable golden vectors under `tests/vectors/`:
+  valid log, tampered log, manifest, saved card, and card-producing store.
+- Added `tests/test_spec_vectors.py`.
+- The vector manifest pins valid log head
+  `ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442`,
+  tamper failure `prev_hash does not match previous line hash` at line 2, and
+  card-store head
+  `9f23e8157f376de86ce3c01115b6900188a60e2b932592ef340b0cf873e8e72a`.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_spec_vectors.py -q
+...                                                                      [100%]
+3 passed in 0.98s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+.............................................................            [100%]
+205 passed in 21.65s
+```
+
+Decision: A2 is complete as a work-tree deliverable. Phase B remains blocked;
+the spec intentionally excludes signed cards and external adjudication.
+
+## EXP-032 - Round Two Phase A3 permitted leftover docs
+
+Hypothesis: The round-one leftover edits can be limited to the exact A3
+surface: CLAUDE identity wording, one AGENTS pointer line, and two README doc
+links.
+
+Mini-plan:
+
+1. Change only the first identity wording in `CLAUDE.md` from trust-protocol
+   language to calibration-instrument language.
+2. Add one `AGENTS.md` pointer to `NORTHSTAR2.md`, `docs/METHOD.md`, and
+   `docs/SPEC.md`.
+3. Add only two README links: METHOD and SPEC.
+4. Run the full suite with `/tmp/caliber-northstar-p1-properties/bin/python -m pytest -q`.
+
+Process note: I applied the small A3 edits after stating this scope in the
+thread, but before appending this notebook mini-plan. That missed the literal
+NORTHSTAR notebook-before-edit ordering. The file edits themselves remained
+inside the A3 allowlist.
+
+Result:
+
+- `CLAUDE.md` now says "Calibration instrument for AI agents" in the opening
+  identity wording.
+- `AGENTS.md` now points to the active round-two directive and Phase A docs.
+- `README.md` now links to `docs/METHOD.md` and `docs/SPEC.md` from the
+  existing quick-start docs area.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+.............................................................            [100%]
+205 passed in 33.12s
+```
+
+Decision: A3 is complete as a work-tree deliverable. No README wording beyond
+the two doc links was changed.
+
+## EXP-033 - Round Two Phase A gate
+
+Hypothesis: Phase A is complete only if the method claims are auditable, the
+spec vectors are executable, a standalone script can recompute a vector head
+without importing Caliber, compileall is clean, the full suite is green, and
+Phase B remains blocked without `R1-SIGNOFF`.
+
+Mini-plan:
+
+1. Re-run the METHOD numeric audit and citation-boundary check.
+2. Recompute the valid vector head with a standalone stdlib script that imports
+   nothing from `caliber/`.
+3. Run `python -m compileall -q caliber`.
+4. Confirm `R1-SIGNOFF` is absent and do not start Phase B.
+5. Update `GAUGE.md` and append the Round Two section to `lab/HANDOFF.md`.
+6. Run the full suite after gate documentation changes.
+
+METHOD claims audit:
+
+```text
+$ rg -n "[0-9]" docs/METHOD.md | wc -l
+93
+
+$ nl -ba docs/METHOD.md | sed -n '348,372p'
+348
+349 | number or range | claim | source |
+350 | --- | --- | --- |
+351 | section 5 | Prior-art citation set | `NORTHSTAR2.md` section 5 |
+352 | 80%, 70%, 90%, 60% | Illustrative confidence examples, not empirical results | Problem-statement examples in this document |
+353 | 0.50, 0.99 | Allowed confidence bounds | `caliber/tracker.py::_validate_confidence` |
+354 | 50-59 through 90-99 | Fixed bucket labels | `caliber/card.py::BUCKET_RANGES` |
+355 | 2, 4, and exponents in formulas | Algebraic terms in Wilson and Brier formulas | `NORTHSTAR.md` section 5 formulas, `caliber/card.py` |
+356 | 0.10, 0.05, 5 | Zone gap, significance, and minimum bucket test size | `caliber/card.py::TrustCard.from_predictions`, `BucketStats.significant` |
+357 | 1.959963984540054, 95% | Wilson interval constant and label | `caliber/card.py::WILSON_Z_95`, `BucketStats.ci95` |
+358 | 4 | Former insufficient-data zone example | `NORTHSTAR.md` section 2 defect D1 and `NORTHSTAR2.md` section 3 A1 |
+359 | 5 percentage points | Midpoint binning-bias bound | `NORTHSTAR2.md` section 3 A1 and `NORTHSTAR.md` section 2 defect D2 |
+360 | 9, 10, 0.5, 0.021484375 | Exact binomial pinned value | `tests/test_card_properties.py::test_exact_binomial_known_values` |
+361 | 1e-9 | Murphy identity property tolerance | `tests/test_card_properties.py::test_murphy_identity_holds_for_random_streams` |
+362 | 25, 3 | Adaptive bucket divisor and minimum groups | `caliber/card.py::_build_adaptive_buckets` |
+363 | 500, 20, 50, 100, 300, 48 | Full benchmark shape | `lab/REPORT.md`, `lab/results/bench-08b2cff.json`, `lab/run_bench.py` |
+364 | 2.8%, 1.0%, 7.2%, 1.4%, 3.0%, 4.2%, 4.6% | Clean and boundary any-flag rates | `lab/REPORT.md` |
+365 | 100.0% attack rates | Attack detection rates | `lab/REPORT.md`, `lab/THREATMODEL.md` |
+366 | 0.13, 0.4945, 0.6, 0.2, 0.5, 0.8, 0.01 | Integrity threshold values | `lab/THRESHOLDS.md`, `caliber/integrity.py` |
+367 | 3.6%, 0.4%, 0.6%, 0.0%, 99.5%, 100.0% | Threshold FPR and power values | `lab/THRESHOLDS.md` |
+368 | 4.6%, 1.4% | Smart-fabricator boundary rates | `lab/THREATMODEL.md`, `lab/REPORT.md` |
+369 | 2026-07-04 | Date of prior-art verification and benchmark artifacts | `NORTHSTAR2.md`, `lab/REPORT.md`, `lab/THRESHOLDS.md` |
+370 | python3, demo-1, confidence 80 in shell commands | Reproduction command literals | `README.md` CLI examples and `caliber/cli.py` |
+371 | URL numbers and classic years | External citation identifiers and allowed classic references | `NORTHSTAR2.md` section 5 |
+```
+
+Citation audit: `docs/METHOD.md` references only the source labels/URLs listed
+in `NORTHSTAR2.md` section 5 and the explicitly allowed estimator classics.
+
+Standalone spec-vector proof script:
+
+```python
+import hashlib
+import json
+from pathlib import Path
+
+root = Path('tests/vectors')
+manifest = json.loads((root / 'manifest.json').read_text())
+valid = manifest['valid_log']
+previous = '0' * 64
+count = 0
+for raw in (root / valid['path']).read_bytes().splitlines():
+    event = json.loads(raw.decode('utf-8'))
+    if event['prev_hash'] != previous:
+        raise SystemExit(f'prev_hash mismatch at line {count + 1}')
+    previous = hashlib.sha256(raw).hexdigest()
+    count += 1
+print(f'count={count}')
+print(f'head={previous}')
+print(f'expected={valid["expected_head"]}')
+print(f'match={previous == valid["expected_head"]}')
+```
+
+Standalone proof output:
+
+```text
+count=3
+head=ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442
+expected=ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442
+match=True
+```
+
+Additional gate checks:
+
+```text
+$ grep -n "R1-SIGNOFF" GAUGE.md
+<no matches; exit 1>
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m compileall -q caliber
+<no output; exit 0>
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+.............................................................            [100%]
+205 passed in 32.50s
+```
+
+Meta-checkpoint:
+
+1. Re-read §0. Phase A increases honesty by making the method citable and the
+   current record/card format executable by another implementation.
+2. Last reality check: vector head was recomputed by a stdlib-only script, and
+   compileall returned exit 0.
+3. Result too clean: the spec is only v0.1 and intentionally excludes signed
+   cards and external adjudication.
+4. Asked question vs easier one: Phase B remains blocked; no signed-card or
+   adjudication work was started.

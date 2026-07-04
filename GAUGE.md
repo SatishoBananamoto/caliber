@@ -4,8 +4,8 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.3.0 local northstar release candidate (v0.2.0 remains on PyPI as `caliber-trust`)
-**Last session**: 2026-07-04 — northstar Phase 4 honest repositioning completed; review/release handoff is ready
-**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 202 tests passing.
+**Last session**: 2026-07-04 — northstar2 Phase A citable/specifiable docs completed in the work tree; Phase B blocked pending Satish's round-one signoff marker
+**Repo**: `northstar2` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 205 tests passing.
 
 ---
 
@@ -13,10 +13,32 @@
 
 ### Active northstar run (2026-07-04)
 
-Read `NORTHSTAR.md` first. It supersedes the older "external user first" and
-"don't rewrite storage" guidance for this branch. Current branch: `northstar`.
-Branch rules: never push, never publish to PyPI, keep runtime dependencies
-stdlib-only, and update `lab/NOTEBOOK.md` plus this file at phase gates.
+Read `NORTHSTAR2.md` first, then the inherited constraints in `NORTHSTAR.md`.
+Current branch: `northstar2`. Branch rules: never push, never publish to PyPI,
+keep runtime dependencies stdlib-only, and update `lab/NOTEBOOK.md` plus this
+file at phase gates.
+
+Round Two Phase A is complete in the work tree:
+
+- A1: `docs/METHOD.md` written as the citable method paper with numeric source
+  map, benchmark tables, limitations, reproduction commands, and citations
+  limited to `NORTHSTAR2.md` section 5.
+- A2: `docs/SPEC.md` written as normative `spec_version: 0.1`; golden vectors
+  added under `tests/vectors/`; `tests/test_spec_vectors.py` validates the
+  vector head, tamper failure, and card-producing store.
+- A3: only permitted leftovers changed: CLAUDE identity wording, one AGENTS
+  pointer line, and two README doc links.
+- Gate evidence: METHOD numeric grep found 93 numeric lines covered by the
+  source map; standalone stdlib script recomputed vector head
+  `ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442`;
+  `python -m compileall -q caliber` exited 0; full suite reached 205 passing.
+- Phase B remains BLOCKED: the exact round-one signoff marker is absent from
+  this file.
+
+Next concrete work: Satish review of round one and round two Phase A. If he
+accepts round one, he can add the exact round-one signoff marker and Phase B
+may start. Until that exact marker exists, do not start signed cards, external
+adjudication, or anchoring hardening.
 
 Phase 0 baseline is complete:
 
@@ -216,6 +238,27 @@ single score._
 ---
 
 ## Session Log
+
+### 2026-07-04 — Northstar2 Phase A citable/specifiable docs (Codex/Kai)
+
+- **Worked on:** `NORTHSTAR2.md` Phase A only: method paper, normative spec,
+  golden vectors, three permitted leftover edits, gate tracking, and handoff.
+- **Completed:** `docs/METHOD.md`; `docs/SPEC.md`; `tests/vectors/`;
+  `tests/test_spec_vectors.py`; CLAUDE identity wording; AGENTS pointer line;
+  README METHOD/SPEC links; Round Two handoff section.
+- **Claims audit:** `docs/METHOD.md` numeric grep found 93 numeric lines, all
+  covered by the document's numeric source map. Citation grep stayed within
+  `NORTHSTAR2.md` section 5 plus the allowed estimator classics.
+- **Spec proof:** `tests/test_spec_vectors.py` passed with 3 tests; a
+  standalone stdlib script, importing nothing from `caliber/`, recomputed
+  valid vector head
+  `ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442`.
+- **Evidence:** A1 full suite -> 202 passed; A2 vector test -> 3 passed; A2
+  full suite -> 205 passed; A3 full suite -> 205 passed; compileall clean.
+- **Skipped/blocked:** Phase B and Phase C not started because Satish's
+  round-one signoff marker is absent. No push, no PyPI publish, no git write
+  command, no runtime dependency added, and no integrity threshold changed.
+- **State:** Work tree contains Phase A deliverables for supervisor commit.
 
 ### 2026-07-04 — Northstar Phase 4 honest repositioning (Codex/Kai)
 
