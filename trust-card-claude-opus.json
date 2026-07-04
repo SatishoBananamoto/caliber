@@ -1,68 +1,165 @@
 {
   "trust_version": "0.1",
   "agent_name": "claude-opus-my-universe",
-  "generated": "2026-03-26T04:49:45.959074+00:00",
+  "generated": "2026-07-04T08:34:03.135853+00:00",
   "calibration": {
-    "total_predictions": 59,
-    "total_verified": 59,
-    "overall_accuracy": 0.763,
-    "mean_confidence": 0.72,
-    "mean_calibration_gap": -0.023,
+    "total_predictions": 94,
+    "total_verified": 94,
+    "overall_accuracy": 0.755,
+    "mean_confidence": 0.707,
+    "mean_calibration_gap": -0.048,
+    "brier_score": 0.1798,
+    "reliability": 0.0205,
+    "resolution": 0.0255,
+    "uncertainty": 0.1848,
+    "calibration_z": 1.0537,
+    "calibration_p": 0.292,
     "confidence_buckets": {
       "50-59": {
-        "predictions": 3,
-        "correct": 2,
+        "predictions": 6,
+        "correct": 4,
+        "mean_confidence": 0.542,
         "accuracy": 0.667,
-        "calibration_gap": -0.122,
-        "insufficient_data": true
+        "ci95": [
+          0.3,
+          0.903
+        ],
+        "calibration_gap": -0.125,
+        "significant": false
       },
       "60-69": {
-        "predictions": 16,
-        "correct": 9,
-        "accuracy": 0.562,
-        "calibration_gap": 0.083,
+        "predictions": 30,
+        "correct": 19,
+        "mean_confidence": 0.625,
+        "accuracy": 0.633,
+        "ci95": [
+          0.455,
+          0.781
+        ],
+        "calibration_gap": -0.008,
         "significant": false
       },
       "70-79": {
-        "predictions": 22,
-        "correct": 18,
-        "accuracy": 0.818,
-        "calibration_gap": -0.073,
+        "predictions": 34,
+        "correct": 28,
+        "mean_confidence": 0.719,
+        "accuracy": 0.824,
+        "ci95": [
+          0.665,
+          0.917
+        ],
+        "calibration_gap": -0.104,
         "significant": false
       },
       "80-89": {
-        "predictions": 17,
-        "correct": 15,
-        "accuracy": 0.882,
-        "calibration_gap": -0.037,
+        "predictions": 22,
+        "correct": 19,
+        "mean_confidence": 0.825,
+        "accuracy": 0.864,
+        "ci95": [
+          0.667,
+          0.953
+        ],
+        "calibration_gap": -0.039,
         "significant": false
       },
       "90-99": {
-        "predictions": 1,
+        "predictions": 2,
         "correct": 1,
-        "accuracy": 1.0,
-        "calibration_gap": -0.055,
+        "mean_confidence": 0.925,
+        "accuracy": 0.5,
+        "ci95": [
+          0.095,
+          0.905
+        ],
+        "calibration_gap": 0.425,
         "insufficient_data": true
       }
     },
+    "adaptive_buckets": [
+      {
+        "index": 1,
+        "predictions": 23,
+        "correct": 13,
+        "confidence_range": [
+          0.5,
+          0.65
+        ],
+        "mean_confidence": 0.589,
+        "accuracy": 0.565,
+        "ci95": [
+          0.368,
+          0.744
+        ],
+        "calibration_gap": 0.024
+      },
+      {
+        "index": 2,
+        "predictions": 24,
+        "correct": 18,
+        "confidence_range": [
+          0.65,
+          0.7
+        ],
+        "mean_confidence": 0.673,
+        "accuracy": 0.75,
+        "ci95": [
+          0.551,
+          0.88
+        ],
+        "calibration_gap": -0.077
+      },
+      {
+        "index": 3,
+        "predictions": 23,
+        "correct": 20,
+        "confidence_range": [
+          0.7,
+          0.75
+        ],
+        "mean_confidence": 0.728,
+        "accuracy": 0.87,
+        "ci95": [
+          0.679,
+          0.955
+        ],
+        "calibration_gap": -0.141
+      },
+      {
+        "index": 4,
+        "predictions": 24,
+        "correct": 20,
+        "confidence_range": [
+          0.8,
+          0.95
+        ],
+        "mean_confidence": 0.833,
+        "accuracy": 0.833,
+        "ci95": [
+          0.641,
+          0.933
+        ],
+        "calibration_gap": -0.0
+      }
+    ],
     "domains": {
       "architecture": {
-        "predictions": 13,
-        "correct": 11,
-        "avg_confidence": 0.723,
-        "accuracy": 0.846
+        "predictions": 21,
+        "correct": 17,
+        "avg_confidence": 0.698,
+        "accuracy": 0.81
       },
       "behavior": {
-        "predictions": 20,
-        "correct": 12,
-        "avg_confidence": 0.727,
-        "accuracy": 0.6
+        "predictions": 31,
+        "correct": 20,
+        "avg_confidence": 0.706,
+        "accuracy": 0.645
       },
       "codebase": {
-        "predictions": 15,
-        "correct": 11,
-        "avg_confidence": 0.7,
-        "accuracy": 0.733
+        "predictions": 25,
+        "correct": 19,
+        "avg_confidence": 0.706,
+        "accuracy": 0.76
       },
       "facts": {
         "predictions": 3,
@@ -70,11 +167,17 @@
         "avg_confidence": 0.8,
         "accuracy": 1.0
       },
-      "self": {
-        "predictions": 4,
-        "correct": 4,
-        "avg_confidence": 0.713,
+      "people": {
+        "predictions": 1,
+        "correct": 1,
+        "avg_confidence": 0.7,
         "accuracy": 1.0
+      },
+      "self": {
+        "predictions": 9,
+        "correct": 7,
+        "avg_confidence": 0.706,
+        "accuracy": 0.778
       },
       "tooling": {
         "predictions": 4,
@@ -82,9 +185,6 @@
         "avg_confidence": 0.7,
         "accuracy": 1.0
       }
-    },
-    "strength_zones": [
-      "50-59"
-    ]
+    }
   }
 }

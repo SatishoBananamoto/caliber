@@ -97,37 +97,51 @@ After 3 predictions: `caliber summary`. After 20: `caliber card`.
 
 ## Trust Card Format
 
+Excerpt from the regenerated `trust-card-claude-opus.json` artifact:
+
 ```json
 {
   "trust_version": "0.1",
-  "agent_name": "my-code-reviewer",
-  "generated": "2026-03-26T00:00:00Z",
+  "agent_name": "claude-opus-my-universe",
+  "generated": "2026-07-04T08:34:03.135853+00:00",
   "calibration": {
-    "total_predictions": 77,
-    "total_verified": 77,
-    "overall_accuracy": 0.766,
-    "mean_confidence": 0.708,
-    "mean_calibration_gap": -0.058,
+    "total_predictions": 94,
+    "total_verified": 94,
+    "overall_accuracy": 0.755,
+    "mean_confidence": 0.707,
+    "mean_calibration_gap": -0.048,
+    "brier_score": 0.1798,
+    "reliability": 0.0205,
+    "resolution": 0.0255,
+    "uncertainty": 0.1848,
+    "calibration_z": 1.0537,
+    "calibration_p": 0.292,
     "confidence_buckets": {
-      "50-59": {"predictions": 4, "correct": 2, "accuracy": 0.5, "calibration_gap": 0.045, "insufficient_data": true},
-      "60-69": {"predictions": 25, "correct": 16, "accuracy": 0.64, "calibration_gap": 0.005, "significant": false},
-      "70-79": {"predictions": 29, "correct": 24, "accuracy": 0.828, "calibration_gap": -0.083, "significant": false},
-      "80-89": {"predictions": 18, "correct": 16, "accuracy": 0.889, "calibration_gap": -0.044, "significant": false},
-      "90-99": {"predictions": 1, "correct": 1, "accuracy": 1.0, "calibration_gap": -0.055, "insufficient_data": true}
+      "50-59": {"predictions": 6, "correct": 4, "mean_confidence": 0.542, "accuracy": 0.667, "ci95": [0.3, 0.903], "calibration_gap": -0.125, "significant": false},
+      "60-69": {"predictions": 30, "correct": 19, "mean_confidence": 0.625, "accuracy": 0.633, "ci95": [0.455, 0.781], "calibration_gap": -0.008, "significant": false},
+      "70-79": {"predictions": 34, "correct": 28, "mean_confidence": 0.719, "accuracy": 0.824, "ci95": [0.665, 0.917], "calibration_gap": -0.104, "significant": false},
+      "80-89": {"predictions": 22, "correct": 19, "mean_confidence": 0.825, "accuracy": 0.864, "ci95": [0.667, 0.953], "calibration_gap": -0.039, "significant": false},
+      "90-99": {"predictions": 2, "correct": 1, "mean_confidence": 0.925, "accuracy": 0.5, "ci95": [0.095, 0.905], "calibration_gap": 0.425, "insufficient_data": true}
     },
+    "adaptive_buckets": [
+      {"index": 1, "predictions": 23, "accuracy": 0.565, "mean_confidence": 0.589, "ci95": [0.368, 0.744]},
+      {"index": 2, "predictions": 24, "accuracy": 0.75, "mean_confidence": 0.673, "ci95": [0.551, 0.88]},
+      {"index": 3, "predictions": 23, "accuracy": 0.87, "mean_confidence": 0.728, "ci95": [0.679, 0.955]},
+      {"index": 4, "predictions": 24, "accuracy": 0.833, "mean_confidence": 0.833, "ci95": [0.641, 0.933]}
+    ],
     "domains": {
       "architecture": {"predictions": 21, "accuracy": 0.81},
-      "behavior": {"predictions": 25, "accuracy": 0.64},
-      "codebase": {"predictions": 20, "accuracy": 0.75}
-    },
-    "strength_zones": ["50-59"]
+      "behavior": {"predictions": 31, "accuracy": 0.645},
+      "codebase": {"predictions": 25, "accuracy": 0.76},
+      "self": {"predictions": 9, "accuracy": 0.778}
+    }
   }
 }
 ```
 
-The Trust Card above is real — generated from 77 calibration predictions made by Claude Opus during the [MY UNIVERSE](https://github.com/SatishoBananamoto/my-universe) project.
+The full artifact is generated from 94 verified predictions in the local MY UNIVERSE calibration corpus.
 
-**What the numbers reveal:** This agent is well-calibrated overall. Each bucket includes a `significant` field (binomial test, p<0.05) and flags `insufficient_data` for small samples. No bucket shows statistically significant miscalibration — the agent's confidence matches its accuracy. Behavior predictions (64%) are its weakest domain.
+**What the numbers reveal:** This agent is slightly underconfident overall: 75.5% accuracy against 70.7% mean confidence. No fixed confidence bucket is a danger or strength zone because none has statistically significant miscalibration. The 90-99% bucket has a large apparent gap, but only 2 predictions, so it is marked `insufficient_data` rather than promoted into a zone. Behavior predictions are still the weakest domain at 64.5% accuracy.
 
 ## Key Concepts
 
@@ -146,7 +160,7 @@ The difference between expected and actual accuracy for each confidence bucket:
 
 ### Danger Zones
 
-Confidence ranges where the calibration gap exceeds 10 percentage points with at least 3 data points. These are the ranges where the agent's self-assessment is unreliable.
+Confidence ranges where the calibration gap exceeds 10 percentage points and the exact binomial significance test passes. Buckets with fewer than 5 predictions are marked `insufficient_data` and cannot become danger or strength zones by themselves.
 
 ## Gaming Detection
 
@@ -168,7 +182,7 @@ Findings are advisory flags with evidence, gated on minimum sample sizes. There 
 
 ## Origin
 
-caliber emerged from [MY UNIVERSE](https://github.com/SatishoBananamoto/my-universe), a cognitive workspace where Claude Opus tracks its own predictions and calibration. 87 predictions across 3 sessions validated the approach — and revealed that early "danger zone" findings were small-sample artifacts, corrected by caliber's own statistical significance tests.
+caliber emerged from a local MY UNIVERSE calibration practice where Claude Opus tracked its own predictions and calibration. The current source corpus parses to 94 verified predictions — and revealed that early "danger zone" findings were small-sample artifacts, corrected by caliber's own statistical significance tests.
 
 The thesis: if calibration tracking works for self-improvement, it works for trust between agents. caliber includes the statistical honesty features because we learned the hard way that small samples lie.
 

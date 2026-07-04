@@ -4,8 +4,8 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.2.0 (on PyPI as `caliber-trust` — gaming detection release)
-**Last session**: 2026-07-04 — northstar branch opened for statistical rigor, adversarial lab, and tamper-evidence work
-**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing.
+**Last session**: 2026-07-04 — northstar Phase 1 statistical core completed; Phase 2 adversarial lab is next
+**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 161 tests passing.
 
 ---
 
@@ -31,9 +31,27 @@ Phase 0 baseline is complete:
   `trust-card-claude-opus.json` has 59 verified predictions plus the D1
   insufficient-data `strength_zones` bug.
 
-Next concrete work: Phase 1 statistical core. Start with D1/D2 in `card.py`:
-zone flags must require a completed significant test, and calibration gaps
-must use mean stated confidence instead of bucket midpoints.
+Phase 1 statistical core is complete:
+
+- D1: danger/strength zones now require a completed significant test;
+  insufficient data cannot create a zone.
+- D2: bucket calibration gaps now use mean stated confidence instead of bucket
+  midpoint bias.
+- D3/D4: bucket JSON and summaries carry Wilson intervals, and significance
+  uses exact two-sided binomial p-values.
+- Trust Cards now expose Brier score, Murphy decomposition, Spiegelhalter Z,
+  and adaptive equal-mass buckets.
+- Property/invariant tests live in `tests/test_card_properties.py`; fresh dev
+  venv run: `161 passed`.
+- `trust-card-claude-opus.json` and the README Trust Card excerpt were
+  regenerated from the current MY UNIVERSE corpus: 94 verified predictions,
+  no `strength_zones` small-sample claim remains.
+- Important correction: NORTHSTAR's proposed "93-97% Wilson coverage on every
+  small-n grid cell" was false by exact enumeration. The tests now pin the
+  true coverage table and use Monte Carlo only as a smoke check.
+
+Next concrete work: Phase 2 Adversarial Lab. Start with `lab/simulate.py` and
+the deterministic population zoo, then `lab/run_bench.py` for FPR/power tables.
 
 ### What just happened (2026-06-10)
 
@@ -150,6 +168,22 @@ single score._
 ---
 
 ## Session Log
+
+### 2026-07-04 — Northstar Phase 1 statistical core (Codex/Kai)
+
+- **Worked on:** Phase 1 from `NORTHSTAR.md`: statistical rigor for Trust
+  Cards, property tests, and flagship-card correction.
+- **Completed:** D1-D4 fixes; mean-confidence bucket gaps; Wilson intervals;
+  exact binomial significance; Brier/Murphy fields; Spiegelhalter Z; adaptive
+  buckets; Hypothesis-backed invariant tests; regenerated
+  `trust-card-claude-opus.json`; README card excerpt and interpretation.
+- **Evidence:** disposable dev venv full suite
+  `/tmp/caliber-northstar-p1-properties/bin/python -m pytest -q` ->
+  161 passed. Notebook records real-corpus checks and the Wilson coverage
+  correction.
+- **State:** Phase 1 gate accepted locally on `northstar`, not pushed. Next:
+  Phase 2 Adversarial Lab (`lab/simulate.py`, `lab/run_bench.py`,
+  `lab/REPORT.md`, threshold operating points, `lab/THREATMODEL.md`).
 
 ### 2026-03-26 — Core build (Session 1)
 

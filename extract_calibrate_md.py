@@ -9,6 +9,7 @@ from pathlib import Path
 
 from caliber import TrustTracker
 from caliber.importer import import_calibrate_md
+from caliber.storage import MemoryStorage
 
 CALIBRATE_MD = Path.home() / "MY UNIVERSE" / "CALIBRATE.md"
 DEFAULT_AGENT = "claude-opus-my-universe"
@@ -21,7 +22,7 @@ def build_trust_card(
     agent_name: str = DEFAULT_AGENT,
 ):
     """Import CALIBRATE.md through the shared importer and write a Trust Card."""
-    tracker = TrustTracker(agent_name)
+    tracker = TrustTracker(agent_name, storage=MemoryStorage())
     count = import_calibrate_md(input_path, tracker)
     card = tracker.generate_card()
     output_path.write_text(card.to_json() + "\n")

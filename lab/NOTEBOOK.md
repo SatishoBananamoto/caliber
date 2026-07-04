@@ -739,3 +739,120 @@ smoke check against the exact result, not as the source of truth.
 Decision: property/invariant tests are added with Hypothesis as a dev-only
 dependency. The literal Wilson acceptance band from NORTHSTAR is corrected by
 evidence rather than forced into a misleading test.
+
+## EXP-008 - Phase 1 Regenerate Flagship Trust Card
+
+Hypothesis: regenerating `trust-card-claude-opus.json` with the corrected
+card statistics should remove the old small-sample `strength_zones` claim,
+surface the new uncertainty/proper-score/adaptive-bucket fields, and force the
+README interpretation to match current evidence.
+
+Mini-plan:
+
+1. Make the compatibility wrapper import MY UNIVERSE calibration data through
+   in-memory storage so regeneration does not mutate `~/.caliber`.
+2. Regenerate `trust-card-claude-opus.json` from
+   `/home/satishocoin/MY UNIVERSE/CALIBRATE.md`.
+3. Update the README's embedded Trust Card excerpt and interpretation
+   paragraph with current values and no small-sample zone claim.
+4. Run wrapper/README-adjacent tests, then the full dev-venv suite.
+
+Result:
+
+Regeneration command:
+
+```text
+$ python3 extract_calibrate_md.py
+Reading: /home/satishocoin/MY UNIVERSE/CALIBRATE.md
+Parsed: 94 verified predictions
+...
+Trust Card saved: /home/satishocoin/caliber/trust-card-claude-opus.json
+```
+
+Key regenerated card values:
+
+- 94 verified predictions, 75.5% accuracy, 70.7% mean confidence.
+- Mean calibration gap changed to `-0.048` under the corrected mean-confidence
+  bucket definition.
+- Brier `0.1798`; reliability `0.0205`; resolution `0.0255`;
+  uncertainty `0.1848`; calibration Z `1.0537`, p `0.292`.
+- No `danger_zones` or `strength_zones` fields remain in the artifact.
+- The 90-99 bucket has a large apparent overconfidence gap (`0.425`) but only
+  2 predictions, so it is `insufficient_data`, not a zone.
+- Four adaptive buckets are present: 23/24/23/24 predictions.
+
+README/artifact checks:
+
+```text
+$ python3 - <<'PY'
+...
+README excerpt and artifact consistency checks passed
+PY
+```
+
+Wrapper and store-boundary checks:
+
+```text
+$ python3 -m pytest tests/test_extract_calibrate_md.py -q
+.                                                                        [100%]
+1 passed in 0.08s
+```
+
+```text
+$ test ! -e /home/satishocoin/.caliber/claude-opus-my-universe.json
+# exit 0
+```
+
+Full suite:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 44%]
+........................................................................ [ 89%]
+.................                                                        [100%]
+161 passed in 4.03s
+```
+
+Decision: the flagship card and README interpretation are now grounded in the
+current source corpus and corrected card statistics. The compatibility wrapper
+now uses `MemoryStorage`, so regenerating the repo artifact does not pollute
+the user's global Caliber store.
+
+## Phase 1 Gate - Statistical Core
+
+Date: 2026-07-04
+
+Gate evidence:
+
+- D1 fixed: zones require `significant is True`; insufficient data no longer
+  permits zone claims.
+- D2 fixed: fixed-bucket `calibration_gap` uses mean stated confidence instead
+  of bucket midpoint when generated from prediction streams.
+- D3 fixed: fixed and adaptive buckets carry Wilson 95% intervals.
+- D4 fixed: bucket significance uses exact two-sided binomial p-values.
+- Card-level Brier/Murphy and Spiegelhalter Z are exposed in JSON and summary.
+- Adaptive equal-mass buckets are added as a second view; fixed buckets remain
+  backward compatible.
+- Property/invariant tests are added under the `dev` extra; full suite is
+  161 passing in a fresh dev venv.
+- `trust-card-claude-opus.json` is regenerated from the current source corpus;
+  no small-sample zone claim remains.
+- README card excerpt and interpretation match the regenerated artifact.
+
+Meta-checkpoint:
+
+1. Re-read §0. Phase 1 increased honesty, not just complexity: every added
+   field either reduces estimator bias, exposes uncertainty, tests an
+   invariant, or removes an overclaim.
+2. Last reality check: full dev-venv suite `161 passed in 4.03s`, wrapper test
+   `1 passed`, README JSON excerpt parsed, and regenerated artifact checked
+   for no `strength_zones`.
+3. Result that was too clean: the original Wilson coverage target. Exact
+   enumeration disproved the 93-97% band for several small-n/extreme-p cells.
+   The test now records the true coverage table instead of forcing a fake pass.
+4. Asked question vs easier one: the easier answer would have been to add
+   Hypothesis tests that pass without challenging the coverage requirement.
+   The actual answer corrected the requirement with computed evidence.
+
+Phase 1 decision: gate accepted with one documented correction to NORTHSTAR's
+coverage-test acceptance band. Next phase is Phase 2 Adversarial Lab.
