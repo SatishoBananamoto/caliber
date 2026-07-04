@@ -1091,3 +1091,69 @@ Decision: the initial full bench is usable evidence for threshold
 re-derivation. Next chunk should convert these rates into threshold operating
 point comments in `integrity.py` and decide whether any current threshold
 actually changes.
+
+## EXP-012 - Phase 2 Threshold Analysis Inputs
+
+Hypothesis: threshold re-derivation needs raw metric distributions at n=50 and
+a target population for every flag. The current simulator zoo lacks an
+exact-duplicate attacker for `DUPLICATE_CLAIMS`, so adding that population and
+a threshold-analysis script is prerequisite evidence work before modifying
+`integrity.py` constants.
+
+Mini-plan:
+
+1. Add `duplicate_spammer` to the simulator zoo and tests.
+2. Add `lab/analyze_thresholds.py` to sweep current flag metrics at n=50 over
+   clean populations and target attacker populations.
+3. Emit recommended thresholds plus current-threshold operating points as
+   JSON/Markdown artifacts in a later run.
+4. Keep this chunk to analyzer implementation and fast tests; run the full
+   threshold analysis after the code is committed so artifacts cite a stable
+   SHA.
+
+Result:
+
+Added:
+
+- `duplicate_spammer` simulator and regression coverage.
+- `lab/analyze_thresholds.py`.
+- `tests/test_lab_analyze_thresholds.py`.
+
+Smoke-test finding:
+
+- The first analyzer tie-break chose extreme thresholds when several
+  candidates had identical clean FPR and target power. Fix: if evidence is
+  tied, prefer the current threshold. This prevents threshold churn when the
+  current constant already survives the measured operating point.
+
+Tiny no-write analyzer smoke:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python lab/analyze_thresholds.py --replicates 3 --n 30 --no-write
+...
+TOP_BUCKET_SHARE_THRESHOLD recommended threshold: 0.6
+DOMAIN_HHI_THRESHOLD recommended threshold: 0.6
+DUPLICATE_RATIO_THRESHOLD recommended threshold: 0.2
+INSTANT_SHARE_THRESHOLD recommended threshold: 0.5
+IMPORT_SHARE_THRESHOLD recommended threshold: 0.8
+```
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_lab_simulate.py tests/test_lab_analyze_thresholds.py -q
+............                                                             [100%]
+12 passed in 0.51s
+```
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+................................                                         [100%]
+176 passed in 5.29s
+```
+
+Decision: threshold-analysis implementation is ready to commit. Next chunk is
+the full n=50, 500-replicate threshold analysis artifact, followed by
+integrity constant comments/changes.

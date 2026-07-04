@@ -350,6 +350,35 @@ def template_spammer(n: int, seed: int) -> list[Record]:
     return records
 
 
+def duplicate_spammer(
+    n: int,
+    seed: int,
+    *,
+    duplicate_share: float = 0.70,
+) -> list[Record]:
+    rng = random.Random(seed)
+    unique_n = max(1, round(n * (1 - duplicate_share)))
+    base_claims = [
+        f"repeated calibration claim {_letter_token(i)}"
+        for i in range(unique_n)
+    ]
+    records = []
+    for i in range(n):
+        confidence = [0.60, 0.75, 0.90][i % 3]
+        records.append(
+            _record(
+                i,
+                claim=base_claims[i % unique_n],
+                confidence=confidence,
+                domain=DOMAINS[i % 3],
+                outcome=_bernoulli(rng, confidence),
+                latency_seconds=_lognormal_latency_seconds(rng),
+                prefix="duplicate",
+            )
+        )
+    return records
+
+
 def domain_camper(n: int, seed: int, *, k_domains: int = 1) -> list[Record]:
     rng = random.Random(seed)
     k = max(1, min(k_domains, len(DOMAINS)))
@@ -403,6 +432,7 @@ POPULATIONS: dict[str, Simulator] = {
     "naive_fabricator": naive_fabricator,
     "smart_fabricator": smart_fabricator,
     "template_spammer": template_spammer,
+    "duplicate_spammer": duplicate_spammer,
     "domain_camper": domain_camper,
     "bulk_importer": bulk_importer,
 }

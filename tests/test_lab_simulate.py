@@ -20,6 +20,7 @@ def test_population_registry_has_required_northstar_generators():
         "naive_fabricator",
         "smart_fabricator",
         "template_spammer",
+        "duplicate_spammer",
         "domain_camper",
         "bulk_importer",
     }
@@ -73,6 +74,13 @@ def test_domain_camper_targets_domain_concentration():
 
     assert "DOMAIN_CONCENTRATION" in codes
     assert report.domain_hhi == 1.0
+
+
+def test_duplicate_spammer_targets_duplicate_claims():
+    codes, report = _codes(simulate.duplicate_spammer(80, 12, duplicate_share=0.7))
+
+    assert "DUPLICATE_CLAIMS" in codes
+    assert report.duplicate_claim_ratio > 0.6
 
 
 def test_bulk_importer_targets_unwitnessed_history():
