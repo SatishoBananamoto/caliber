@@ -1,4 +1,4 @@
-"""Prediction commitment scheme — proves predictions were made before verification.
+"""Prediction commitment scheme for prediction contents.
 
 When a prediction is committed:
 1. A salt is generated
@@ -7,8 +7,12 @@ When a prediction is committed:
 4. At verification time, the full data is revealed
 5. Anyone can verify: SHA256(revealed_data) == stored_commitment
 
-This prevents retroactive fabrication of predictions.
-No blockchain. No external service. Just SHA256 + salt.
+A commitment proves that revealed prediction fields match a previously stored
+hash. By itself it does not prove when that hash existed: if the commitment,
+salt, prediction, and verification all live in the same mutable local store, an
+attacker can rewrite them together. Timing proof requires a witnessed or
+anchored record, such as the Phase 3 event log plus an externally saved chain
+head from ``caliber anchor``.
 """
 
 from __future__ import annotations
@@ -52,8 +56,9 @@ def create_commitment(
 ) -> Commitment:
     """Create a commitment hash for a prediction.
 
-    The commitment proves the prediction existed at this point in time.
-    The salt ensures the hash can't be reverse-engineered from the claim.
+    The commitment binds the claim/confidence/domain/timestamp fields to a
+    salted hash. It proves timing only when the hash is witnessed or anchored
+    outside the mutable local record.
     """
     salt = secrets.token_hex(16)
     data = _commitment_data(claim, confidence, domain, timestamp, salt)

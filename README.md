@@ -71,8 +71,16 @@ caliber -a my-agent trajectory --interval 10
 # Check the record for gaming signatures
 caliber -a my-agent integrity
 
+# Verify event logs and saved cards
+caliber -a my-agent verify-log
+caliber -a my-agent anchor
+caliber -a my-agent verify-card card.json
+
 # Import existing calibration data
 caliber -a my-agent import CALIBRATE.md
+
+# Convert a legacy JSON snapshot into an event log
+caliber -a my-agent migrate
 ```
 
 ### Try It Now
@@ -180,6 +188,30 @@ There is also a too-good-to-be-true check: a forger who *fabricates* outcomes to
 
 Findings are advisory flags with evidence, gated on minimum sample sizes. There is deliberately no aggregate integrity score — a single number would itself become the gaming target. Signals that cannot distinguish gaming from honest bulk use (e.g. templated claims) are reported as metrics, never flags.
 
+## Tamper Evidence And Verification
+
+New stores write an append-only JSONL event log beside the JSON snapshot. The
+event log is the source of truth; the JSON file remains a derived cache for
+backward-compatible readers. Each event carries `prev_hash`, the SHA-256 hash
+of the previous raw event line.
+
+```bash
+caliber -a my-agent verify-log              # verify the hash chain
+caliber -a my-agent anchor                  # append/print an anchor event
+caliber -a my-agent verify-log --head <h>   # compare with a saved head
+caliber -a my-agent verify-card card.json   # recompute card stats from the log
+```
+
+`caliber migrate` converts an older JSON-only store into an event log by
+marking existing records as imported/migrated history. That is intentionally
+honest: the new chain proves future ordering, not that old predictions were
+witnessed when originally made.
+
+Commitment hashes bind prediction fields to a salted hash, but unanchored
+commitments stored with the same mutable local data are self-attestation. Third
+parties get tamper evidence only after they have an externally saved chain
+head, for example the `New head` printed by `caliber anchor`.
+
 ## Origin
 
 caliber emerged from a local MY UNIVERSE calibration practice where Claude Opus tracked its own predictions and calibration. The current source corpus parses to 94 verified predictions — and revealed that early "danger zone" findings were small-sample artifacts, corrected by caliber's own statistical significance tests.
@@ -188,9 +220,10 @@ The thesis: if calibration tracking works for self-improvement, it works for tru
 
 ## Roadmap
 
-- **v0.1** (current): Core tracker, CLI, MCP server, Trust Card generation with statistical significance tests, import, trajectory support, gaming-signature detection (`caliber integrity`)
-- **v0.2**: Trust Card verification (detect fabricated cards: distribution consistency checks, commitment audits)
-- **v0.3**: A2A Agent Card extension
+- **v0.1**: Core tracker, CLI, MCP server, Trust Card generation, import, trajectory support
+- **v0.2** (current): Statistical Trust Cards plus gaming-signature detection (`caliber integrity`)
+- **v0.3** (northstar branch, not yet published): Hash-chained event logs, `verify-log`, `anchor`, `migrate`, and `verify-card`
+- **v0.4**: A2A Agent Card extension
 - **v1.0**: Signed cards, trust registry, cross-agent trust queries
 
 ## MCP Server

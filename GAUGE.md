@@ -4,8 +4,8 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.2.0 (on PyPI as `caliber-trust` — gaming detection release)
-**Last session**: 2026-07-04 — northstar Phase 2 adversarial lab completed; Phase 3 tamper evidence is next
-**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 179 tests passing.
+**Last session**: 2026-07-04 — northstar Phase 3 tamper evidence completed; Phase 4 honest repositioning is next
+**Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 202 tests passing.
 
 ---
 
@@ -65,8 +65,22 @@ Phase 2 adversarial lab is complete:
   smart fabrication and synthetic import timestamps are explicit record-only
   limits; Phase 3 must add anchored event history.
 
-Next concrete work: Phase 3 Tamper Evidence. Start with the append-only JSONL
-event log design and compatibility tests before changing storage behavior.
+Phase 3 tamper evidence is complete:
+
+- Added append-only hash-chained JSONL event logs in `caliber/event_log.py`.
+- New stores replay the event log as source of truth; JSON remains a derived
+  cache, and legacy JSON-only stores stay compatible until explicit migration.
+- Added `caliber verify-log`, `caliber anchor`, `caliber migrate`, and
+  `caliber verify-card`.
+- Migration marks old records as imported/migrated history rather than
+  pretending they were witnessed.
+- Real scratch-corpus migration round-trip passed for `default`, `test`, and
+  `claude-trader`; verified-card/tamper tests are in the suite.
+- README and `commitment.py` now state that unanchored commitments are
+  self-attestation unless the chain head is witnessed or anchored externally.
+
+Next concrete work: Phase 4 Honest Repositioning. Start with the README
+identity/claims rewrite and a clean-venv `GETTING_STARTED.md` transcript.
 
 ### What just happened (2026-06-10)
 
@@ -183,6 +197,23 @@ single score._
 ---
 
 ## Session Log
+
+### 2026-07-04 — Northstar Phase 3 tamper evidence (Codex/Kai)
+
+- **Worked on:** Phase 3 from `NORTHSTAR.md`: event logs, chain verification,
+  anchoring, migration, card verification, and commitment/README honesty.
+- **Completed:** `caliber/event_log.py`; event-log-backed `FileStorage`;
+  `caliber verify-log`; `caliber anchor`; `caliber migrate`;
+  `caliber verify-card`; migration/card/tamper tests; real scratch-corpus
+  migration round-trip; README and commitment evidence-level wording.
+- **Evidence:** real `/tmp/codex-caliber-p3-realcorpus` scratch migration kept
+  `default` and `test` card statistics identical and round-tripped
+  `claude-trader` prediction counts; `/tmp/caliber-northstar-p1-properties/bin/python -m pytest -q`
+  -> 202 passed.
+- **State:** Phase 3 gate accepted locally on `northstar`, not pushed. Next:
+  Phase 4 honest repositioning: README claim cleanup, clean-venv
+  `GETTING_STARTED.md` transcript, CHANGELOG v0.3.0, version bump only after
+  docs are honest. Do not publish.
 
 ### 2026-07-04 — Northstar Phase 2 adversarial lab (Codex/Kai)
 

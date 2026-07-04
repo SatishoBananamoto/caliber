@@ -1926,3 +1926,110 @@ Decision: `verify-card` now closes the core "card agrees with log" requirement
 for event-log-backed stores. Remaining Phase 3 gate work: real-corpus
 migration round-trip, commitment docstring/README honesty, and a phase-gate
 audit/update.
+
+## EXP-025 - Phase 3 real-corpus migration and claim honesty
+
+Hypothesis: Phase 3 is not gate-complete until migration is proven on local
+real corpora and the docs stop claiming that unanchored commitments prove more
+than self-attestation. The real corpora must be copied to scratch before
+migration so the user's live `~/.caliber` store is not mutated.
+
+Mini-plan:
+
+1. Copy available real corpus JSON files from `~/.caliber` into a `/tmp`
+   scratch directory.
+2. For each corpus with verified predictions, compare Trust Card statistics
+   before and after `FileStorage.migrate_snapshot()`.
+3. For corpora without verified predictions, verify prediction-count
+   round-trip and valid event-log head.
+4. Update `commitment.py` and README with honest evidence-level language for
+   unanchored commitments, event logs, anchors, `verify-log`, and
+   `verify-card`.
+5. Run targeted tests and the full suite, then perform a Phase 3 gate audit.
+
+Result:
+
+Real-corpus migration in scratch directory:
+
+```text
+scratch=/tmp/codex-caliber-p3-realcorpus
+```
+
+```json
+[
+  {
+    "agent": "claude-trader",
+    "predictions_before": 5,
+    "predictions_after": 5,
+    "verified_before": 0,
+    "verified_after": 0,
+    "card_equal": true,
+    "event_count": 5,
+    "head_valid": true
+  },
+  {
+    "agent": "default",
+    "predictions_before": 20,
+    "predictions_after": 20,
+    "verified_before": 20,
+    "verified_after": 20,
+    "card_equal": true,
+    "event_count": 20,
+    "head_valid": true
+  },
+  {
+    "agent": "test",
+    "predictions_before": 88,
+    "predictions_after": 88,
+    "verified_before": 88,
+    "verified_after": 88,
+    "card_equal": true,
+    "event_count": 88,
+    "head_valid": true
+  }
+]
+```
+
+Docs updated:
+
+- `caliber/commitment.py` now says a commitment binds prediction fields to a
+  salted hash but proves timing only when witnessed or anchored outside the
+  mutable local record.
+- README now documents `verify-log`, `anchor`, `migrate`, and `verify-card`.
+- README states migrated records are imported/unwitnessed history.
+- README states unanchored commitments stored with mutable local data are
+  self-attestation.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_commitment.py tests/test_cli.py tests/test_storage.py -q
+...................................................                      [100%]
+51 passed in 8.35s
+
+$ rg -n "proves predictions were made|prevents retroactive fabrication|self-attestation|verify-card|verify-log|anchor|migrate" README.md caliber/commitment.py
+README.md and commitment.py mention the new commands and self-attestation language; the old overclaiming phrases were not present.
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 71%]
+..........................................................               [100%]
+202 passed in 9.65s
+```
+
+Phase 3 gate audit:
+
+- Append-only JSONL event log: implemented in `caliber/event_log.py`.
+- New-store source of truth: `FileStorage.load()` replays the event log when
+  present; JSON remains a derived cache.
+- Tamper tests: middle edit, deletion, reorder, invalid JSON, and anchored
+  final-line edit are covered in `tests/test_event_log.py`.
+- `verify-log`: implemented and CLI-tested.
+- `anchor`: implemented and CLI-tested; anchor events do not break card replay.
+- `verify-card`: implemented and CLI-tested for matching, integrity, tampered,
+  and agent-mismatch cards.
+- Migration: implemented and CLI-tested; real scratch corpora round-trip.
+- Claim honesty: commitment docstring and README updated.
+
+Decision: Phase 3 gate evidence is complete. Update `GAUGE.md` and commit.
+Next phase is Phase 4 honest repositioning and fresh-venv getting-started.
