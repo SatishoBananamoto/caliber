@@ -147,3 +147,52 @@ def test_replay_rejects_invalid_log(tmp_path):
 
     with pytest.raises(ValueError, match="invalid log"):
         log.replay("agent")
+
+
+def _chain_valid_lines(agent: str, mutate_second) -> bytes:
+    """Two chain-valid canonical lines; mutate_second edits event 2 pre-hash."""
+    import hashlib
+
+    prev = GENESIS_HASH
+    lines = []
+    for index, mutate in enumerate((lambda ev: None, mutate_second), start=1):
+        event = {
+            "version": 1,
+            "type": "predicted",
+            "event_id": f"e{index}",
+            "agent_name": agent,
+            "created_at": T0.isoformat(),
+            "prev_hash": prev,
+            "payload": {"prediction": {"id": f"p{index}"}},
+        }
+        mutate(event)
+        raw = json.dumps(event, sort_keys=True, separators=(",", ":")).encode()
+        lines.append(raw)
+        prev = hashlib.sha256(raw).hexdigest()
+    return b"\n".join(lines) + b"\n"
+
+
+@pytest.mark.parametrize(
+    "mutation, expected_error",
+    [
+        (lambda ev: ev.update(version=99), "unsupported event version"),
+        (lambda ev: ev.update(version=True), "unsupported event version"),
+        (lambda ev: ev.update(type="banana"), "unsupported event type"),
+        (lambda ev: ev.update(event_id=""), "event_id must be a non-empty string"),
+        (lambda ev: ev.update(agent_name="other"), "agent_name does not match"),
+        (lambda ev: ev.update(created_at="not-a-date"), "created_at is not ISO 8601"),
+        (lambda ev: ev.update(payload="oops"), "payload must be a JSON object"),
+    ],
+)
+def test_verify_rejects_chain_valid_but_structurally_invalid_events(
+    tmp_path, mutation, expected_error
+):
+    """SPEC section 2 table is enforced at verification, not just at append."""
+    log = EventLog(tmp_path)
+    log.path_for("agent").write_bytes(_chain_valid_lines("agent", mutation))
+
+    verification = log.verify("agent")
+
+    assert verification.valid is False
+    assert verification.failed_line == 2
+    assert expected_error in verification.error

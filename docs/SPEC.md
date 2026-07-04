@@ -109,7 +109,16 @@ terminators. For each line:
 1. The line MUST be non-empty.
 2. The line MUST decode as UTF-8 and parse as JSON.
 3. `event.prev_hash` MUST equal the previous hash.
-4. The new previous hash becomes `SHA256(raw_line_bytes).hexdigest()`.
+4. The event MUST satisfy every rule in the event-object table of section 2:
+   `version` is the integer `1` (booleans are rejected), `type` is a supported
+   event type, `event_id` is a non-empty string, `agent_name` equals the
+   selected agent, `created_at` is an ISO 8601 datetime string, `prev_hash` is
+   a string, and `payload` is a JSON object. Verification MUST fail at the
+   first violating line.
+5. The new previous hash becomes `SHA256(raw_line_bytes).hexdigest()`.
+
+Payload-internal rules (section 3.3) are enforced during store reconstruction
+(section 4), not by log verification.
 
 The verifier MUST hash the raw line bytes it accepted. It MUST NOT reserialize
 the JSON before hashing. This matches current `verify-log` behavior and is
@@ -465,6 +474,7 @@ Executable vectors live under `tests/vectors/`:
 | `manifest.json` | Expected heads, event counts, and tamper failure. |
 | `log-valid/vector-agent.events.jsonl` | Valid log with `predicted`, `verified`, and `anchor` events. |
 | `log-tampered/vector-agent.events.jsonl` | First event claim edited without updating later `prev_hash`. |
+| `log-structural/vector-agent.events.jsonl` | Chain-valid log whose second event has an unsupported `type`. |
 | `card.json` | Saved Trust Card. |
 | `card-store/vector-agent.events.jsonl` | Event-log-backed store that produces `card.json`. |
 | `card-store/vector-agent.json` | Derived JSON snapshot cache for the same store. |
@@ -482,6 +492,8 @@ Vector expectations:
   "valid_log_head": "ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442",
   "tampered_failure": "prev_hash does not match previous line hash",
   "tampered_failed_line": 2,
+  "structural_failure": "unsupported event type: 'banana'",
+  "structural_failed_line": 2,
   "card_store_head": "9f23e8157f376de86ce3c01115b6900188a60e2b932592ef340b0cf873e8e72a"
 }
 ```

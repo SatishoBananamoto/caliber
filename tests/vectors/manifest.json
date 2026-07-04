@@ -12,6 +12,12 @@
     "expected_failure": "prev_hash does not match previous line hash",
     "expected_failed_line": 2
   },
+  "structural_log": {
+    "path": "log-structural/vector-agent.events.jsonl",
+    "expected_valid": false,
+    "expected_failure": "unsupported event type: 'banana'",
+    "expected_failed_line": 2
+  },
   "card": {
     "path": "card.json",
     "store_dir": "card-store",

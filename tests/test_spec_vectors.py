@@ -55,6 +55,19 @@ def test_tampered_event_log_vector_fails_as_specified():
     assert verification.failed_line == tampered["expected_failed_line"]
 
 
+def test_structural_event_log_vector_fails_as_specified():
+    manifest = _manifest()
+    agent = manifest["agent_name"]
+    structural = manifest["structural_log"]
+    directory = VECTORS / Path(structural["path"]).parent
+
+    verification = EventLog(directory).verify(agent)
+
+    assert verification.valid is structural["expected_valid"]
+    assert verification.error == structural["expected_failure"]
+    assert verification.failed_line == structural["expected_failed_line"]
+
+
 def test_card_vector_matches_event_log_backed_store():
     manifest = _manifest()
     agent = manifest["agent_name"]
