@@ -18,6 +18,10 @@ class TestBucketStats:
         b = BucketStats(label="70-79", predictions=0, correct=0)
         assert b.accuracy is None
 
+    def test_ci95_empty(self):
+        b = BucketStats(label="70-79", predictions=0, correct=0)
+        assert b.ci95 is None
+
     def test_expected_accuracy(self):
         b = BucketStats(label="70-79", predictions=1, correct=1)
         assert b.expected_accuracy == 0.745
@@ -48,7 +52,14 @@ class TestBucketStats:
         assert d["correct"] == 4
         assert d["mean_confidence"] == 0.82
         assert d["accuracy"] == 0.8
+        assert d["ci95"] == [0.376, 0.964]
         assert "calibration_gap" in d
+
+    def test_wilson_interval_known_range(self):
+        b = BucketStats(label="70-79", predictions=10, correct=5)
+        lo, hi = b.ci95
+        assert abs(lo - 0.237) < 0.001
+        assert abs(hi - 0.763) < 0.001
 
 
 class TestDomainStats:
@@ -183,6 +194,7 @@ class TestTrustCard:
         assert "test" in summary
         assert "Overall accuracy" in summary
         assert "code" in summary
+        assert "95% CI" in summary
 
     def test_perfect_calibration(self):
         """Agent that's right exactly as often as confidence implies."""

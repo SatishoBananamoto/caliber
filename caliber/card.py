@@ -33,6 +33,8 @@ BUCKET_RANGES = [
     (0.90, 0.99, "90-99"),
 ]
 
+WILSON_Z_95 = 1.959963984540054
+
 
 @dataclass
 class BucketStats:
@@ -75,6 +77,24 @@ class BucketStats:
         return self.expected_accuracy - self.accuracy
 
     @property
+    def ci95(self) -> Optional[tuple[float, float]]:
+        """Wilson 95% confidence interval for bucket accuracy."""
+        if self.predictions == 0:
+            return None
+        n = self.predictions
+        p_hat = self.correct / n
+        z = WILSON_Z_95
+        z2 = z * z
+        denom = 1 + z2 / n
+        center = (p_hat + z2 / (2 * n)) / denom
+        margin = (
+            z
+            * math.sqrt((p_hat * (1 - p_hat) / n) + (z2 / (4 * n * n)))
+            / denom
+        )
+        return (max(0.0, center - margin), min(1.0, center + margin))
+
+    @property
     def significant(self) -> Optional[bool]:
         """Is the calibration gap statistically significant (p < 0.05)?
 
@@ -102,6 +122,9 @@ class BucketStats:
             d["mean_confidence"] = round(self.mean_confidence, 3)
         if self.accuracy is not None:
             d["accuracy"] = round(self.accuracy, 3)
+            ci95 = self.ci95
+            if ci95 is not None:
+                d["ci95"] = [round(ci95[0], 3), round(ci95[1], 3)]
             d["calibration_gap"] = round(self.calibration_gap, 3)
             sig = self.significant
             if sig is not None:
@@ -333,9 +356,16 @@ class TrustCard:
                         sig_note = " [insufficient data]"
                     elif bucket.significant is False:
                         sig_note = " [not significant]"
+                    ci95 = bucket.ci95
+                    ci_note = (
+                        f", 95% CI {ci95[0]:.1%}-{ci95[1]:.1%}"
+                        if ci95 is not None
+                        else ""
+                    )
                     lines.append(
                         f"  {label}%: {bucket.accuracy:.1%} accurate "
-                        f"({bucket.predictions} predictions){marker}{sig_note}"
+                        f"({bucket.predictions} predictions{ci_note})"
+                        f"{marker}{sig_note}"
                     )
 
         if self.domains:

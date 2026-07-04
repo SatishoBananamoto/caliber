@@ -484,3 +484,44 @@ Decision: D2 fixed for fixed-bucket card generation. Bucket labels remain the
 same for compatibility, but `calibration_gap` and `significant` now use the
 bucket's observed mean stated confidence when the card is generated from
 predictions.
+
+## EXP-003 - Phase 1 D3 Wilson Bucket Intervals
+
+Hypothesis: bucket accuracies as point estimates overstate certainty,
+especially for small buckets. Wilson 95% intervals make uncertainty explicit
+without adding runtime dependencies.
+
+Mini-plan:
+
+1. Add a Wilson score `ci95` property to `BucketStats`.
+2. Emit `ci95: [lo, hi]` in bucket JSON for non-empty buckets.
+3. Render the interval in the human Trust Card summary.
+4. Add tests for empty buckets, known interval range, JSON emission, and
+   summary rendering.
+5. Run targeted card tests and the full suite.
+
+Result:
+
+```text
+$ python3 -m pytest tests/test_card.py -q
+.................................                                        [100%]
+33 passed in 0.18s
+```
+
+```text
+$ python3 -m pytest -q
+........................................................................ [ 48%]
+........................................................................ [ 96%]
+.....                                                                    [100%]
+149 passed in 1.73s
+```
+
+Real-corpus smoke:
+
+- `python3 -m caliber.cli -a test card --json` now emits `ci95` for every
+  non-empty confidence bucket.
+- `python3 -m caliber.cli -a test card` renders `95% CI` in the human summary.
+
+Decision: D3 fixed for fixed buckets. Wilson intervals make small-bucket
+uncertainty explicit, including visibly wide intervals such as the 1-sample
+`90-99` bucket (`20.7%-100.0%` in the current `test` corpus).
