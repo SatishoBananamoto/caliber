@@ -205,12 +205,13 @@ class TrustCard:
                 sig = bucket.significant  # None if <5 predictions
                 gap = bucket.calibration_gap
                 if gap > 0.10:
-                    # Overconfident: accuracy < expected
-                    if sig is True or sig is None:  # confirmed or untestable
+                    # Overconfident: accuracy < expected.
+                    # A zone requires evidence, not just an untestable gap.
+                    if sig is True:
                         danger_zones.append(label)
                 elif gap < -0.10:
-                    # Underconfident: accuracy > expected
-                    if sig is True or sig is None:
+                    # Underconfident: accuracy > expected.
+                    if sig is True:
                         strength_zones.append(label)
 
         # Mean calibration gap (weighted by bucket size)

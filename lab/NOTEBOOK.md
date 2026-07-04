@@ -403,3 +403,40 @@ remove this zone after the significance-gating fix.
 
 Next phase: Phase 1 statistical core, starting with D1/D2 because they change
 the card schema/semantics that later intervals and README examples depend on.
+
+## EXP-001 - Phase 1 D1 Insufficient-Data Zone Gating
+
+Hypothesis: zone detection currently treats `BucketStats.significant is None`
+as permission to flag danger/strength zones, which means too little data can
+produce a stronger claim than enough data. If zone detection requires
+`significant is True`, 3-4 prediction buckets with large gaps will stop
+flagging, while large tested buckets will still flag.
+
+Mini-plan:
+
+1. Change only `TrustCard.from_predictions` zone gating in `caliber/card.py`.
+2. Update card tests so 3-4 sample buckets are explicitly not zones.
+3. Keep positive zone tests using larger samples that satisfy the significance
+   test.
+4. Run the targeted card tests, then the full suite.
+
+Result:
+
+```text
+$ python3 -m pytest tests/test_card.py -q
+.............................                                            [100%]
+29 passed in 0.13s
+```
+
+```text
+$ python3 -m pytest -q
+........................................................................ [ 49%]
+........................................................................ [ 99%]
+.                                                                        [100%]
+145 passed in 1.51s
+```
+
+Decision: D1 fixed as a narrow chunk. `TrustCard.from_predictions` now only
+creates a danger/strength zone when `BucketStats.significant is True`; an
+untestable gap (`None`) is no longer enough. Added explicit 4-sample
+regressions for both danger and strength zones.

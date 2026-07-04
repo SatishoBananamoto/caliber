@@ -112,12 +112,8 @@ class TestTrustCard:
         assert card.domains["style"].accuracy == 1.0
 
     def test_danger_zone_detection(self):
-        # 3+ predictions in 60-69% bucket, all wrong → danger zone
-        preds = self._make_predictions([
-            (0.65, "a", False),
-            (0.62, "a", False),
-            (0.68, "a", False),
-        ])
+        # Enough predictions in 60-69% bucket, all wrong -> danger zone.
+        preds = self._make_predictions([(0.65, "a", False)] * 20)
         card = TrustCard.from_predictions("test", preds)
         assert "60-69" in card.danger_zones
 
@@ -136,6 +132,21 @@ class TestTrustCard:
             (0.65, "a", False),
             (0.62, "a", False),
         ])
+        card = TrustCard.from_predictions("test", preds)
+        assert "60-69" not in card.danger_zones
+
+    def test_danger_zone_requires_significance_not_untestable_gap(self):
+        # D1 regression: 4 wrong predictions create a large gap, but
+        # significance is None, so the bucket must not be flagged.
+        preds = self._make_predictions([
+            (0.65, "a", False),
+            (0.62, "a", False),
+            (0.68, "a", False),
+            (0.64, "a", False),
+        ])
+        bucket = TrustCard.from_predictions("test", preds).confidence_buckets["60-69"]
+        assert bucket.calibration_gap > 0.10
+        assert bucket.significant is None
         card = TrustCard.from_predictions("test", preds)
         assert "60-69" not in card.danger_zones
 
@@ -238,12 +249,8 @@ class TestStrengthZones:
         return preds
 
     def test_strength_zone_detected(self):
-        # 3+ predictions in 50-59%, all correct → underconfident
-        preds = self._make_predictions([
-            (0.55, "a", True),
-            (0.52, "a", True),
-            (0.58, "a", True),
-        ])
+        # Enough predictions in 50-59%, all correct -> underconfident.
+        preds = self._make_predictions([(0.55, "a", True)] * 20)
         card = TrustCard.from_predictions("test", preds)
         assert "50-59" in card.strength_zones
 
@@ -257,11 +264,20 @@ class TestStrengthZones:
         assert card.strength_zones == []
 
     def test_strength_zone_in_json(self):
+        preds = self._make_predictions([(0.55, "a", True)] * 20)
+        card = TrustCard.from_predictions("test", preds)
+        data = json.loads(card.to_json())
+        assert "strength_zones" in data["calibration"]
+
+    def test_strength_zone_requires_significance_not_untestable_gap(self):
         preds = self._make_predictions([
             (0.55, "a", True),
             (0.52, "a", True),
             (0.58, "a", True),
+            (0.54, "a", True),
         ])
+        bucket = TrustCard.from_predictions("test", preds).confidence_buckets["50-59"]
+        assert bucket.calibration_gap < -0.10
+        assert bucket.significant is None
         card = TrustCard.from_predictions("test", preds)
-        data = json.loads(card.to_json())
-        assert "strength_zones" in data["calibration"]
+        assert "50-59" not in card.strength_zones
