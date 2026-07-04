@@ -1417,3 +1417,68 @@ Decision: commit this bench artifact because it is valid evidence, not because
 it is flattering. Next chunk should convert the bench into fast regression
 tests and use those tests to make the clean/biased/uninformative distinction
 explicit before writing `lab/THREATMODEL.md`.
+
+## EXP-017 - Phase 2 Fast Bench Regression Tests
+
+Hypothesis: a small deterministic bench can protect the Phase 2 findings in
+the normal test suite without freezing the full 500-replicate artifact. At
+`n=100`, clean/boundary populations should stay below the 5% any-flag budget,
+while each attacker population should trip its expected flag with high power.
+
+Mini-plan:
+
+1. Run an exploratory no-write small bench to choose stable replicate counts
+   and thresholds for a fast regression test.
+2. Add `tests/test_lab_bench.py` with explicit clean/boundary and attacker
+   expectations at `n=100`.
+3. Make the test assert flag-specific behavior, not just `any_flag`, so a
+   wrong flag cannot accidentally satisfy the attack coverage requirement.
+4. Run the new test, then the full suite, and record failures honestly.
+
+Result:
+
+Exploratory no-write slice at `n=100`, 50 replicates:
+
+```text
+honest any 0.0 {}
+overconfident any 0.0 {}
+underconfident any 0.02 {'LOW_OUTCOME_VARIANCE': 0.02}
+noisy any 0.0 {}
+farmer any 1.0 {'LOW_OUTCOME_VARIANCE': 1.0, 'CONFIDENCE_CONCENTRATION': 1.0, 'DOMAIN_CONCENTRATION': 1.0, 'INSTANT_VERIFICATION': 1.0}
+patient_farmer any 1.0 {'LOW_OUTCOME_VARIANCE': 1.0, 'CONFIDENCE_CONCENTRATION': 1.0, 'DOMAIN_CONCENTRATION': 1.0}
+naive_fabricator any 1.0 {'NO_DISCRIMINATION': 1.0, 'SUSPICIOUSLY_PERFECT': 1.0}
+smart_fabricator any 0.0 {}
+template_spammer any 1.0 {'NO_DISCRIMINATION': 1.0}
+duplicate_spammer any 1.0 {'NO_DISCRIMINATION': 1.0, 'DUPLICATE_CLAIMS': 1.0}
+domain_camper any 1.0 {'LOW_OUTCOME_VARIANCE': 0.04, 'DOMAIN_CONCENTRATION': 1.0}
+bulk_importer any 1.0 {'UNWITNESSED_HISTORY': 1.0}
+```
+
+Added `tests/test_lab_bench.py`:
+
+- one module-scoped mini-bench fixture (`n=100`, 50 replicates);
+- clean/boundary populations must stay at `any_flag_rate <= 0.05`;
+- attacker populations must hit expected flag codes at `>= 0.95`;
+- patient farmer must be caught without `INSTANT_VERIFICATION`.
+
+Targeted verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_lab_bench.py -q
+...                                                                      [100%]
+3 passed in 3.85s
+```
+
+Full suite:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 40%]
+........................................................................ [ 80%]
+...................................                                      [100%]
+179 passed in 11.66s
+```
+
+Decision: the fast bench regression now protects the core Phase 2 claims in
+normal CI-scale tests. Remaining Phase 2 gate work: write `lab/THREATMODEL.md`
+and explicitly classify the record-only impossibility boundaries.
