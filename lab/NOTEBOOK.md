@@ -658,3 +658,84 @@ Real-corpus smoke:
 
 Decision: adaptive buckets are added as a second view without removing or
 renaming the fixed five-bucket table, preserving compatibility.
+
+## EXP-007 - Phase 1 Property-Based Statistical Invariants
+
+Hypothesis: the new statistical helpers should be protected by invariant-style
+tests, not only hand-picked examples. Hypothesis can generate random forecast
+streams for Murphy identity checks, while deterministic Monte Carlo coverage
+can guard Wilson intervals across the NORTHSTAR grid.
+
+Mini-plan:
+
+1. Add `hypothesis` under `[project.optional-dependencies].dev` only; do not
+   add any runtime dependency.
+2. Add a focused property test file for Murphy identity, Wilson interval
+   coverage, and exact-binomial known values/properties.
+3. Keep Monte Carlo deterministic and bounded so the full suite stays fast.
+4. Install the dev extra locally only if needed for verification.
+5. Run the new property tests, then the full suite.
+
+Result:
+
+Initial setup findings:
+
+- `python3 -m pip install -e .[dev]` against system Python failed with
+  PEP 668 `externally-managed-environment`; verification moved to disposable
+  venv `/tmp/caliber-northstar-p1-properties`.
+- The first venv install failed under sandbox DNS while fetching build
+  dependencies, then succeeded after explicit network approval.
+- Existing `tests/test_mcp_server.py` imports `mcp`, so the new `dev` extra
+  must include the existing MCP optional dependency for a fresh full-suite run.
+  CI was updated to install `.[dev]`.
+
+First property-test run failed usefully:
+
+- Hypothesis rejected `width=32` floats with bounds `0.001`/`0.999` because
+  those exact decimals are not representable as 32-bit floats. Fix: use default
+  64-bit float generation.
+- Wilson intervals for zero successes can produce a tiny positive lower bound
+  (`5.55e-17`) instead of mathematical zero. Fix: clamp near-zero and near-one
+  numerical artifacts inside `_wilson_ci`.
+
+Wilson coverage check:
+
+Exact enumeration over the NORTHSTAR grid showed the requested "93-97%
+coverage for every Wilson cell" is mathematically false for this interval at
+small n/extreme p. The test now pins the actual exact coverage values and
+records the cells outside the original band:
+
+```text
+(5, 0.85)=0.9734
+(5, 0.95)=0.9774
+(10, 0.70)=0.9244
+(10, 0.95)=0.9139
+(20, 0.70)=0.9752
+(20, 0.85)=0.9781
+(20, 0.95)=0.9245
+```
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_card_properties.py -q
+......                                                                   [100%]
+6 passed in 1.97s
+```
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 44%]
+........................................................................ [ 89%]
+.................                                                        [100%]
+161 passed in 4.04s
+```
+
+LRN: A nominal 95% Wilson interval does not guarantee 93-97% exact coverage
+on every small-sample grid cell. Future statistical gates should prefer exact
+enumeration for binomial intervals when n is small, and treat Monte Carlo as a
+smoke check against the exact result, not as the source of truth.
+
+Decision: property/invariant tests are added with Hypothesis as a dev-only
+dependency. The literal Wilson acceptance band from NORTHSTAR is corrected by
+evidence rather than forced into a misleading test.

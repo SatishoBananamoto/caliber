@@ -123,7 +123,13 @@ def _wilson_ci(correct: int, n: int) -> Optional[tuple[float, float]]:
         * math.sqrt((p_hat * (1 - p_hat) / n) + (z2 / (4 * n * n)))
         / denom
     )
-    return (max(0.0, center - margin), min(1.0, center + margin))
+    lower = max(0.0, center - margin)
+    upper = min(1.0, center + margin)
+    if abs(lower) < 1e-15:
+        lower = 0.0
+    if abs(upper - 1.0) < 1e-15:
+        upper = 1.0
+    return (lower, upper)
 
 
 @dataclass
