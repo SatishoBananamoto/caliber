@@ -1,0 +1,21 @@
+{
+  "spec_version": "0.1",
+  "agent_name": "vector-agent",
+  "valid_log": {
+    "path": "log-valid/vector-agent.events.jsonl",
+    "event_count": 3,
+    "expected_head": "ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442"
+  },
+  "tampered_log": {
+    "path": "log-tampered/vector-agent.events.jsonl",
+    "expected_valid": false,
+    "expected_failure": "prev_hash does not match previous line hash",
+    "expected_failed_line": 2
+  },
+  "card": {
+    "path": "card.json",
+    "store_dir": "card-store",
+    "event_count": 5,
+    "expected_head": "9f23e8157f376de86ce3c01115b6900188a60e2b932592ef340b0cf873e8e72a"
+  }
+}

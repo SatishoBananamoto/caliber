@@ -1,0 +1,128 @@
+{
+  "trust_version": "0.1",
+  "agent_name": "vector-agent",
+  "generated": "2026-07-04T12:30:00+00:00",
+  "calibration": {
+    "total_predictions": 5,
+    "total_verified": 5,
+    "overall_accuracy": 0.6,
+    "mean_confidence": 0.74,
+    "mean_calibration_gap": 0.14,
+    "brier_score": 0.234,
+    "reliability": 0.1007,
+    "resolution": 0.1067,
+    "uncertainty": 0.24,
+    "calibration_z": -0.7259,
+    "calibration_p": 0.4679,
+    "confidence_buckets": {
+      "50-59": {
+        "predictions": 0,
+        "correct": 0
+      },
+      "60-69": {
+        "predictions": 1,
+        "correct": 0,
+        "mean_confidence": 0.6,
+        "accuracy": 0.0,
+        "ci95": [
+          0.0,
+          0.793
+        ],
+        "calibration_gap": 0.6,
+        "insufficient_data": true
+      },
+      "70-79": {
+        "predictions": 1,
+        "correct": 1,
+        "mean_confidence": 0.7,
+        "accuracy": 1.0,
+        "ci95": [
+          0.207,
+          1.0
+        ],
+        "calibration_gap": -0.3,
+        "insufficient_data": true
+      },
+      "80-89": {
+        "predictions": 3,
+        "correct": 2,
+        "mean_confidence": 0.8,
+        "accuracy": 0.667,
+        "ci95": [
+          0.208,
+          0.939
+        ],
+        "calibration_gap": 0.133,
+        "insufficient_data": true
+      },
+      "90-99": {
+        "predictions": 0,
+        "correct": 0
+      }
+    },
+    "adaptive_buckets": [
+      {
+        "index": 1,
+        "predictions": 1,
+        "correct": 0,
+        "confidence_range": [
+          0.6,
+          0.6
+        ],
+        "mean_confidence": 0.6,
+        "accuracy": 0.0,
+        "ci95": [
+          0.0,
+          0.793
+        ],
+        "calibration_gap": 0.6
+      },
+      {
+        "index": 2,
+        "predictions": 2,
+        "correct": 2,
+        "confidence_range": [
+          0.7,
+          0.8
+        ],
+        "mean_confidence": 0.75,
+        "accuracy": 1.0,
+        "ci95": [
+          0.342,
+          1.0
+        ],
+        "calibration_gap": -0.25
+      },
+      {
+        "index": 3,
+        "predictions": 2,
+        "correct": 1,
+        "confidence_range": [
+          0.8,
+          0.8
+        ],
+        "mean_confidence": 0.8,
+        "accuracy": 0.5,
+        "ci95": [
+          0.095,
+          0.905
+        ],
+        "calibration_gap": 0.3
+      }
+    ],
+    "domains": {
+      "code": {
+        "predictions": 3,
+        "correct": 2,
+        "avg_confidence": 0.8,
+        "accuracy": 0.667
+      },
+      "ops": {
+        "predictions": 2,
+        "correct": 1,
+        "avg_confidence": 0.65,
+        "accuracy": 0.5
+      }
+    }
+  }
+}
