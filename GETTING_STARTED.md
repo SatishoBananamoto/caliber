@@ -19,6 +19,15 @@ If you are testing from a local checkout:
 python3 -m pip install -e .
 ```
 
+In a network-restricted local checkout, use a fresh environment that can see
+already-installed build/runtime packages and disable build isolation:
+
+```bash
+python3 -m venv --system-site-packages /tmp/caliber-fresh
+. /tmp/caliber-fresh/bin/activate
+python3 -m pip install --no-build-isolation -e .
+```
+
 ## 2. Pick An Agent Name
 
 Use one stable name for the agent or workflow you want to measure:

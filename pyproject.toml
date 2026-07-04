@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "caliber-trust"
 version = "0.2.0"
 description = "Calibration instrument for AI agents: measure calibration, stress-test records, and verify cards."
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 requires-python = ">=3.9"
 authors = [
     {name = "Satish Patil", email = "satishpatil@proton.me"},

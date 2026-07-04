@@ -2092,3 +2092,158 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: public identity claims are now materially more honest. Next Phase 4
 chunk should run `GETTING_STARTED.md` end-to-end in a clean venv and paste the
 transcript.
+
+## EXP-027 - Phase 4 clean-venv GETTING_STARTED transcript
+
+Hypothesis: `GETTING_STARTED.md` should work in a clean virtual environment
+from local checkout install through prediction, verification, summary, card,
+integrity, import, and MCP config commands. The walkthrough must run with a
+temporary `HOME` so it does not mutate the user's real `~/.caliber` store.
+
+Mini-plan:
+
+1. Create a fresh venv under `/tmp`.
+2. Install the local checkout with `python -m pip install -e .`.
+3. Run the guide's main commands using a temp `HOME` and stable `AGENT_NAME`.
+4. Create a tiny temporary `CALIBRATE.md` sample for the import section.
+5. Record the transcript and fix any guide/code discrepancy found.
+
+Result:
+
+Initial clean-venv install found two setup discrepancies:
+
+- `python -m pip install -e .` tried to fetch isolated build dependencies and
+  failed in this network-restricted environment (`ProxyError`, no
+  `setuptools` wheel available).
+- `python -m pip install --no-build-isolation -e .` then exposed that older
+  default `setuptools` rejects `license = "MIT"` in `pyproject.toml`.
+
+Fixes:
+
+- Lowered the package build-system floor to `setuptools>=61.0`, which is
+  enough for this PEP 621 project.
+- Changed package license metadata to `license = {text = "MIT"}` for older
+  build backends.
+- Added a network-restricted local-checkout install path to
+  `GETTING_STARTED.md` using a fresh `--system-site-packages` venv and the
+  explicit `--no-build-isolation` pip option.
+
+Clean walkthrough transcript after the fix:
+
+```text
+fresh_root=/tmp/caliber-fresh-fixed3.Hb97hP
+$ python3 -m venv --system-site-packages /tmp/.../venv
+$ python -m pip install --no-build-isolation -e .
+Successfully built caliber-trust
+Successfully installed caliber-trust-0.2.0
+
+$ export AGENT_NAME=getting-started-smoke
+$ caliber -a "$AGENT_NAME" predict "the repository has a pytest config" -c 70 -d codebase
+Recorded: f1e77c50
+  Claim: the repository has a pytest config
+  Confidence: 70%
+  Domain: codebase
+
+$ caliber -a "$AGENT_NAME" predict "the main package exposes a CLI entry point" -c 80 -d api
+Recorded: 8034fc45
+  Claim: the main package exposes a CLI entry point
+  Confidence: 80%
+  Domain: api
+
+$ caliber -a "$AGENT_NAME" predict "the README documents installation" -c 90 -d docs
+Recorded: 5afe4e70
+  Claim: the README documents installation
+  Confidence: 90%
+  Domain: docs
+
+$ caliber -a "$AGENT_NAME" verify f1e77c50 --correct
+Verified f1e77c50: correct
+
+$ caliber -a "$AGENT_NAME" verify 8034fc45 --correct
+Verified 8034fc45: correct
+
+$ caliber -a "$AGENT_NAME" verify 5afe4e70 --correct --notes "README includes pip install caliber-trust"
+Verified 5afe4e70: correct
+  Notes: README includes pip install caliber-trust
+
+$ caliber -a "$AGENT_NAME" summary
+Agent: getting-started-smoke
+Total predictions: 3
+  Verified: 3
+  Unverified: 0
+  Accuracy: 100.0% (3/3)
+  Avg confidence: 80.0%
+  Calibration: underconfident by 20%
+
+  Need 17 more predictions for meaningful Trust Card.
+
+$ caliber -a "$AGENT_NAME" card
+Trust Card: getting-started-smoke
+Predictions: 3 verified / 3 total
+Overall accuracy: 100.0%
+Mean confidence: 80.0%
+Calibration gap: 20.0% (underconfident)
+Brier score: 0.0467 (reliability 0.0467 - resolution 0.0000 + uncertainty 0.0000)
+Calibration Z: 0.885 (p=0.376)
+
+$ caliber -a "$AGENT_NAME" card --json
+{
+  "agent_name": "getting-started-smoke",
+  "calibration": {
+    "total_predictions": 3,
+    "total_verified": 3,
+    "overall_accuracy": 1.0,
+    "mean_confidence": 0.8,
+    "mean_calibration_gap": -0.2
+  }
+}
+
+$ caliber -a "$AGENT_NAME" integrity
+Integrity Report: getting-started-smoke
+Verified predictions: 3
+
+Insufficient data for integrity analysis (3 verified, need 10+).
+
+$ caliber -a "$AGENT_NAME" card --with-integrity
+Trust Card: getting-started-smoke
+Predictions: 3 verified / 3 total
+Integrity Report: getting-started-smoke
+Verified predictions: 3
+Insufficient data for integrity analysis (3 verified, need 10+).
+
+$ caliber -a "$AGENT_NAME" import /tmp/.../CALIBRATE.md
+Imported 2 predictions from /tmp/caliber-fresh-fixed3.Hb97hP/import/CALIBRATE.md
+
+$ caliber -a "$AGENT_NAME" card
+Trust Card: getting-started-smoke
+Predictions: 5 verified / 5 total
+Overall accuracy: 80.0%
+Mean confidence: 76.0%
+Calibration gap: 4.0% (underconfident)
+
+$ caliber mcp-config --cwd /home/satishocoin/caliber
+{
+  "mcpServers": {
+    "caliber": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "caliber.mcp_server"
+      ],
+      "cwd": "/home/satishocoin/caliber"
+    }
+  }
+}
+
+$ caliber mcp-config --install --path /tmp/.../mcp.json --cwd /home/satishocoin/caliber
+Installed MCP server 'caliber' in /tmp/caliber-fresh-fixed3.Hb97hP/mcp.json
+
+store_files:
+getting-started-smoke.events.jsonl
+getting-started-smoke.json
+```
+
+Decision: `GETTING_STARTED.md` now has a verified local-checkout path for a
+network-restricted environment. The guide's prediction, verification, summary,
+card, integrity, import, and MCP config commands all ran against a temporary
+`HOME` without mutating the user's real store.
