@@ -6,7 +6,7 @@ import pytest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from caliber.tracker import Prediction
+from caliber.tracker import Prediction, TrustTracker
 from caliber.storage import FileStorage, MemoryStorage
 
 
@@ -104,3 +104,85 @@ class TestFileStorage:
         s.save("agent", [_make_prediction("p1"), _make_prediction("p2")])
         loaded = s.load("agent")
         assert len(loaded) == 2
+
+    def test_new_store_writes_event_log_and_replays_over_snapshot(self, tmp_path):
+        s = FileStorage(tmp_path)
+        tracker = TrustTracker("agent", storage=s)
+        pid = tracker.predict(
+            "event log claim",
+            confidence=0.80,
+            domain="test",
+            timestamp=datetime(2026, 3, 24, tzinfo=timezone.utc),
+            prediction_id="p1",
+        )
+        tracker.verify(
+            pid,
+            correct=True,
+            verified_at=datetime(2026, 3, 24, 0, 2, tzinfo=timezone.utc),
+        )
+
+        event_path = tmp_path / "agent.events.jsonl"
+        assert event_path.exists()
+        events = [json.loads(line) for line in event_path.read_text().splitlines()]
+        assert [event["type"] for event in events] == ["predicted", "verified"]
+
+        snapshot = json.loads((tmp_path / "agent.json").read_text())
+        snapshot["predictions"][0]["outcome"] = False
+        (tmp_path / "agent.json").write_text(json.dumps(snapshot) + "\n")
+
+        loaded = FileStorage(tmp_path).load("agent")
+        assert loaded[0].outcome is True
+
+    def test_add_completed_creates_imported_event_for_new_store(self, tmp_path):
+        tracker = TrustTracker("agent", storage=FileStorage(tmp_path))
+        tracker.add_completed(
+            "historical claim",
+            confidence=0.70,
+            domain="history",
+            correct=False,
+            timestamp=datetime(2026, 3, 24, tzinfo=timezone.utc),
+            prediction_id="p1",
+        )
+
+        event_path = tmp_path / "agent.events.jsonl"
+        event = json.loads(event_path.read_text().splitlines()[0])
+
+        assert event["type"] == "imported"
+        loaded = FileStorage(tmp_path).load("agent")
+        assert loaded[0].id == "p1"
+        assert loaded[0].outcome is False
+
+    def test_invalid_event_log_fails_loudly(self, tmp_path):
+        tracker = TrustTracker("agent", storage=FileStorage(tmp_path))
+        pid = tracker.predict(
+            "event log claim",
+            confidence=0.80,
+            domain="test",
+            prediction_id="p1",
+        )
+        tracker.verify(pid, correct=True)
+
+        event_path = tmp_path / "agent.events.jsonl"
+        lines = event_path.read_text().splitlines()
+        event = json.loads(lines[0])
+        event["payload"]["prediction"]["claim"] = "tampered"
+        lines[0] = json.dumps(event, sort_keys=True, separators=(",", ":"))
+        event_path.write_text("\n".join(lines) + "\n")
+
+        with pytest.raises(ValueError, match="invalid log"):
+            FileStorage(tmp_path).load("agent")
+
+    def test_legacy_json_store_does_not_auto_create_partial_event_log(self, tmp_path):
+        legacy_path = tmp_path / "my_agent.json"
+        legacy_path.write_text(json.dumps({
+            "agent_name": "my agent",
+            "predictions": [_make_prediction("legacy").to_dict()],
+        }) + "\n")
+
+        s = FileStorage(tmp_path)
+        predictions = s.load("my agent")
+        predictions.append(_make_prediction("new"))
+        s.save("my agent", predictions)
+
+        assert not (tmp_path / "my%20agent.events.jsonl").exists()
+        assert s.load("my agent")[0].id == "legacy"

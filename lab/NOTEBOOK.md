@@ -1615,3 +1615,66 @@ Failure/limit learned:
 Decision: the hash-chain primitive is ready for integration. Next chunk should
 wire prediction/verification/import events into storage while preserving the
 existing JSON snapshot as a backward-compatible derived cache.
+
+## EXP-020 - Phase 3 FileStorage Event-Log Integration
+
+Hypothesis: `FileStorage` can make event logs the source of truth for new
+stores without breaking existing JSON snapshot users. For stores with an event
+log, `load()` should replay the log and treat the JSON file as a derived cache;
+legacy JSON files without an event log should still load unchanged until an
+explicit migration command exists.
+
+Mini-plan:
+
+1. Extend `FileStorage` internally with `EventLog` replay/append support while
+   keeping the public `Storage.save/load` interface unchanged.
+2. Diff old vs new predictions during `save()` to append `predicted`,
+   `verified`, or `imported` events for new event-log-backed stores.
+3. Keep legacy JSON fallback when no `.events.jsonl` exists.
+4. Add tests proving new stores create/replay event logs, snapshot tampering is
+   ignored when an event log exists, invalid event logs fail loudly, and legacy
+   JSON fallback still works.
+5. Run targeted storage/tracker/CLI tests, then the full suite.
+
+Result:
+
+Integrated `EventLog` into `FileStorage`:
+
+- new stores now write `<agent>.events.jsonl` beside the JSON snapshot;
+- `predict()` produces a `predicted` event;
+- `verify()` produces a `verified` event;
+- `add_completed()` / direct save of already-verified new predictions produces
+  an `imported` event;
+- when an event log exists, `load()` replays it and treats JSON as a derived
+  cache;
+- legacy JSON-only stores still load from JSON and do not silently get a
+  partial event log before an explicit migration command exists.
+
+Tests added to `tests/test_storage.py`:
+
+- event log is written and replayed over a tampered JSON snapshot;
+- completed historical predictions create `imported` events;
+- invalid event logs fail loudly;
+- legacy sanitized JSON does not auto-create a partial event log.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_storage.py -q
+................                                                         [100%]
+16 passed in 0.89s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_tracker.py tests/test_cli.py tests/test_importer.py -q
+..................................                                       [100%]
+34 passed in 4.67s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 37%]
+........................................................................ [ 75%]
+..............................................                           [100%]
+190 passed in 15.71s
+```
+
+Decision: new stores now have event logs as the replay source of truth while
+old JSON-only stores stay compatible. Next chunk should expose verification via
+`caliber verify-log` and then add explicit migration for old JSON stores.
