@@ -49,38 +49,55 @@ MIN_N_DISTRIBUTIONAL = 20
 # distribution shape, so they stabilize sooner.
 MIN_N_BEHAVIORAL = 10
 
-# Outcome-variance floor: uncertainty below this means the base rate is
-# outside ~[0.10, 0.90] — the outcome set was close to a foregone conclusion.
-LOW_UNCERTAINTY_THRESHOLD = 0.09
+# Outcome-variance floor: uncertainty below this means the base rate is close
+# to a foregone conclusion. Bench thresholds-78508b1 @ n=50: clean FPR 3.64%,
+# power 99.2% vs farmer, 99.8% vs patient_farmer.
+LOW_UNCERTAINTY_THRESHOLD = 0.13
 
-# Resolution-to-uncertainty ratio below which confidence levels carry
-# essentially no information about outcomes.
-LOW_RESOLUTION_RATIO = 0.10
+# Resolution-to-uncertainty ratio below which confidence levels carry little
+# information about outcomes. Bench thresholds-78508b1 @ n=50: clean FPR 0.4%,
+# power 100% vs naive_fabricator and template_spammer.
+LOW_RESOLUTION_RATIO = 0.494476
+
+# Small samples need a stricter no-discrimination gate; the n=50-derived ratio
+# false-positive flagged existing honest n=24/n=30 fixtures. Keep the original
+# ratio below 50 verified predictions until a separate small-n bench justifies
+# changing it.
+LOW_RESOLUTION_RATIO_SMALL_N = 0.10
+LOW_RESOLUTION_RATIO_DERIVED_MIN_N = 50
 
 # Share of verified predictions in the top confidence bucket (90-99) above
-# which the confidence distribution looks like farming.
+# which the confidence distribution looks like farming. Bench
+# thresholds-78508b1 @ n=50: clean FPR 0.64%, power 100% vs farmer and
+# patient_farmer.
 TOP_BUCKET_SHARE_THRESHOLD = 0.60
 
 # Herfindahl index over domains above which activity is suspiciously narrow.
+# Bench thresholds-78508b1 @ n=50: clean FPR 0.0%, power 100% vs domain_camper.
 DOMAIN_HHI_THRESHOLD = 0.60
 
-# Share of normalized claims that are duplicates of an earlier claim.
+# Share of normalized claims that are duplicates of an earlier claim. Bench
+# thresholds-78508b1 @ n=50: clean FPR 0.0%, power 100% vs duplicate_spammer.
 DUPLICATE_RATIO_THRESHOLD = 0.20
 
 # Predict->verify gaps under this many seconds count as "instant".
 INSTANT_VERIFY_SECONDS = 120.0
 
-# Share of live (non-imported) verifications that are instant.
+# Share of live (non-imported) verifications that are instant. Bench
+# thresholds-78508b1 @ n=50: clean FPR 0.0%, power 100% vs farmer.
 INSTANT_SHARE_THRESHOLD = 0.50
 
 # Share of verified predictions that arrived as batch imports
 # (timestamp == verified_at, no witnessed prediction window).
+# Bench thresholds-78508b1 @ n=50: clean FPR 0.0%, power 100% vs bulk_importer.
 IMPORT_SHARE_THRESHOLD = 0.80
 
 # Too-good-to-be-true test (the Mendel test). Real binomial outcomes are
 # noisy; fabricated outcomes track stated confidence too closely. We flag
 # when the per-bucket goodness-of-fit statistic falls in the extreme LOW
 # tail of its chi-square distribution.
+# Bench thresholds-78508b1 @ n=50: clean FPR 0.0%, power 100% vs
+# naive_fabricator.
 MENDEL_P_LOW_THRESHOLD = 0.01
 MENDEL_MIN_BUCKET_N = 10
 MENDEL_MIN_BUCKETS = 3
@@ -388,26 +405,31 @@ class IntegrityReport:
                 self.resolution is not None
                 and self.uncertainty is not None
                 and self.uncertainty >= LOW_UNCERTAINTY_THRESHOLD
-                and self.resolution / self.uncertainty < LOW_RESOLUTION_RATIO
             ):
-                flags.append(
-                    IntegrityFlag(
-                        code="NO_DISCRIMINATION",
-                        message=(
-                            "Outcomes vary but confidence levels do not track "
-                            "them — stated confidence carries almost no "
-                            "information about which predictions come true."
-                        ),
-                        evidence={
-                            "resolution": round(self.resolution, 4),
-                            "uncertainty": round(self.uncertainty, 4),
-                            "ratio": round(
-                                self.resolution / self.uncertainty, 3
-                            ),
-                            "threshold": LOW_RESOLUTION_RATIO,
-                        },
-                    )
+                resolution_ratio = self.resolution / self.uncertainty
+                ratio_threshold = (
+                    LOW_RESOLUTION_RATIO
+                    if n >= LOW_RESOLUTION_RATIO_DERIVED_MIN_N
+                    else LOW_RESOLUTION_RATIO_SMALL_N
                 )
+                if resolution_ratio < ratio_threshold:
+                    flags.append(
+                        IntegrityFlag(
+                            code="NO_DISCRIMINATION",
+                            message=(
+                                "Outcomes vary but confidence levels do not "
+                                "track them — stated confidence carries almost "
+                                "no information about which predictions come "
+                                "true."
+                            ),
+                            evidence={
+                                "resolution": round(self.resolution, 4),
+                                "uncertainty": round(self.uncertainty, 4),
+                                "ratio": round(resolution_ratio, 3),
+                                "threshold": ratio_threshold,
+                            },
+                        )
+                    )
 
             if (
                 self.top_bucket_share is not None

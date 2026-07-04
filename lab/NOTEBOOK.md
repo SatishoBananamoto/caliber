@@ -1220,3 +1220,79 @@ Decision: threshold artifacts are ready to commit. Next chunk should update
 `integrity.py` constants/comments for the two recommended changes and measured
 operating-point comments for all surviving constants, then rerun the bench
 slice that proves the changed thresholds behave as expected.
+
+## EXP-014 - Phase 2 Apply Threshold Operating Points
+
+Hypothesis: applying the n=50 threshold recommendations should improve farmer
+and template-spammer detection while keeping clean-population FPR within the
+5% budget, and every integrity constant should carry a measured operating
+point comment.
+
+Mini-plan:
+
+1. Update `LOW_UNCERTAINTY_THRESHOLD` and `LOW_RESOLUTION_RATIO` from
+   `lab/THRESHOLDS.md` recommendations.
+2. Add bench-result comments for every threshold constant in `integrity.py`.
+3. Run targeted integrity/adversarial/lab tests, then the full suite.
+4. Rerun threshold analysis after the change to confirm realized operating
+   points.
+
+Result:
+
+Applied:
+
+- `LOW_UNCERTAINTY_THRESHOLD`: `0.09` -> `0.13`.
+- `LOW_RESOLUTION_RATIO`: `0.10` -> `0.494476` for n>=50.
+- Added `LOW_RESOLUTION_RATIO_SMALL_N = 0.10` and
+  `LOW_RESOLUTION_RATIO_DERIVED_MIN_N = 50` after tests showed the n=50-derived
+  ratio false-positive flagged existing honest n=24/n=30 fixtures.
+- Added operating-point comments for all threshold constants.
+
+First targeted run failed usefully:
+
+```text
+tests/test_integrity.py::TestHonestAgent::test_no_flags FAILED
+tests/test_integrity.py::TestSerialization::test_honest_summary_clean FAILED
+tests/test_integrity_adversarial.py::TestKnownResidualLimitations::test_honest_bulk_user_not_punished_for_templates FAILED
+```
+
+Cause: the n=50-derived `LOW_RESOLUTION_RATIO` threshold was too aggressive
+for smaller honest fixtures. Fix: use the derived ratio at n>=50 and keep the
+old 0.10 ratio below n=50 until a separate small-n bench justifies changing it.
+
+Post-fix targeted verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_integrity.py tests/test_integrity_adversarial.py tests/test_lab_simulate.py tests/test_lab_analyze_thresholds.py -q
+..........................................                               [100%]
+42 passed in 0.63s
+```
+
+No-write n=50 threshold-analysis confirmation:
+
+```text
+LOW_UNCERTAINTY_THRESHOLD current 0.13 clean_fpr 0.0364
+  farmer 0.992, patient_farmer 0.998
+LOW_RESOLUTION_RATIO current 0.494476 clean_fpr 0.0044
+  naive_fabricator 1.0, template_spammer metric-threshold 1.0
+TOP_BUCKET_SHARE_THRESHOLD current 0.6 survives
+DOMAIN_HHI_THRESHOLD current 0.6 survives
+DUPLICATE_RATIO_THRESHOLD current 0.2 survives
+INSTANT_SHARE_THRESHOLD current 0.5 survives
+IMPORT_SHARE_THRESHOLD current 0.8 survives
+MENDEL_P_LOW_THRESHOLD current 0.01 survives
+```
+
+Full suite:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+................................                                         [100%]
+176 passed in 3.82s
+```
+
+Decision: threshold constants/comments are updated with one dynamic small-n
+guard. Next chunk should rerun/persist post-change threshold artifacts and a
+bench slice so committed evidence matches current code.
