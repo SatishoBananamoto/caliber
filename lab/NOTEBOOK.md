@@ -1678,3 +1678,61 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: new stores now have event logs as the replay source of truth while
 old JSON-only stores stay compatible. Next chunk should expose verification via
 `caliber verify-log` and then add explicit migration for old JSON stores.
+
+## EXP-021 - Phase 3 verify-log CLI
+
+Hypothesis: exposing the event-log verifier through the CLI lets users and
+third parties detect edited/deleted/reordered history and compare a stored
+chain head without changing storage or migration behavior.
+
+Mini-plan:
+
+1. Add `caliber verify-log` with text and JSON output.
+2. Support an optional expected head hash so externally stored anchors can
+   detect final-line edits.
+3. Return a non-zero exit code for missing, invalid, or head-mismatched logs.
+4. Add CLI tests for valid logs, JSON output, bad expected heads, and tampered
+   logs.
+5. Run CLI/event-log tests, then the full suite.
+
+Result:
+
+Added `caliber verify-log`:
+
+- text output: event count, head hash, and log path when valid;
+- `--json` output for machine checks;
+- `--head <hash>` expected-head verification for externally stored anchors;
+- exit code 1 for missing logs, invalid chains, or expected-head mismatches.
+
+Added CLI tests:
+
+- valid chain text output;
+- JSON output shape;
+- wrong expected head fails;
+- tampered first event causes line-2 `prev_hash` failure.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_cli.py -q
+...............                                                          [100%]
+15 passed in 2.13s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_event_log.py -q
+.......                                                                  [100%]
+7 passed in 1.49s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_storage.py -q
+................                                                         [100%]
+16 passed in 1.40s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 37%]
+........................................................................ [ 74%]
+..................................................                       [100%]
+194 passed in 9.21s
+```
+
+Decision: users can now verify event-log structure and compare an externally
+saved head. Next chunk should add `caliber anchor`, which records or prints the
+current head in a way `verify-log --head` can later use.

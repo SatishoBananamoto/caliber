@@ -304,6 +304,59 @@ def integrity(ctx, as_json: bool):
         click.echo(report.summary())
 
 
+@cli.command("verify-log")
+@click.option("--head", "expected_head", default=None,
+              help="Expected chain head hash from an external anchor.")
+@click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.pass_context
+def verify_log(ctx, expected_head: str | None, as_json: bool):
+    """Verify the append-only event-log hash chain."""
+    from caliber.event_log import EventLog
+
+    log = EventLog(ctx.obj["store"])
+    path = log.path_for(ctx.obj["agent"])
+    if not path.exists():
+        result = {
+            "agent_name": ctx.obj["agent"],
+            "path": str(path),
+            "valid": False,
+            "event_count": 0,
+            "head_hash": None,
+            "error": "No event log found.",
+            "failed_line": None,
+        }
+        if as_json:
+            click.echo(json.dumps(result, indent=2))
+        else:
+            click.echo(f"Error: {result['error']} ({path})", err=True)
+        sys.exit(1)
+
+    verification = log.verify(ctx.obj["agent"], expected_head=expected_head)
+    result = {
+        "agent_name": ctx.obj["agent"],
+        "path": str(path),
+        "valid": verification.valid,
+        "event_count": verification.event_count,
+        "head_hash": verification.head_hash,
+        "error": verification.error,
+        "failed_line": verification.failed_line,
+    }
+    if as_json:
+        click.echo(json.dumps(result, indent=2))
+    elif verification.valid:
+        click.echo(f"Event log valid: {verification.event_count} event(s)")
+        click.echo(f"Head: {verification.head_hash}")
+        click.echo(f"Path: {path}")
+    else:
+        click.echo(f"Event log invalid: {verification.error}", err=True)
+        if verification.failed_line is not None:
+            click.echo(f"Failed line: {verification.failed_line}", err=True)
+        click.echo(f"Head: {verification.head_hash}", err=True)
+
+    if not verification.valid:
+        sys.exit(1)
+
+
 @cli.command("mcp-config")
 @click.option("--install", is_flag=True, help="Write the config into an MCP JSON file.")
 @click.option(

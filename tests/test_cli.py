@@ -222,6 +222,77 @@ def test_import_command_imports_calibrate_md(tmp_path):
     assert data["calibration"]["total_verified"] == 1
 
 
+def test_verify_log_command_reports_valid_chain(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "verify-log"],
+    )
+
+    assert result.exit_code == 0
+    assert "Event log valid: 2 event(s)" in result.output
+    assert "Head: " in result.output
+
+
+def test_verify_log_command_json(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "verify-log", "--json"],
+    )
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["valid"] is True
+    assert data["event_count"] == 2
+    assert len(data["head_hash"]) == 64
+
+
+def test_verify_log_command_fails_on_wrong_expected_head(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-log",
+            "--head",
+            "0" * 64,
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Event log invalid: head hash does not match expected_head" in result.output
+
+
+def test_verify_log_command_fails_on_tampered_log(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+    event_path = tmp_path / "cli-test.events.jsonl"
+    lines = event_path.read_text().splitlines()
+    event = json.loads(lines[0])
+    event["payload"]["prediction"]["claim"] = "tampered"
+    lines[0] = json.dumps(event, sort_keys=True, separators=(",", ":"))
+    event_path.write_text("\n".join(lines) + "\n")
+
+    result = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "verify-log"],
+    )
+
+    assert result.exit_code == 1
+    assert "Event log invalid: prev_hash does not match previous line hash" in result.output
+    assert "Failed line: 2" in result.output
+
+
 def test_mcp_config_prints_json(tmp_path):
     runner = CliRunner()
 
