@@ -1,10 +1,10 @@
 # GAUGE — caliber
 
-> Trust protocol for AI agents. Tracks predictions, measures calibration.
+> Calibration instrument for AI agents. Tracks predictions, measures calibration.
 > Updated before every commit. Single source of truth.
 
-**Current version**: v0.2.0 (on PyPI as `caliber-trust` — gaming detection release)
-**Last session**: 2026-07-04 — northstar Phase 3 tamper evidence completed; Phase 4 honest repositioning is next
+**Current version**: v0.3.0 local northstar release candidate (v0.2.0 remains on PyPI as `caliber-trust`)
+**Last session**: 2026-07-04 — northstar Phase 4 honest repositioning completed; review/release handoff is ready
 **Repo**: `northstar` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 202 tests passing.
 
 ---
@@ -79,8 +79,27 @@ Phase 3 tamper evidence is complete:
 - README and `commitment.py` now state that unanchored commitments are
   self-attestation unless the chain head is witnessed or anchored externally.
 
-Next concrete work: Phase 4 Honest Repositioning. Start with the README
-identity/claims rewrite and a clean-venv `GETTING_STARTED.md` transcript.
+Phase 4 honest repositioning is complete:
+
+- README now identifies Caliber as a calibration instrument, not a trust
+  protocol, and frames registries/A2A as motivation rather than current
+  capability.
+- README threat-model language distinguishes record-only evidence, event-log
+  tamper evidence, anchored-head evidence, and external adjudication.
+- `GETTING_STARTED.md` was walked end-to-end in a fresh temp-home flow; the
+  transcript is in `lab/NOTEBOOK.md` under EXP-027.
+- `CHANGELOG.md` now has a v0.3.0 entry that calls out statistical
+  corrections, adversarial lab evidence, tamper-evidence commands, and the
+  no-publish boundary.
+- Local package metadata is bumped to `0.3.0`; Satish still owns all push and
+  PyPI release decisions.
+- `lab/HANDOFF.md` is the review starting point.
+
+Next concrete work: Satish review and release decision. Start with
+`lab/HANDOFF.md`, then review `CHANGELOG.md`, `README.md`,
+`GETTING_STARTED.md`, the statistical/card changes, the lab evidence, and the
+event-log verification path. Do not push or publish until Satish explicitly
+decides to release.
 
 ### What just happened (2026-06-10)
 
@@ -197,6 +216,39 @@ single score._
 ---
 
 ## Session Log
+
+### 2026-07-04 — Northstar Phase 4 honest repositioning (Codex/Kai)
+
+- **Worked on:** Phase 4 from `NORTHSTAR.md`: honest public positioning,
+  fresh-venv getting-started verification, v0.3.0 changelog/version bump,
+  phase-gate tracker update, and handoff.
+- **Completed:** README identity rewrite away from "trust protocol";
+  evidence-level threat model in README; clean temp-home
+  `GETTING_STARTED.md` walkthrough transcript; network-restricted local
+  checkout install note; `CHANGELOG.md`; local version bump to `0.3.0`;
+  `lab/HANDOFF.md`.
+- **Headline numbers:** test suite grew from the northstar baseline `143
+  passed` to `202 passed`; flagship card regenerated from 94 verified
+  predictions with 75.5% accuracy, 70.7% mean confidence, mean calibration gap
+  `-0.048`, Brier `0.1798`, and no `danger_zones` or `strength_zones`; the
+  90-99 bucket's apparent `0.425` gap remains `insufficient_data` at n=2.
+- **Bench summary:** full Phase 2 bench covers 12 populations x 4 sample
+  sizes with 500 seeded replicates per cell. At n=50, `honest` any-flag rate
+  was 2.8%; at n=100, 1.0%. Farmer, patient farmer, naive fabricator,
+  template spammer, duplicate spammer, domain camper, and bulk importer all
+  hit 100% detection at n=50 and n=100. Smart fabrication remains the
+  record-only boundary (4.6% any-flag at n=50, 1.4% at n=100).
+- **Evidence:** Phase 4 claim grep found no old "trust protocol" / private
+  `my-universe` / fabricated-card overclaim matches; temp-home walkthrough
+  created only `getting-started-smoke.events.jsonl`,
+  `getting-started-smoke.json`, and a temp MCP config; final full suite
+  `/tmp/caliber-northstar-p1-properties/bin/python3 -m pytest -q` ->
+  202 passed.
+- **Skipped/blocked:** Phase 5 `docs/METHOD.md` was not attempted. No push,
+  no PyPI publish, no `master` touch. Remaining gaps are ranked in
+  `lab/HANDOFF.md`.
+- **State:** Phase 4 gate accepted locally on `northstar`. Next: Satish review
+  and release decision.
 
 ### 2026-07-04 — Northstar Phase 3 tamper evidence (Codex/Kai)
 

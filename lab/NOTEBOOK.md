@@ -2284,3 +2284,63 @@ $ . /tmp/caliber-northstar-p1-properties/bin/activate && python3 -m pytest -q
 
 Decision: v0.3.0 release surfaces are ready locally, with no push and no PyPI
 publication.
+
+## EXP-029 - Phase 4 gate and handoff
+
+Hypothesis: Phase 4 is not complete until the tracker and handoff say exactly
+what shipped, what changed numerically, what Satish must review, and what was
+not attempted. The gate should not treat a local version bump as a PyPI
+release.
+
+Mini-plan:
+
+1. Update `GAUGE.md` top status, next-session section, and session log with
+   Phase 4 completion evidence.
+2. Write `lab/HANDOFF.md` per NORTHSTAR section 9: engram-worthy learnings,
+   review checklist, required sign-offs, and ranked remaining gaps.
+3. Include the Phase 4 meta-checkpoint in this notebook entry.
+4. Run the full suite after the tracking/handoff docs.
+5. Commit the gate chunk only if tests are green.
+
+Result:
+
+- Updated `GAUGE.md` top status, next-session guidance, and session log to
+  state Phase 4 is complete locally and review/release is next.
+- Wrote `lab/HANDOFF.md` with plain-language explanation, engram-worthy
+  learnings, review checklist, sign-off decisions, and ranked remaining gaps.
+- Left `docs/` untracked and untouched.
+- Phase 5 `docs/METHOD.md` was not attempted.
+
+Claim-grep:
+
+```text
+$ rg -n "Trust protocol|trust protocol|Prove capability|prove capability|Trust Card verification \\(detect fabricated|github.com/SatishoBananamoto/my-universe" README.md pyproject.toml caliber/__init__.py caliber/cli.py GETTING_STARTED.md CHANGELOG.md
+<no matches>
+```
+
+Verification:
+
+```text
+$ . /tmp/caliber-northstar-p1-properties/bin/activate && python3 -m pytest -q
+........................................................................ [ 35%]
+........................................................................ [ 71%]
+..........................................................               [100%]
+202 passed in 25.75s
+```
+
+Meta-checkpoint:
+
+1. Re-read §0. This chunk increased honesty by making the tracker and handoff
+   match the real local state instead of implying a release or hiding review
+   decisions.
+2. Last reality check: public-surface claim grep returned no matches, and the
+   full dev-venv suite returned `202 passed in 25.75s`.
+3. Result that is too clean: v0.3.0 is only a local release candidate. The
+   clean tests do not prove PyPI packaging, external anchoring, or external
+   user adoption.
+4. Asked question vs easier one: the asked work was Phase 4 gate completion
+   and handoff. The optional Phase 5 method paper was deliberately skipped
+   rather than widening scope after the gate.
+
+Decision: Phase 4 gate is complete locally on `northstar`. No push, no PyPI
+publish, and no `master` touch occurred.
