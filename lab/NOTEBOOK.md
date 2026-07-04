@@ -856,3 +856,78 @@ Meta-checkpoint:
 
 Phase 1 decision: gate accepted with one documented correction to NORTHSTAR's
 coverage-test acceptance band. Next phase is Phase 2 Adversarial Lab.
+
+## EXP-009 - Phase 2 Simulator Zoo
+
+Hypothesis: before threshold benchmarking, Caliber needs deterministic
+population generators whose outputs can be converted directly into
+`Prediction` objects and fed through `IntegrityReport`. The simulator layer
+should make honest streams, known attackers, and known impossibility cases
+reproducible by `(n, seed)`.
+
+Mini-plan:
+
+1. Add `lab/simulate.py` with stdlib-only generators for the required
+   NORTHSTAR population zoo.
+2. Return `Prediction`-compatible dictionaries and provide a `to_predictions`
+   helper for tests/bench code.
+3. Add focused simulator tests for determinism, schema compatibility, and
+   expected current integrity flags on representative populations.
+4. Keep this chunk to simulation only; full FPR/power benchmarking belongs to
+   the next `lab/run_bench.py` chunk.
+5. Run simulator tests and the full dev-venv suite.
+
+Result:
+
+Added:
+
+- `lab/simulate.py`
+- `lab/__init__.py`
+- `tests/test_lab_simulate.py`
+
+Simulator coverage:
+
+- `honest(sharpness)`
+- `overconfident(delta)`
+- `underconfident(delta)`
+- `noisy(sigma)`
+- `farmer(easy_share)`
+- `patient_farmer(easy_share)`
+- `naive_fabricator`
+- `smart_fabricator`
+- `template_spammer`
+- `domain_camper(k_domains)`
+- `bulk_importer(import_share)`
+- `mixture(honest_frac, attacker, ...)`
+
+Representative flag smoke at n=120, seed=42:
+
+```text
+honest: flags=[]
+farmer: flags=['LOW_OUTCOME_VARIANCE', 'CONFIDENCE_CONCENTRATION', 'DOMAIN_CONCENTRATION', 'INSTANT_VERIFICATION']
+patient_farmer: flags=['LOW_OUTCOME_VARIANCE', 'CONFIDENCE_CONCENTRATION', 'DOMAIN_CONCENTRATION']
+naive_fabricator: flags=['NO_DISCRIMINATION', 'SUSPICIOUSLY_PERFECT']
+smart_fabricator: flags=[]
+domain_camper: flags=['DOMAIN_CONCENTRATION']
+bulk_importer: flags=['UNWITNESSED_HISTORY']
+```
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_lab_simulate.py -q
+.........                                                                [100%]
+9 passed in 0.91s
+```
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 42%]
+........................................................................ [ 84%]
+..........................                                               [100%]
+170 passed in 4.02s
+```
+
+Decision: simulator zoo chunk is complete. It provides deterministic inputs
+for the next benchmark harness, but does not yet estimate FPR/power or change
+any integrity threshold.
