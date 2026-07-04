@@ -1544,3 +1544,74 @@ threatmodel exists True bench test exists True
 
 Decision: Phase 2 gate evidence is complete. Update `GAUGE.md` at the phase
 gate and commit the threat-model chunk. Next phase is Phase 3 tamper evidence.
+
+## EXP-019 - Phase 3 Hash-Chain Event Log Primitive
+
+Hypothesis: before replacing storage behavior, Caliber needs a small stdlib
+event-log primitive that can append canonical JSONL events, chain each event to
+the previous line hash, and verify that middle edits, deletions, reorderings,
+and anchored-head mismatches are detected.
+
+Mini-plan:
+
+1. Add a focused `caliber/event_log.py` module with no integration side effects
+   on existing `FileStorage` or CLI behavior.
+2. Use canonical compact JSON lines and `prev_hash = sha256(previous raw line)`
+   with a fixed genesis hash for the first event.
+3. Add tests for path naming, append/replay, middle-line mutation detection,
+   deletion/reordering detection, and expected-head mismatch for last-line
+   edits.
+4. Run the event-log tests, storage tests, then the full suite before deciding
+   whether to integrate it into `TrustTracker`.
+
+Result:
+
+Added `caliber/event_log.py`:
+
+- canonical compact JSONL event lines;
+- first event uses `GENESIS_HASH = "0" * 64`;
+- every later event carries `prev_hash` equal to SHA256 of the previous raw
+  line;
+- `EventLog.append()`, `EventLog.replay()`, and `EventLog.verify()`;
+- optional `expected_head` verification for anchored chain heads.
+
+Added `tests/test_event_log.py`:
+
+- URL-safe event-log path naming;
+- append/replay/head verification;
+- middle-line mutation detection;
+- deletion detection;
+- reorder detection;
+- expected-head mismatch for last-line edits;
+- replay rejection for invalid JSON logs.
+
+Verification:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_event_log.py -q
+.......                                                                  [100%]
+7 passed in 1.04s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest tests/test_storage.py -q
+............                                                             [100%]
+12 passed in 0.91s
+
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 38%]
+........................................................................ [ 77%]
+..........................................                               [100%]
+186 passed in 12.82s
+```
+
+Failure/limit learned:
+
+- A chain can detect edited, deleted, or reordered historical lines when a
+  later line still points at the original previous hash.
+- Editing the final line changes the head hash but remains structurally valid
+  unless the verifier has an expected anchored head. This is not a bug; it is
+  why Phase 3 needs `caliber anchor` and `verify-log --head`/equivalent
+  expected-head verification.
+
+Decision: the hash-chain primitive is ready for integration. Next chunk should
+wire prediction/verification/import events into storage while preserving the
+existing JSON snapshot as a backward-compatible derived cache.
