@@ -1296,3 +1296,53 @@ $ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
 Decision: threshold constants/comments are updated with one dynamic small-n
 guard. Next chunk should rerun/persist post-change threshold artifacts and a
 bench slice so committed evidence matches current code.
+
+## EXP-015 - Phase 2 Post-Change Threshold Artifact
+
+Hypothesis: after committing measured threshold changes, a fresh threshold
+analysis artifact at SHA `c31299f` should show the applied constants as the
+current recommended operating points.
+
+Mini-plan:
+
+1. Rerun `lab/analyze_thresholds.py` at n=50, 500 replicates from SHA
+   `c31299f`.
+2. Save `lab/results/thresholds-c31299f.json` and refresh
+   `lab/THRESHOLDS.md`.
+3. Confirm recommendations match applied constants.
+4. Run the full suite after artifact generation.
+
+Result:
+
+```text
+Wrote /home/satishocoin/caliber/lab/results/thresholds-c31299f.json
+Wrote /home/satishocoin/caliber/lab/THRESHOLDS.md
+elapsed_seconds=14.14
+```
+
+Confirmed recommendations match applied constants:
+
+```text
+LOW_UNCERTAINTY_THRESHOLD 0.13 -> recommended 0.13
+LOW_RESOLUTION_RATIO 0.494476 -> recommended 0.494476
+TOP_BUCKET_SHARE_THRESHOLD 0.6 -> recommended 0.6
+DOMAIN_HHI_THRESHOLD 0.6 -> recommended 0.6
+DUPLICATE_RATIO_THRESHOLD 0.2 -> recommended 0.2
+INSTANT_SHARE_THRESHOLD 0.5 -> recommended 0.5
+IMPORT_SHARE_THRESHOLD 0.8 -> recommended 0.8
+MENDEL_P_LOW_THRESHOLD 0.01 -> recommended 0.01
+```
+
+Full suite:
+
+```text
+$ /tmp/caliber-northstar-p1-properties/bin/python -m pytest -q
+........................................................................ [ 40%]
+........................................................................ [ 81%]
+................................                                         [100%]
+176 passed in 4.24s
+```
+
+Decision: post-change threshold artifacts are current. Next chunk should rerun
+the full adversarial bench at the current SHA so `lab/REPORT.md` reflects
+duplicate_spammer and the changed thresholds.

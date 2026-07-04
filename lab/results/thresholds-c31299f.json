@@ -1,0 +1,241 @@
+{
+  "generated_utc": "2026-07-04T09:01:01.541268+00:00",
+  "git_sha": "c31299f",
+  "n": 50,
+  "replicates": 500,
+  "base_seed": 9301,
+  "clean_populations": [
+    "honest",
+    "overconfident",
+    "underconfident",
+    "noisy",
+    "smart_fabricator"
+  ],
+  "analyses": [
+    {
+      "constant": "LOW_UNCERTAINTY_THRESHOLD",
+      "metric": "uncertainty",
+      "direction": "low",
+      "flag_code": "LOW_OUTCOME_VARIANCE",
+      "current_threshold": 0.13,
+      "current_clean_fpr": 0.0364,
+      "current_target_rates": {
+        "farmer": 0.992,
+        "patient_farmer": 0.998
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.042,
+        "overconfident": 0.04,
+        "underconfident": 0.04,
+        "noisy": 0.03,
+        "smart_fabricator": 0.03,
+        "farmer": 0.992,
+        "patient_farmer": 0.998
+      },
+      "recommended": {
+        "threshold": 0.13,
+        "clean_fpr": 0.0364,
+        "target_power_mean": 0.995,
+        "target_rates": {
+          "farmer": 0.992,
+          "patient_farmer": 0.998
+        }
+      }
+    },
+    {
+      "constant": "LOW_RESOLUTION_RATIO",
+      "metric": "resolution_ratio",
+      "direction": "low",
+      "flag_code": "NO_DISCRIMINATION",
+      "current_threshold": 0.494476,
+      "current_clean_fpr": 0.0044,
+      "current_target_rates": {
+        "naive_fabricator": 1.0,
+        "template_spammer": 1.0
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.0,
+        "overconfident": 0.0,
+        "underconfident": 0.02,
+        "noisy": 0.0,
+        "smart_fabricator": 0.0,
+        "naive_fabricator": 1.0,
+        "template_spammer": 0.974
+      },
+      "recommended": {
+        "threshold": 0.494476,
+        "clean_fpr": 0.004,
+        "target_power_mean": 1.0,
+        "target_rates": {
+          "naive_fabricator": 1.0,
+          "template_spammer": 1.0
+        }
+      }
+    },
+    {
+      "constant": "TOP_BUCKET_SHARE_THRESHOLD",
+      "metric": "top_bucket_share",
+      "direction": "high",
+      "flag_code": "CONFIDENCE_CONCENTRATION",
+      "current_threshold": 0.6,
+      "current_clean_fpr": 0.0064,
+      "current_target_rates": {
+        "farmer": 1.0,
+        "patient_farmer": 1.0
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.0,
+        "overconfident": 0.032,
+        "underconfident": 0.0,
+        "noisy": 0.0,
+        "smart_fabricator": 0.0,
+        "farmer": 1.0,
+        "patient_farmer": 1.0
+      },
+      "recommended": {
+        "threshold": 0.6,
+        "clean_fpr": 0.0064,
+        "target_power_mean": 1.0,
+        "target_rates": {
+          "farmer": 1.0,
+          "patient_farmer": 1.0
+        }
+      }
+    },
+    {
+      "constant": "DOMAIN_HHI_THRESHOLD",
+      "metric": "domain_hhi",
+      "direction": "high",
+      "flag_code": "DOMAIN_CONCENTRATION",
+      "current_threshold": 0.6,
+      "current_clean_fpr": 0.0,
+      "current_target_rates": {
+        "domain_camper": 1.0
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.0,
+        "overconfident": 0.0,
+        "underconfident": 0.0,
+        "noisy": 0.0,
+        "smart_fabricator": 0.0,
+        "domain_camper": 1.0
+      },
+      "recommended": {
+        "threshold": 0.6,
+        "clean_fpr": 0.0,
+        "target_power_mean": 1.0,
+        "target_rates": {
+          "domain_camper": 1.0
+        }
+      }
+    },
+    {
+      "constant": "DUPLICATE_RATIO_THRESHOLD",
+      "metric": "duplicate_claim_ratio",
+      "direction": "high",
+      "flag_code": "DUPLICATE_CLAIMS",
+      "current_threshold": 0.2,
+      "current_clean_fpr": 0.0,
+      "current_target_rates": {
+        "duplicate_spammer": 1.0
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.0,
+        "overconfident": 0.0,
+        "underconfident": 0.0,
+        "noisy": 0.0,
+        "smart_fabricator": 0.0,
+        "duplicate_spammer": 1.0
+      },
+      "recommended": {
+        "threshold": 0.2,
+        "clean_fpr": 0.0,
+        "target_power_mean": 1.0,
+        "target_rates": {
+          "duplicate_spammer": 1.0
+        }
+      }
+    },
+    {
+      "constant": "INSTANT_SHARE_THRESHOLD",
+      "metric": "instant_verify_share",
+      "direction": "high",
+      "flag_code": "INSTANT_VERIFICATION",
+      "current_threshold": 0.5,
+      "current_clean_fpr": 0.0,
+      "current_target_rates": {
+        "farmer": 1.0
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.0,
+        "overconfident": 0.0,
+        "underconfident": 0.0,
+        "noisy": 0.0,
+        "smart_fabricator": 0.0,
+        "farmer": 1.0
+      },
+      "recommended": {
+        "threshold": 0.5,
+        "clean_fpr": 0.0,
+        "target_power_mean": 1.0,
+        "target_rates": {
+          "farmer": 1.0
+        }
+      }
+    },
+    {
+      "constant": "IMPORT_SHARE_THRESHOLD",
+      "metric": "import_share",
+      "direction": "high",
+      "flag_code": "UNWITNESSED_HISTORY",
+      "current_threshold": 0.8,
+      "current_clean_fpr": 0.0,
+      "current_target_rates": {
+        "bulk_importer": 1.0
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.0,
+        "overconfident": 0.0,
+        "underconfident": 0.0,
+        "noisy": 0.0,
+        "smart_fabricator": 0.0,
+        "bulk_importer": 1.0
+      },
+      "recommended": {
+        "threshold": 0.8,
+        "clean_fpr": 0.0,
+        "target_power_mean": 1.0,
+        "target_rates": {
+          "bulk_importer": 1.0
+        }
+      }
+    },
+    {
+      "constant": "MENDEL_P_LOW_THRESHOLD",
+      "metric": "mendel_p_low",
+      "direction": "low",
+      "flag_code": "SUSPICIOUSLY_PERFECT",
+      "current_threshold": 0.01,
+      "current_clean_fpr": 0.0,
+      "current_target_rates": {
+        "naive_fabricator": 1.0
+      },
+      "actual_current_flag_rates": {
+        "honest": 0.0,
+        "overconfident": 0.0,
+        "underconfident": 0.0,
+        "noisy": 0.0,
+        "smart_fabricator": 0.0,
+        "naive_fabricator": 1.0
+      },
+      "recommended": {
+        "threshold": 0.01,
+        "clean_fpr": 0.0,
+        "target_power_mean": 1.0,
+        "target_rates": {
+          "naive_fabricator": 1.0
+        }
+      }
+    }
+  ]
+}
