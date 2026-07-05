@@ -2596,3 +2596,190 @@ Meta-checkpoint:
    cards and external adjudication.
 4. Asked question vs easier one: Phase B remains blocked; no signed-card or
    adjudication work was started.
+
+## EXP-034 - Round Two Phase B plan
+
+Hypothesis: Phase B can make Trust Cards externally verifiable without
+changing core runtime dependency rules by keeping signing behind an optional
+extra, recording third-party adjudication as a hash-chained event, and emitting
+anchors to a separate file for external witness workflows.
+
+Mini-plan:
+
+1. B1 signed cards: add optional Ed25519 helpers guarded behind
+   `caliber-trust[signing]`; implement `caliber keygen`, `caliber card --sign`,
+   and `caliber verify-card --pubkey`; test valid signatures, signed-card
+   mutation failure, and unsigned-card compatibility.
+2. Run the full suite after B1 in the signing venv and prove a core-only env
+   cannot import `cryptography`.
+3. B2 adjudication: add an `adjudicated` event, tracker/CLI support, card
+   self-vs-adjudicated accuracy sections with separate Wilson intervals, an
+   adjudicated-share integrity metric, spec v0.2 text, and executable vectors.
+4. Run the full suite after B2.
+5. B3 anchoring: add `caliber anchor --emit <file>` and document the git
+   commit anchoring pattern in `GETTING_STARTED.md`.
+6. Run the full suite after B3, then update `GAUGE.md`, `lab/NOTEBOOK.md`, and
+   append the Phase B handoff section.
+
+Result after B1:
+
+- Added optional `[signing]` extra with `cryptography>=42.0`.
+- Added guarded `caliber/signing.py`; importing `caliber` does not import
+  `cryptography`.
+- Added `caliber keygen`, `caliber card --sign`, and
+  `caliber verify-card --pubkey <file>`.
+- Default keys live under the store directory as
+  `<url-quoted-agent>.ed25519.private.pem` and
+  `<url-quoted-agent>.ed25519.public.pem`; private keys are written with
+  `0600` permissions.
+- Signed cards add a top-level `signature` envelope. The signed bytes are a
+  domain-separated payload containing the current event-log head plus the
+  canonical card JSON without the signature envelope.
+- `verify-card` strips the top-level signature envelope for ordinary card-stat
+  comparison, so unsigned cards and signed cards without `--pubkey` still
+  verify calibration normally.
+
+Install note:
+
+```text
+$ python3 -m venv /tmp/caliber-phaseb-venv
+<exit 0>
+
+$ /tmp/caliber-phaseb-venv/bin/pip install -e '.[signing]' hypothesis pytest mcp
+ERROR: Could not find a version that satisfies the requirement setuptools>=61.0
+because pip build isolation attempted network access and the proxy returned
+403 Forbidden.
+```
+
+Fallback used for local verification: kept `/tmp/caliber-phaseb-venv`, added a
+`.pth` file pointing at already-installed local dev/signing packages, then
+installed Caliber editable with `--no-build-isolation --no-index --no-deps`.
+This matches the repository's documented network-restricted local-checkout
+pattern and avoids downloading anything.
+
+Verification:
+
+```text
+$ python3 -m pytest tests/test_cli.py -q
+26 passed in 1.60s
+
+$ /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+216 passed in 8.59s
+
+$ PYTHONPATH=/tmp/caliber-no-cryptography /tmp/caliber-phaseb-venv/bin/python -c "import cryptography"
+ImportError: cryptography blocked for optional-core test
+
+$ PYTHONPATH=/tmp/caliber-no-cryptography /tmp/caliber-phaseb-venv/bin/python -c "import caliber; print(caliber.__version__)"
+0.3.0
+
+$ PYTHONPATH=/tmp/caliber-no-cryptography /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+213 passed, 3 skipped in 6.64s
+```
+
+Decision: B1 is complete as an optional feature. The only skipped tests in the
+core-only run are the signing-specific tests; core imports and unsigned card
+verification remain usable without `cryptography`.
+
+Result after B2:
+
+- Added `Prediction` adjudication metadata:
+  `adjudicated_by`, `adjudicated_at`, `adjudication_note`, and
+  `adjudicator_signature`.
+- Added `TrustTracker.adjudicate()` and `caliber adjudicate <prediction-id>
+  --correct/--incorrect --by <identity>`.
+- Added `adjudicated` as a hash-chained event type. Replay sets the prediction
+  outcome plus adjudication metadata, and storage writes adjudication as a
+  distinct event rather than a self-verification event.
+- Mixed self/adjudicated cards now include separate `self_verified` and
+  `adjudicated` accuracy sections with Wilson intervals. They omit
+  `overall_accuracy` so the two outcome sources are not blended into one
+  accuracy number. Legacy calibration views in such cards are explicitly marked
+  with `accuracy_basis: self_verified`.
+- Integrity reports now include `adjudicated_share` as a metric only; no new
+  flag or threshold was added.
+- `docs/SPEC.md` is bumped to `spec_version: 0.2` and covers the new event
+  type, prediction fields, split card fields, optional signature envelope, and
+  `verify-card --pubkey`.
+- Added v0.2 adjudication vectors under `tests/vectors/adjudicated-store/` plus
+  `tests/vectors/adjudicated-card.json`; manifest expected head is
+  `d16b1d7b9ae039c705da8ab40b163988334e74f47dea0eb9fce95bf4653c5517`.
+
+Verification:
+
+```text
+$ /tmp/caliber-phaseb-venv/bin/python -m pytest tests/test_spec_vectors.py tests/test_tracker.py tests/test_storage.py tests/test_card.py tests/test_cli.py tests/test_integrity.py -q
+125 passed in 3.96s
+
+$ /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+221 passed in 6.92s
+```
+
+Decision: B2 is complete. The major design choice is to omit blended
+`overall_accuracy` whenever adjudicated outcomes are present, even though
+legacy self-only cards keep the existing field.
+
+Result after B3:
+
+- Added `caliber anchor --emit <file>`.
+- The command still appends an internal `anchor` event, and now also appends a
+  JSON line to the requested anchors file with `anchored_head`, `new_head`,
+  event counts, label, agent name, and emit timestamp.
+- `GETTING_STARTED.md` now documents the git-commit anchoring pattern: run
+  `caliber anchor --emit caliber-anchors.jsonl`, commit the anchors file, and
+  use the hosted commit as an external witness.
+- `docs/SPEC.md` documents the emitted anchors-file fields and keeps the
+  boundary explicit: no network operation is performed.
+
+Verification:
+
+```text
+$ /tmp/caliber-phaseb-venv/bin/python -m pytest tests/test_cli.py -q
+28 passed in 1.69s
+
+$ /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+222 passed in 9.51s
+```
+
+Decision: B3 is complete. The emitted anchors file records both heads because
+`anchored_head` proves the pre-anchor prefix, while `new_head` verifies the full
+log after the internal anchor event.
+
+## EXP-035 - Round Two Phase B gate
+
+Hypothesis: Phase B is complete only if signed-card forgery fails, adjudicated
+and self-verified accuracy are visibly split, SPEC v0.2 vectors execute,
+anchors can be emitted to a separate file, the signing-enabled suite is green,
+and the core still works without `cryptography`.
+
+Gate evidence:
+
+```text
+$ grep -n R1-SIGNOFF GAUGE.md
+7:**Last session**: 2026-07-05 — northstar2 Phase B externally verifiable cards/adjudication/anchor emit completed in the work tree; round-one signoff marker present <- R1-SIGNOFF: Satish accepts round-one northstar Phase 0-4 for Phase B to begin.>
+
+$ git branch --show-current
+northstar2
+
+$ /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+222 passed in 7.48s
+
+$ PYTHONPATH=/tmp/caliber-no-cryptography /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+219 passed, 3 skipped in 6.21s
+```
+
+Meta-checkpoint:
+
+1. Re-read §0. Phase B increases honesty by binding cards to log heads,
+   distinguishing self-graded from externally adjudicated outcomes, and making
+   anchors easier to witness outside the local store.
+2. Last reality check: the signing-enabled full suite passed with 222 tests,
+   and the blocked-cryptography suite imported `caliber` but not
+   `cryptography`.
+3. Result too clean: the direct pip install command failed under network/build
+   isolation, and the test venv needed the documented local fallback. This is
+   recorded rather than hidden.
+4. Asked question vs easier one: Phase C was not started, no network anchoring
+   adapter was implemented, and no integrity thresholds were retuned.
+
+Decision: Phase B gate is complete in the work tree. Supervisor should commit
+the deliverables separately if desired; no git write commands were run here.

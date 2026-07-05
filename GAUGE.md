@@ -4,8 +4,8 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.3.0 local northstar release candidate (v0.2.0 remains on PyPI as `caliber-trust`)
-**Last session**: 2026-07-04 — northstar2 Phase A citable/specifiable docs completed in the work tree; Phase B blocked pending Satish's round-one signoff marker <- R1-SIGNOFF: Satish accepts round-one northstar Phase 0-4 for Phase B to begin.>
-**Repo**: `northstar2` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 205 tests passing.
+**Last session**: 2026-07-05 — northstar2 Phase B externally verifiable cards/adjudication/anchor emit completed in the work tree; round-one signoff marker present <- R1-SIGNOFF: Satish accepts round-one northstar Phase 0-4 for Phase B to begin.>
+**Repo**: `northstar2` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 222 tests passing.
 
 ---
 
@@ -32,12 +32,40 @@ found four issues; all are fixed on `northstar2`:
 4. **P3 — dirty worktree gate**: pre-existing untracked docs explainer
    artifacts are now gitignored.
 
-### Active northstar run (2026-07-04)
+### Active northstar run (2026-07-05)
 
 Read `NORTHSTAR2.md` first, then the inherited constraints in `NORTHSTAR.md`.
 Current branch: `northstar2`. Branch rules: never push, never publish to PyPI,
 keep runtime dependencies stdlib-only, and update `lab/NOTEBOOK.md` plus this
 file at phase gates.
+
+Round Two Phase B is complete in the work tree. Supervisor will create commits;
+no git write commands were run by the coding agent because `.git` is mounted
+read-only in this sandbox.
+
+- B1 signed cards: optional `[signing]` extra added for Ed25519 via
+  `cryptography`; core imports remain guarded. New CLI:
+  `caliber keygen`, `caliber card --sign`, and
+  `caliber verify-card --pubkey <file>`.
+- B2 adjudication: new `adjudicated` event type, `caliber adjudicate`, card
+  `self_verified` vs `adjudicated` accuracy sections with separate Wilson
+  intervals and no blended `overall_accuracy` when adjudication exists,
+  `adjudicated_share` integrity metric, and `docs/SPEC.md` bumped to
+  `spec_version: 0.2` with executable adjudication vectors.
+- B3 anchor hardening: `caliber anchor --emit <file>` appends a JSONL anchor
+  record to a separate file; `GETTING_STARTED.md` documents the git-commit
+  anchoring pattern.
+- Gate evidence: exact requested signing venv creation succeeded; the direct
+  install command hit a network/build-isolation 403, so verification used the
+  repo-documented local fallback with already-installed dev/signing packages.
+  Signing-enabled suite: `222 passed`. Core-only proof with `cryptography`
+  import blocked: `219 passed, 3 skipped`. Focused B3 CLI: `28 passed`.
+
+Next concrete work: supervisor review and commits for Phase B. Phase C is out
+of scope until a separate directive exists. Do not push, publish, touch
+`master`, or retune `caliber/integrity.py` thresholds.
+
+Historical Phase A state follows for review context.
 
 Round Two Phase A is complete in the work tree:
 
@@ -53,13 +81,29 @@ Round Two Phase A is complete in the work tree:
   source map; standalone stdlib script recomputed vector head
   `ab5f201068385c1644d4ba62b37977ea7201009100c902e70610641de67ac442`;
   `python -m compileall -q caliber` exited 0; full suite reached 205 passing.
-- Phase B remains BLOCKED: the exact round-one signoff marker is absent from
-  this file.
+- Phase B was blocked at the Phase A gate until Satish recorded the exact
+  `R1-SIGNOFF` marker. That marker is now present, and Phase B has completed
+  locally as recorded above.
 
-Next concrete work: Satish review of round one and round two Phase A. If he
-accepts round one, he can add the exact round-one signoff marker and Phase B
-may start. Until that exact marker exists, do not start signed cards, external
-adjudication, or anchoring hardening.
+### 2026-07-05 — Northstar2 Phase B externally verifiable cards (Codex/Kai)
+
+- **Worked on:** NORTHSTAR2 Phase B: signed cards, external adjudication, and
+  anchor hardening. Work tree only; no git writes, no push, no publish, no
+  `master` touch.
+- **Completed:** optional Ed25519 signing extra and commands (`keygen`,
+  `card --sign`, `verify-card --pubkey`); `adjudicated` event type and
+  `caliber adjudicate`; card split sections for `self_verified` and
+  `adjudicated` with Wilson intervals and no blended mixed-card
+  `overall_accuracy`; `adjudicated_share` integrity metric; SPEC v0.2 and
+  adjudication vectors; `anchor --emit` and git anchoring docs.
+- **Evidence:** signing-enabled phaseb suite
+  `/tmp/caliber-phaseb-venv/bin/python -m pytest -q` -> `222 passed`;
+  core-only import-blocker proof
+  `PYTHONPATH=/tmp/caliber-no-cryptography /tmp/caliber-phaseb-venv/bin/python -m pytest -q`
+  -> `219 passed, 3 skipped`; B2 full suite `221 passed`; B3 focused CLI
+  `28 passed`.
+- **State:** Phase B gate accepted locally on `northstar2`. Supervisor commits
+  afterward. Phase C is explicitly out of scope.
 
 Phase 0 baseline is complete:
 

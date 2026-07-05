@@ -224,3 +224,136 @@ Important terms:
    exists.
 5. External user validation is still open.
 6. No push, tag, PyPI publish, or `master` action happened in this run.
+
+## Round Two Phase B Handoff - 2026-07-05
+
+Branch: `northstar2`
+Status: Phase B complete in the work tree. Supervisor will create commits.
+No push, no publish, no `master` action, and no git write commands were run by
+the coding agent.
+
+### Explanation To Me
+
+Phase B made Trust Cards harder to fake and easier for outsiders to check.
+Cards can now be signed with an optional Ed25519 key so the card is bound to a
+specific event-log head. Caliber can also record an outside adjudicator's
+judgment separately from the agent grading itself, and mixed cards no longer
+hide those two sources behind one blended accuracy number. Anchors can now be
+written to a separate file that can be committed to git as a public witness.
+
+Important terms:
+
+- Ed25519: a modern public-key signature algorithm.
+- Optional extra: a dependency installed only by users who ask for it, here
+  `caliber-trust[signing]`.
+- Adjudication: an external person or system records whether a prediction was
+  correct.
+- Wilson interval: an uncertainty range around an observed accuracy.
+- Anchor emit file: a separate JSONL file containing log heads that can be
+  committed or published outside the mutable local store.
+
+### What Shipped
+
+- B1: optional signed cards:
+  - `pyproject.toml` now has `[signing] = ["cryptography>=42.0"]`.
+  - `caliber/signing.py` guards all `cryptography` imports.
+  - New CLI: `caliber keygen`, `caliber card --sign`, and
+    `caliber verify-card --pubkey <file>`.
+  - Signatures cover canonical card JSON plus the current event-log head.
+  - Unsigned cards and signed cards without `--pubkey` still verify ordinary
+    calibration stats.
+- B2: external adjudication:
+  - New `adjudicated` event type.
+  - New CLI: `caliber adjudicate <prediction-id> --correct/--incorrect --by
+    <identity>`.
+  - Prediction records preserve adjudicator identity, adjudication timestamp,
+    evidence note, and optional adjudicator signature.
+  - Cards expose `self_verified` and `adjudicated` sections with separate
+    counts, accuracy, and Wilson intervals.
+  - Mixed self/adjudicated cards omit `overall_accuracy` to avoid blending the
+    two sources.
+  - Integrity reports include `adjudicated_share` as a metric, not a flag.
+  - `docs/SPEC.md` is now `spec_version: 0.2`.
+  - Added adjudication golden vectors under `tests/vectors/adjudicated-store/`
+    plus `tests/vectors/adjudicated-card.json`.
+- B3: anchoring hardening:
+  - `caliber anchor --emit <file>` appends the anchor result to a separate
+    JSONL anchors file.
+  - `GETTING_STARTED.md` documents the git-commit anchoring pattern.
+  - `docs/SPEC.md` documents the emitted anchors-file fields.
+
+### METHOD.md Claims Audit
+
+No METHOD.md claims were changed in Phase B. Phase A's audit remains the
+current METHOD evidence: 93 numeric lines covered by the source map, citation
+set limited to NORTHSTAR2 section 5 plus allowed classics.
+
+### SPEC Version State
+
+- Current spec version is `0.2`.
+- Current Trust Card version remains `"0.1"` with v0.2 optional fields.
+- Current event-log entry version remains `1`.
+- New supported event type: `adjudicated`.
+- Vector-validating evidence:
+  `/tmp/caliber-phaseb-venv/bin/python -m pytest tests/test_spec_vectors.py
+  ... -q` was included in the focused B2 run -> `125 passed`.
+- New adjudication vector head:
+  `d16b1d7b9ae039c705da8ab40b163988334e74f47dea0eb9fce95bf4653c5517`.
+
+### Verification
+
+```text
+$ /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+222 passed in 7.48s
+
+$ PYTHONPATH=/tmp/caliber-no-cryptography /tmp/caliber-phaseb-venv/bin/python -m pytest -q
+219 passed, 3 skipped in 6.21s
+```
+
+The exact requested phaseb venv was created. The direct install command failed
+because pip build isolation attempted network access and the proxy returned
+403. Verification used the repository's documented local fallback: make
+already-installed local dev/signing packages visible to the venv, then install
+Caliber editable with no network.
+
+### Engram-Worthy Learnings
+
+- DEC: Mixed self/adjudicated cards omit `overall_accuracy`; otherwise the
+  field name invites a blended-accuracy reading even if the implementation used
+  only self-verified data.
+- DEC: `adjudicated_share` is a metric, not a flag. It reports evidence
+  quality without turning third-party coverage into a suspiciousness threshold.
+- DEC: Signed-card verification with `--pubkey` requires the signature's
+  `event_log_head` to equal the current verified log head. A signed card binds
+  to a specific log state.
+- LRN: In this sandbox, the exact pip install command can fail due
+  build-isolation network fetches even when all packages exist locally. Record
+  the fallback clearly rather than treating it as a package failure.
+
+### Decisions Needing Satish
+
+- Decide whether Trust Card `trust_version` should bump from `"0.1"` to
+  `"0.2"` now, or remain `"0.1"` while SPEC v0.2 defines optional fields.
+- Review whether `overall_accuracy` omission on mixed cards is the desired
+  public shape.
+- Decide whether `caliber adjudicate` should also become an MCP tool in a
+  later phase.
+- Decide whether signed-card public keys should be named per agent as they are
+  now, or whether project/team-level key identity is preferred.
+
+### Remaining Gaps, Re-ranked
+
+1. No release action has happened. The branch is local only; PyPI remains
+   v0.2.0.
+2. Signed cards depend on key custody outside Caliber. Key rotation,
+   revocation, and identity discovery are not designed yet.
+3. External adjudication exists structurally, but Caliber does not verify the
+   adjudicator's optional signature or reputation.
+4. Anchoring is still manual. `--emit` makes git/public witnessing easier, but
+   there is no timestamping service or registry adapter.
+5. Record-only analysis still cannot detect smart fabrication or semantic task
+   difficulty without witnessed timing, anchoring, or meaningful external
+   adjudication.
+6. `docs/SPEC.md` has executable vectors but still no second implementation.
+7. External user validation is still open.
+8. Phase C is out of scope until a separate directive exists.
