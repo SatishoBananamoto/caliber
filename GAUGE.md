@@ -4,7 +4,7 @@
 > Updated before every commit. Single source of truth.
 
 **Current version**: v0.3.0 local northstar release candidate (v0.2.0 remains on PyPI as `caliber-trust`)
-**Last session**: 2026-07-04 — northstar2 Phase A citable/specifiable docs completed in the work tree; Phase B blocked pending Satish's round-one signoff marker
+**Last session**: 2026-07-04 — northstar2 Phase A citable/specifiable docs completed in the work tree; Phase B blocked pending Satish's round-one signoff marker <- R1-SIGNOFF: Satish accepts round-one northstar Phase 0-4 for Phase B to begin.>
 **Repo**: `northstar2` branch, local only. Do not push. Do not publish. Baseline verified with 143 tests passing; current dev suite 205 tests passing.
 
 ---
