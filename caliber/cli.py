@@ -92,6 +92,29 @@ def cli(ctx, agent: str, store: str):
     ctx.obj["store"] = store
 
 
+@cli.command("keygen")
+@click.option("--force", is_flag=True, help="Replace an existing signing keypair.")
+@click.pass_context
+def keygen(ctx, force: bool):
+    """Generate an optional Ed25519 signing keypair for Trust Cards."""
+    from caliber.signing import SigningUnavailable, generate_keypair
+
+    try:
+        paths = generate_keypair(
+            ctx.obj["store"],
+            ctx.obj["agent"],
+            force=force,
+        )
+    except SigningUnavailable as exc:
+        raise click.ClickException(str(exc)) from exc
+    except FileExistsError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    click.echo(f"Private key: {paths.private_key}")
+    click.echo(f"Public key:  {paths.public_key}")
+    click.echo("Private key permissions set to 0600.")
+
+
 @cli.command()
 @click.argument("claim")
 @click.option("--confidence", "-c", required=True, type=float,
@@ -134,11 +157,58 @@ def verify(ctx, prediction_id: str, correct: bool, notes: str):
 
 
 @cli.command()
+@click.argument("prediction_id")
+@click.option("--correct/--incorrect", required=True, help="Was the prediction correct?")
+@click.option("--by", "adjudicator", required=True, help="Adjudicator identity.")
+@click.option("--evidence-note", default=None, help="Optional evidence note.")
+@click.option("--signature", "adjudicator_signature", default=None,
+              help="Optional adjudicator signature.")
+@click.pass_context
+def adjudicate(
+    ctx,
+    prediction_id: str,
+    correct: bool,
+    adjudicator: str,
+    evidence_note: str | None,
+    adjudicator_signature: str | None,
+):
+    """Record an externally adjudicated outcome for a prediction."""
+    tracker = _get_tracker(ctx.obj["agent"], ctx.obj["store"])
+    try:
+        tracker.adjudicate(
+            prediction_id,
+            correct=correct,
+            adjudicator=adjudicator,
+            evidence_note=evidence_note,
+            adjudicator_signature=adjudicator_signature,
+        )
+    except KeyError:
+        click.echo(f"Error: No prediction with id '{prediction_id}'", err=True)
+        sys.exit(1)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    result = "correct" if correct else "incorrect"
+    click.echo(f"Adjudicated {prediction_id}: {result}")
+    click.echo(f"  By: {adjudicator}")
+    if evidence_note:
+        click.echo(f"  Evidence: {evidence_note}")
+
+
+@cli.command()
 @click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
 @click.option("--with-integrity", "with_integrity", is_flag=True,
               help="Attach the gaming-signature analysis to the card.")
+@click.option("--sign", is_flag=True, help="Sign the card with the store keypair.")
+@click.option(
+    "--key",
+    "private_key",
+    type=click.Path(exists=True),
+    default=None,
+    help="Private key path for --sign. Defaults to the store keypair.",
+)
 @click.pass_context
-def card(ctx, as_json: bool, with_integrity: bool):
+def card(ctx, as_json: bool, with_integrity: bool, sign: bool, private_key: str | None):
     """Generate a Trust Card from accumulated predictions."""
     tracker = _get_tracker(ctx.obj["agent"], ctx.obj["store"])
     if not tracker.verified:
@@ -153,10 +223,41 @@ def card(ctx, as_json: bool, with_integrity: bool):
             ctx.obj["agent"], tracker.predictions
         )
 
-    if as_json:
-        card_dict = trust_card.to_dict()
-        if report is not None:
-            card_dict["integrity"] = report.to_dict()
+    card_dict = trust_card.to_dict()
+    if report is not None:
+        card_dict["integrity"] = report.to_dict()
+
+    if sign:
+        from caliber.event_log import EventLog
+        from caliber.signing import (
+            SigningUnavailable,
+            default_key_paths,
+            sign_card,
+        )
+
+        log = EventLog(ctx.obj["store"])
+        event_path = log.path_for(ctx.obj["agent"])
+        if not event_path.exists():
+            raise click.ClickException(
+                f"cannot sign card: no event log found for {ctx.obj['agent']!r}"
+            )
+        verification = log.verify(ctx.obj["agent"])
+        if not verification.valid:
+            raise click.ClickException(
+                f"cannot sign card: event log invalid: {verification.error}"
+            )
+        key_path = Path(private_key) if private_key else default_key_paths(
+            ctx.obj["store"],
+            ctx.obj["agent"],
+        ).private_key
+        try:
+            card_dict = sign_card(card_dict, verification.head_hash, key_path)
+        except SigningUnavailable as exc:
+            raise click.ClickException(str(exc)) from exc
+        except (OSError, ValueError) as exc:
+            raise click.ClickException(f"cannot sign card: {exc}") from exc
+
+    if as_json or sign:
         click.echo(json.dumps(card_dict, indent=2))
     else:
         click.echo(trust_card.summary())
@@ -405,9 +506,16 @@ def verify_log(ctx, expected_head: str | None, as_json: bool):
 
 @cli.command("anchor")
 @click.option("--label", default=None, help="Optional local label for this anchor.")
+@click.option(
+    "--emit",
+    "emit_path",
+    type=click.Path(),
+    default=None,
+    help="Append the anchor result to a separate JSONL anchors file.",
+)
 @click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
 @click.pass_context
-def anchor(ctx, label: str | None, as_json: bool):
+def anchor(ctx, label: str | None, emit_path: str | None, as_json: bool):
     """Append and print an anchor event for the current event-log head."""
     from caliber.event_log import EventLog
 
@@ -422,6 +530,7 @@ def anchor(ctx, label: str | None, as_json: bool):
             "event_count_before": 0,
             "event_count_after": 0,
             "label": label,
+            "emit_path": emit_path,
             "error": "No event log found.",
         }
         if as_json:
@@ -440,6 +549,7 @@ def anchor(ctx, label: str | None, as_json: bool):
             "event_count_before": verification.event_count,
             "event_count_after": verification.event_count,
             "label": label,
+            "emit_path": emit_path,
             "error": verification.error,
         }
         if as_json:
@@ -462,8 +572,25 @@ def anchor(ctx, label: str | None, as_json: bool):
         "event_count_before": verification.event_count,
         "event_count_after": verification.event_count + 1,
         "label": label,
+        "emit_path": emit_path,
         "error": None,
     }
+    if emit_path is not None:
+        anchor_record = {
+            "version": 1,
+            "agent_name": ctx.obj["agent"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "anchored_head": verification.head_hash,
+            "new_head": appended.line_hash,
+            "event_count_before": verification.event_count,
+            "event_count_after": verification.event_count + 1,
+            "label": label,
+        }
+        anchor_path = Path(emit_path).expanduser()
+        anchor_path.parent.mkdir(parents=True, exist_ok=True)
+        with anchor_path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(anchor_record, sort_keys=True) + "\n")
+
     if as_json:
         click.echo(json.dumps(result, indent=2))
     else:
@@ -473,6 +600,8 @@ def anchor(ctx, label: str | None, as_json: bool):
         click.echo(f"Path:          {path}")
         if label:
             click.echo(f"Label:         {label}")
+        if emit_path:
+            click.echo(f"Emitted to:    {Path(emit_path).expanduser()}")
         click.echo("Use the new head with: caliber verify-log --head <new-head>")
 
 
@@ -508,10 +637,23 @@ def migrate(ctx, as_json: bool):
 @cli.command("verify-card")
 @click.argument("card_path", type=click.Path(exists=True))
 @click.option("--json", "as_json", is_flag=True, help="Output raw JSON.")
+@click.option(
+    "--pubkey",
+    type=click.Path(exists=True),
+    default=None,
+    help="Verify a signed card with this Ed25519 public key.",
+)
 @click.pass_context
-def verify_card(ctx, card_path: str, as_json: bool):
+def verify_card(ctx, card_path: str, as_json: bool, pubkey: str | None):
     """Verify a saved Trust Card against the event-log-backed store."""
     from caliber.event_log import EventLog
+    from caliber.signing import (
+        SIGNATURE_FIELD,
+        SignatureVerificationError,
+        SigningUnavailable,
+        strip_signature,
+        verify_card_signature,
+    )
 
     path = Path(card_path)
     try:
@@ -566,9 +708,48 @@ def verify_card(ctx, card_path: str, as_json: bool):
             click.echo(f"Error: {result['error']}", err=True)
         sys.exit(1)
 
+    checked = ["calibration"]
+    if pubkey is not None:
+        try:
+            verify_card_signature(
+                saved_card,
+                pubkey,
+                current_event_log_head=log_verification.head_hash,
+            )
+        except SigningUnavailable as exc:
+            result = {
+                "card_path": str(path),
+                "agent_name": agent_name,
+                "valid": False,
+                "checked": checked,
+                "event_log_head": log_verification.head_hash,
+                "event_count": log_verification.event_count,
+                "error": str(exc),
+            }
+            if as_json:
+                click.echo(json.dumps(result, indent=2))
+            else:
+                click.echo(f"Card signature failed: {result['error']}", err=True)
+            sys.exit(1)
+        except SignatureVerificationError as exc:
+            result = {
+                "card_path": str(path),
+                "agent_name": agent_name,
+                "valid": False,
+                "checked": checked,
+                "event_log_head": log_verification.head_hash,
+                "event_count": log_verification.event_count,
+                "error": str(exc),
+            }
+            if as_json:
+                click.echo(json.dumps(result, indent=2))
+            else:
+                click.echo(f"Card signature failed: {result['error']}", err=True)
+            sys.exit(1)
+        checked.append("signature")
+
     tracker = _get_tracker(agent_name, ctx.obj["store"])
     recomputed = tracker.generate_card().to_dict()
-    checked = ["calibration"]
     if "integrity" in saved_card:
         from caliber.integrity import IntegrityReport
 
@@ -577,7 +758,12 @@ def verify_card(ctx, card_path: str, as_json: bool):
         checked.append("integrity")
 
     expected = _strip_generated_fields(recomputed)
-    actual = _strip_generated_fields(saved_card)
+    actual_card = (
+        strip_signature(saved_card)
+        if SIGNATURE_FIELD in saved_card
+        else saved_card
+    )
+    actual = _strip_generated_fields(actual_card)
     mismatch = _first_mismatch(expected, actual)
     result = {
         "card_path": str(path),

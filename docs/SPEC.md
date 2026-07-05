@@ -1,19 +1,19 @@
 # Caliber Record And Verification Spec
 
-Spec version: `0.1`
+Spec version: `0.2`
 
-Status: Round Two Phase A. This document specifies the record, event-log,
+Status: Round Two Phase B. This document specifies the record, event-log,
 commitment, anchor, Trust Card, `verify-log`, and `verify-card` behavior that
-exists in the current Caliber codebase. It does not specify signed cards,
-external adjudication, network anchoring, multi-class outcomes, or any Phase B
-feature.
+exists in the current Caliber codebase. Version `0.2` adds optional signed
+cards and external adjudication. It does not specify network anchoring,
+multi-class outcomes, or Phase C succession gates.
 
 Normative keywords `MUST`, `MUST NOT`, `SHOULD`, and `MAY` are used in their
 ordinary RFC sense.
 
 ## 1. Versioning
 
-The spec version for this document is `0.1`.
+The spec version for this document is `0.2`.
 
 Trust Card JSON currently uses:
 
@@ -27,8 +27,9 @@ Event-log entries currently use:
 {"version": 1}
 ```
 
-A verifier for this spec MUST support Trust Card `trust_version` `"0.1"` and
-event `version` `1`.
+A verifier for this spec MUST support Trust Card `trust_version` `"0.1"`,
+the optional v0.2 signed-card and adjudication fields below, and event
+`version` `1`.
 
 ## 2. Prediction Records
 
@@ -46,6 +47,10 @@ A prediction record is a JSON object with these fields:
 | `notes` | string or null | yes | Optional outcome note. |
 | `commitment_hash` | string | no | Lowercase SHA-256 hex digest when present. |
 | `commitment_salt` | string | no | Commitment salt when present. |
+| `adjudicated_by` | string | no | External adjudicator identity string. |
+| `adjudicated_at` | string or null | no | ISO 8601 adjudication datetime. |
+| `adjudication_note` | string or null | no | Free-text evidence note. |
+| `adjudicator_signature` | string | no | Optional adjudicator signature string. |
 
 Writers MUST reject confidence values outside `[0.50, 0.99]`. Readers SHOULD
 reject records missing required fields.
@@ -66,6 +71,7 @@ Each non-empty line is one JSON object. The supported event types are:
 - `predicted`
 - `verified`
 - `imported`
+- `adjudicated`
 - `anchor`
 
 Every event object MUST have:
@@ -159,6 +165,23 @@ head does not equal that expected head.
 For `verified`, `outcome` MUST be boolean. `verified_at` MAY be `null`, though
 writers SHOULD provide an ISO 8601 datetime. `notes` MAY be `null`.
 
+`adjudicated` payload:
+
+```json
+{
+  "prediction_id": "p1",
+  "outcome": false,
+  "adjudicated_at": "2026-07-05T12:30:00+00:00",
+  "adjudicator": "external-reviewer@example.com",
+  "evidence_note": "public evidence note",
+  "adjudicator_signature": "optional signature"
+}
+```
+
+For `adjudicated`, `outcome` MUST be boolean, `adjudicator` MUST be a
+non-empty identity string, `adjudicated_at` SHOULD be an ISO 8601 datetime,
+`evidence_note` MAY be `null`, and `adjudicator_signature` MAY be `null`.
+
 `anchor` payload:
 
 ```json
@@ -181,8 +204,13 @@ A verifier rebuilding a prediction store MUST process events in log order:
 2. `verified`: find `payload.prediction_id`; if absent, fail verification.
    Set that prediction's `outcome`, `verified_at`, and `notes` fields from the
    payload.
-3. `anchor`: ignore for prediction reconstruction.
-4. Unknown event type: fail verification.
+3. `adjudicated`: find `payload.prediction_id`; if absent, fail verification.
+   Set that prediction's `outcome`, `verified_at`, `notes`,
+   `adjudicated_by`, `adjudicated_at`, `adjudication_note`, and
+   `adjudicator_signature` fields from the payload. This marks the outcome as
+   externally adjudicated rather than self-verified.
+4. `anchor`: ignore for prediction reconstruction.
+5. Unknown event type: fail verification.
 
 The JSON snapshot file `<url-quoted-agent-name>.json` is a derived cache. When
 an event log exists, verifiers MUST prefer the event log over the snapshot.
@@ -229,6 +257,24 @@ caliber --agent <agent> --store <store> verify-log --head <new-head>
 If only `anchored_head` is saved externally, it proves the pre-anchor prefix
 but not the anchor event itself.
 
+With `--emit <file>`, `caliber anchor` also appends one JSON line to a separate
+anchors file. The emitted object has:
+
+| field | type | rule |
+| --- | --- | --- |
+| `version` | integer | Current value `1`. |
+| `agent_name` | string | Selected agent. |
+| `created_at` | string | ISO 8601 emit time. |
+| `anchored_head` | string | Head before the internal anchor event. |
+| `new_head` | string | Head after the internal anchor event. |
+| `event_count_before` | integer | Event count before anchoring. |
+| `event_count_after` | integer | Event count after anchoring. |
+| `label` | string or null | Optional label. |
+
+The emitted file is append-only from Caliber's perspective and is intended to
+be committed to git or published elsewhere as an external witness. It is not a
+network operation.
+
 ## 7. Trust Card JSON
 
 A Trust Card is a JSON object:
@@ -240,6 +286,7 @@ A Trust Card is a JSON object:
 | `generated` | string | ISO 8601 generation datetime. |
 | `calibration` | object | Calibration statistics below. |
 | `integrity` | object | Optional when generated with integrity attachment. |
+| `signature` | object | Optional v0.2 Ed25519 signature envelope. |
 
 ### 7.1 Calibration Object
 
@@ -250,7 +297,8 @@ Required calibration fields:
 | `total_predictions` | integer | Number of predictions supplied to card generation. |
 | `total_verified` | integer | Number with non-null `outcome`. |
 
-When at least one prediction is verified, these fields MUST be present:
+When at least one prediction is verified and the card contains no externally
+adjudicated outcomes, these fields MUST be present:
 
 | field | rounding | formula |
 | --- | ---: | --- |
@@ -263,6 +311,22 @@ When at least one prediction is verified, these fields MUST be present:
 | `uncertainty` | 4 decimals | `base_rate * (1 - base_rate)` |
 | `calibration_z` | 4 decimals | Spiegelhalter Z. |
 | `calibration_p` | 4 decimals | Two-sided normal p-value for `calibration_z`. |
+
+When a card contains any externally adjudicated predictions, `overall_accuracy`
+MUST be omitted to avoid blending self-verified and adjudicated outcomes into
+one number. The other calibration fields in the table above are computed on the
+self-verified subset when that subset is non-empty. The card MUST include:
+
+| field | type | rule |
+| --- | --- | --- |
+| `accuracy_basis` | string | Current value `"self_verified"`; legacy calibration views are computed on self-verified predictions only. |
+| `self_verified` | object | Accuracy section for non-adjudicated verified predictions. |
+| `adjudicated` | object | Accuracy section for externally adjudicated predictions. |
+
+Each accuracy section contains `predictions` and `correct`. Non-empty sections
+also contain `accuracy = correct / predictions` and `ci95`, the Wilson interval
+for that section's accuracy. These two sections MUST NOT be combined into an
+aggregate accuracy field.
 
 Outcomes are encoded as `1` for `true` and `0` for `false`.
 
@@ -386,9 +450,53 @@ integrity object contains:
 - optional `metrics`
 - `flags`
 
-The exact metric and flag semantics are implementation-defined for spec
-version `0.1`, but verifiers MUST compare the saved object to the recomputed
-object after stripping all `generated` fields.
+The exact metric and flag semantics are implementation-defined, but verifiers
+MUST compare the saved object to the recomputed object after stripping all
+`generated` fields.
+
+Spec version `0.2` includes `adjudicated_share` in the optional integrity
+metrics object when verified predictions exist. It is the share of verified
+predictions with an adjudicator identity. It is a reported metric only, not a
+flag.
+
+### 7.6 Optional Signature Envelope
+
+Signed cards have a top-level `signature` object:
+
+```json
+{
+  "algorithm": "Ed25519",
+  "event_log_head": "<64 lowercase hex characters>",
+  "signature": "<base64 Ed25519 signature>"
+}
+```
+
+The signing extra is optional: writers that implement signing use
+`caliber-trust[signing]`, which depends on `cryptography`. Core readers and
+writers MUST NOT require this dependency unless signing or signature
+verification is requested.
+
+The signed bytes are:
+
+```text
+"caliber-card-signature-v1\n"
++ event_log_head
++ "\n"
++ canonical_card_json_without_signature
+```
+
+`canonical_card_json_without_signature` is the Trust Card JSON object with the
+top-level `signature` field removed, serialized with sorted keys and compact
+separators:
+
+```python
+json.dumps(card_without_signature, sort_keys=True, separators=(",", ":")).encode("utf-8")
+```
+
+Signature verification with `--pubkey` MUST verify the Ed25519 signature and
+MUST fail if `signature.event_log_head` does not equal the current verified
+event-log head. Ordinary `verify-card` without `--pubkey` MUST strip the
+top-level signature envelope before comparing card statistics.
 
 ## 8. `verify-log` Algorithm
 
@@ -432,6 +540,7 @@ Inputs:
 - selected `agent_name`;
 - selected store directory;
 - saved card JSON path.
+- optional Ed25519 public key path.
 
 Algorithm:
 
@@ -443,13 +552,18 @@ Algorithm:
 6. Generate a Trust Card from reconstructed verified predictions.
 7. If the saved card has an `integrity` field, recompute integrity and attach
    it to the recomputed card.
-8. Recursively remove every `generated` field from both saved and recomputed
+8. If a public key was supplied, verify the saved card's signature envelope
+   using section 7.6. Fail if the signature is absent, malformed, invalid, or
+   bound to any head other than the current verified event-log head.
+9. Remove the top-level `signature` field from the saved card before ordinary
+   card-stat comparison.
+10. Recursively remove every `generated` field from both saved and recomputed
    JSON objects.
-9. Compare objects exactly:
+11. Compare objects exactly:
    - dictionary key sets MUST match;
    - list lengths and order MUST match;
    - primitive values MUST match.
-10. Fail on the first mismatch; otherwise pass.
+12. Fail on the first mismatch; otherwise pass.
 
 Expected JSON output shape:
 
@@ -478,6 +592,9 @@ Executable vectors live under `tests/vectors/`:
 | `card.json` | Saved Trust Card. |
 | `card-store/vector-agent.events.jsonl` | Event-log-backed store that produces `card.json`. |
 | `card-store/vector-agent.json` | Derived JSON snapshot cache for the same store. |
+| `adjudicated-card.json` | Saved Trust Card with split self-verified/adjudicated accuracy. |
+| `adjudicated-store/vector-agent.events.jsonl` | Event-log-backed store containing an `adjudicated` event. |
+| `adjudicated-store/vector-agent.json` | Derived JSON snapshot cache for the adjudicated store. |
 
 The vector-validating test is:
 
@@ -494,7 +611,8 @@ Vector expectations:
   "tampered_failed_line": 2,
   "structural_failure": "unsupported event type: 'banana'",
   "structural_failed_line": 2,
-  "card_store_head": "9f23e8157f376de86ce3c01115b6900188a60e2b932592ef340b0cf873e8e72a"
+  "card_store_head": "9f23e8157f376de86ce3c01115b6900188a60e2b932592ef340b0cf873e8e72a",
+  "adjudicated_store_head": "d16b1d7b9ae039c705da8ab40b163988334e74f47dea0eb9fce95bf4653c5517"
 }
 ```
 

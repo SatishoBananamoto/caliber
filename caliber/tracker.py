@@ -28,6 +28,10 @@ class Prediction:
     notes: Optional[str] = None
     commitment_hash: Optional[str] = None
     commitment_salt: Optional[str] = None
+    adjudicated_by: Optional[str] = None
+    adjudicated_at: Optional[datetime] = None
+    adjudication_note: Optional[str] = None
+    adjudicator_signature: Optional[str] = None
 
     def to_dict(self) -> dict:
         d = {
@@ -43,6 +47,14 @@ class Prediction:
         if self.commitment_hash:
             d["commitment_hash"] = self.commitment_hash
             d["commitment_salt"] = self.commitment_salt
+        if self.adjudicated_by:
+            d["adjudicated_by"] = self.adjudicated_by
+            d["adjudicated_at"] = (
+                self.adjudicated_at.isoformat() if self.adjudicated_at else None
+            )
+            d["adjudication_note"] = self.adjudication_note
+            if self.adjudicator_signature:
+                d["adjudicator_signature"] = self.adjudicator_signature
         return d
 
     @classmethod
@@ -62,6 +74,14 @@ class Prediction:
                 else None
             ),
             notes=data.get("notes"),
+            adjudicated_by=data.get("adjudicated_by"),
+            adjudicated_at=(
+                datetime.fromisoformat(data["adjudicated_at"])
+                if data.get("adjudicated_at")
+                else None
+            ),
+            adjudication_note=data.get("adjudication_note"),
+            adjudicator_signature=data.get("adjudicator_signature"),
         )
 
 
@@ -182,6 +202,33 @@ class TrustTracker:
         pred.verified_at = verified_at or datetime.now(timezone.utc)
         if notes is not None:
             pred.notes = notes
+        self._save()
+        return pred
+
+    def adjudicate(
+        self,
+        prediction_id: str,
+        correct: bool,
+        adjudicator: str,
+        evidence_note: Optional[str] = None,
+        adjudicator_signature: Optional[str] = None,
+        adjudicated_at: Optional[datetime] = None,
+    ) -> Prediction:
+        """Record an externally adjudicated outcome for a prediction."""
+        if prediction_id not in self._predictions:
+            raise KeyError(f"No prediction with id '{prediction_id}'")
+        if not adjudicator:
+            raise ValueError("adjudicator identity must be non-empty")
+
+        adjudication_time = adjudicated_at or datetime.now(timezone.utc)
+        pred = self._predictions[prediction_id]
+        pred.outcome = correct
+        pred.verified_at = adjudication_time
+        pred.notes = evidence_note
+        pred.adjudicated_by = adjudicator
+        pred.adjudicated_at = adjudication_time
+        pred.adjudication_note = evidence_note
+        pred.adjudicator_signature = adjudicator_signature
         self._save()
         return pred
 

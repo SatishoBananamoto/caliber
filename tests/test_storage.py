@@ -152,6 +152,40 @@ class TestFileStorage:
         assert loaded[0].id == "p1"
         assert loaded[0].outcome is False
 
+    def test_adjudication_writes_adjudicated_event_for_new_store(self, tmp_path):
+        tracker = TrustTracker("agent", storage=FileStorage(tmp_path))
+        tracker.predict(
+            "external claim",
+            confidence=0.80,
+            domain="facts",
+            timestamp=datetime(2026, 3, 24, tzinfo=timezone.utc),
+            prediction_id="p1",
+        )
+        tracker.adjudicate(
+            "p1",
+            correct=False,
+            adjudicator="reviewer@example.com",
+            evidence_note="evidence note",
+            adjudicator_signature="sig-1",
+            adjudicated_at=datetime(2026, 3, 25, tzinfo=timezone.utc),
+        )
+
+        event_path = tmp_path / "agent.events.jsonl"
+        events = [json.loads(line) for line in event_path.read_text().splitlines()]
+        assert [event["type"] for event in events] == ["predicted", "adjudicated"]
+        payload = events[1]["payload"]
+        assert payload["prediction_id"] == "p1"
+        assert payload["outcome"] is False
+        assert payload["adjudicator"] == "reviewer@example.com"
+        assert payload["evidence_note"] == "evidence note"
+        assert payload["adjudicator_signature"] == "sig-1"
+
+        loaded = FileStorage(tmp_path).load("agent")[0]
+        assert loaded.outcome is False
+        assert loaded.adjudicated_by == "reviewer@example.com"
+        assert loaded.adjudication_note == "evidence note"
+        assert loaded.adjudicator_signature == "sig-1"
+
     def test_invalid_event_log_fails_loudly(self, tmp_path):
         tracker = TrustTracker("agent", storage=FileStorage(tmp_path))
         pid = tracker.predict(

@@ -134,6 +134,31 @@ class TestTrustCard:
         assert abs(card.overall_accuracy - 0.667) < 0.01
         assert abs(card.mean_confidence - 0.80) < 0.01
 
+    def test_adjudicated_accuracy_is_split_not_blended(self):
+        preds = self._make_predictions([
+            (0.80, "self", True),
+            (0.80, "external", False),
+        ])
+        preds[1].adjudicated_by = "reviewer@example.com"
+        preds[1].adjudicated_at = preds[1].verified_at
+        preds[1].adjudication_note = "external evidence"
+
+        card = TrustCard.from_predictions("test", preds)
+        data = json.loads(card.to_json())
+        cal = data["calibration"]
+
+        assert cal["total_verified"] == 2
+        assert cal["accuracy_basis"] == "self_verified"
+        assert "overall_accuracy" not in cal
+        assert cal["self_verified"]["predictions"] == 1
+        assert cal["self_verified"]["correct"] == 1
+        assert cal["self_verified"]["accuracy"] == 1.0
+        assert "ci95" in cal["self_verified"]
+        assert cal["adjudicated"]["predictions"] == 1
+        assert cal["adjudicated"]["correct"] == 0
+        assert cal["adjudicated"]["accuracy"] == 0.0
+        assert "ci95" in cal["adjudicated"]
+
     def test_confidence_buckets(self):
         preds = self._make_predictions([
             (0.55, "a", True),   # 50-59

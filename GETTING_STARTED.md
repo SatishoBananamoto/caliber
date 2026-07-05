@@ -97,7 +97,32 @@ The Trust Card answers:
 Treat small buckets carefully. caliber flags insufficient data and statistical
 significance so a few lucky or unlucky predictions do not become a fake pattern.
 
-## 7. Check Your Record For Gaming Signatures
+## 7. Anchor The Event Log
+
+An anchor is a saved event-log head. If you commit or publish that head outside
+the mutable local store, later retroactive rewrites can be detected from that
+anchor forward.
+
+```bash
+caliber -a "$AGENT_NAME" anchor --label "$(date -u +%Y-%m-%d)" --emit caliber-anchors.jsonl
+```
+
+The command appends an internal anchor event and appends a JSON line to
+`caliber-anchors.jsonl` containing both the pre-anchor head and the new head.
+The `new_head` is what `verify-log --head` should use for the full log.
+
+A simple git pattern is:
+
+```bash
+caliber -a "$AGENT_NAME" anchor --emit caliber-anchors.jsonl
+git add caliber-anchors.jsonl
+git commit -m "anchor caliber event-log head"
+```
+
+The git commit timestamp and hosted commit hash become the external witness for
+that anchor file.
+
+## 8. Check Your Record For Gaming Signatures
 
 ```bash
 caliber -a "$AGENT_NAME" integrity
@@ -117,7 +142,7 @@ after 20+ verified predictions, and attach it when sharing a card:
 caliber -a "$AGENT_NAME" card --with-integrity
 ```
 
-## 8. Import Existing Calibration Data
+## 9. Import Existing Calibration Data
 
 If you already have a MY UNIVERSE-style `CALIBRATE.md`:
 
@@ -137,7 +162,7 @@ reports — the predictions arrived with their outcomes, so timing cannot be
 independently verified. Live predictions you make going forward do not have
 this caveat.
 
-## 9. Use MCP From An Agent
+## 10. Use MCP From An Agent
 
 Print the MCP config snippet:
 

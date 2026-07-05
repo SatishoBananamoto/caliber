@@ -137,6 +137,27 @@ class FileStorage(Storage):
                     else None
                 )
                 prediction.notes = payload.get("notes")
+            elif event_type == "adjudicated":
+                prediction_id = payload["prediction_id"]
+                if prediction_id not in predictions:
+                    raise ValueError(
+                        f"invalid event log: adjudicate before predict for {prediction_id}"
+                    )
+                prediction = predictions[prediction_id]
+                adjudicated_at = (
+                    _datetime_from_iso(payload["adjudicated_at"])
+                    if payload.get("adjudicated_at")
+                    else None
+                )
+                prediction.outcome = payload["outcome"]
+                prediction.verified_at = adjudicated_at
+                prediction.notes = payload.get("evidence_note")
+                prediction.adjudicated_by = payload["adjudicator"]
+                prediction.adjudicated_at = adjudicated_at
+                prediction.adjudication_note = payload.get("evidence_note")
+                prediction.adjudicator_signature = payload.get(
+                    "adjudicator_signature"
+                )
             else:
                 raise ValueError(f"invalid event log: unknown event type {event_type!r}")
         return list(predictions.values())
@@ -168,20 +189,40 @@ class FileStorage(Storage):
                     {"prediction": prediction.to_dict()},
                 )
             elif _verification_changed(prior, prediction):
-                self._event_log.append(
-                    agent_name,
-                    "verified",
-                    {
-                        "prediction_id": prediction.id,
-                        "outcome": prediction.outcome,
-                        "verified_at": (
-                            prediction.verified_at.isoformat()
-                            if prediction.verified_at
-                            else None
-                        ),
-                        "notes": prediction.notes,
-                    },
-                )
+                if prediction.adjudicated_by:
+                    self._event_log.append(
+                        agent_name,
+                        "adjudicated",
+                        {
+                            "prediction_id": prediction.id,
+                            "outcome": prediction.outcome,
+                            "adjudicated_at": (
+                                prediction.adjudicated_at.isoformat()
+                                if prediction.adjudicated_at
+                                else None
+                            ),
+                            "adjudicator": prediction.adjudicated_by,
+                            "evidence_note": prediction.adjudication_note,
+                            "adjudicator_signature": (
+                                prediction.adjudicator_signature
+                            ),
+                        },
+                    )
+                else:
+                    self._event_log.append(
+                        agent_name,
+                        "verified",
+                        {
+                            "prediction_id": prediction.id,
+                            "outcome": prediction.outcome,
+                            "verified_at": (
+                                prediction.verified_at.isoformat()
+                                if prediction.verified_at
+                                else None
+                            ),
+                            "notes": prediction.notes,
+                        },
+                    )
 
 
 def _datetime_from_iso(value: str):
@@ -195,6 +236,10 @@ def _verification_changed(before: Prediction, after: Prediction) -> bool:
         before.outcome != after.outcome
         or before.verified_at != after.verified_at
         or before.notes != after.notes
+        or before.adjudicated_by != after.adjudicated_by
+        or before.adjudicated_at != after.adjudicated_at
+        or before.adjudication_note != after.adjudication_note
+        or before.adjudicator_signature != after.adjudicator_signature
     )
 
 

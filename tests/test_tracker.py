@@ -100,6 +100,23 @@ class TestTrustTracker:
         with pytest.raises(KeyError):
             t.verify("ghost", correct=True)
 
+    def test_adjudicate_records_external_outcome_metadata(self):
+        t = self._make_tracker()
+        pid = t.predict("external check", confidence=0.80, domain="facts")
+        result = t.adjudicate(
+            pid,
+            correct=False,
+            adjudicator="reviewer@example.com",
+            evidence_note="linked evidence",
+            adjudicator_signature="sig-1",
+        )
+
+        assert result.outcome is False
+        assert result.verified_at is not None
+        assert result.adjudicated_by == "reviewer@example.com"
+        assert result.adjudication_note == "linked evidence"
+        assert result.adjudicator_signature == "sig-1"
+
     def test_predictions_ordered(self):
         t = self._make_tracker()
         t.predict("first", confidence=0.80, domain="a",

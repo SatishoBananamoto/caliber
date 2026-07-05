@@ -19,7 +19,13 @@ from urllib.parse import quote
 
 GENESIS_HASH = "0" * 64
 LOG_VERSION = 1
-SUPPORTED_EVENT_TYPES = frozenset({"predicted", "verified", "imported", "anchor"})
+SUPPORTED_EVENT_TYPES = frozenset({
+    "predicted",
+    "verified",
+    "imported",
+    "adjudicated",
+    "anchor",
+})
 
 
 @dataclass(frozen=True)

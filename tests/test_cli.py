@@ -1,10 +1,19 @@
 """Tests for caliber CLI commands."""
 
 import json
+import stat
 
+import pytest
 from click.testing import CliRunner
 
 from caliber.cli import cli
+
+
+def _require_cryptography() -> None:
+    try:
+        import cryptography  # noqa: F401
+    except ImportError as exc:
+        pytest.skip(f"cryptography unavailable: {exc}")
 
 
 def _write_legacy_snapshot(store, agent_name="legacy agent") -> None:
@@ -265,6 +274,90 @@ def test_verify_log_command_reports_valid_chain(tmp_path):
     assert "Head: " in result.output
 
 
+def test_adjudicate_command_records_event_card_split_and_integrity_metric(tmp_path):
+    runner = CliRunner()
+    store = str(tmp_path)
+
+    for pid in ("self-1", "adj-1"):
+        result = runner.invoke(
+            cli,
+            [
+                "--agent",
+                "cli-test",
+                "--store",
+                store,
+                "predict",
+                f"claim {pid}",
+                "--confidence",
+                "80",
+                "--domain",
+                "codebase",
+                "--id",
+                pid,
+            ],
+        )
+        assert result.exit_code == 0
+
+    assert runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", store, "verify", "self-1", "--correct"],
+    ).exit_code == 0
+    adjudicated = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            store,
+            "adjudicate",
+            "adj-1",
+            "--incorrect",
+            "--by",
+            "reviewer@example.com",
+            "--evidence-note",
+            "external note",
+            "--signature",
+            "sig-1",
+        ],
+    )
+    assert adjudicated.exit_code == 0
+    assert "Adjudicated adj-1: incorrect" in adjudicated.output
+
+    events = [
+        json.loads(line)
+        for line in (tmp_path / "cli-test.events.jsonl").read_text().splitlines()
+    ]
+    assert [event["type"] for event in events] == [
+        "predicted",
+        "predicted",
+        "verified",
+        "adjudicated",
+    ]
+    assert events[-1]["payload"]["adjudicator"] == "reviewer@example.com"
+
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", store, "card", "--json"],
+    )
+    assert card.exit_code == 0
+    data = json.loads(card.output)
+    cal = data["calibration"]
+    assert cal["accuracy_basis"] == "self_verified"
+    assert "overall_accuracy" not in cal
+    assert cal["self_verified"]["predictions"] == 1
+    assert cal["self_verified"]["accuracy"] == 1.0
+    assert cal["adjudicated"]["predictions"] == 1
+    assert cal["adjudicated"]["accuracy"] == 0.0
+
+    integrity = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", store, "integrity", "--json"],
+    )
+    assert integrity.exit_code == 0
+    metrics = json.loads(integrity.output)["metrics"]
+    assert metrics["adjudicated_share"] == 0.5
+
+
 def test_verify_log_command_json(tmp_path):
     runner = CliRunner()
     _record_verified_predictions(runner, str(tmp_path), count=1)
@@ -374,6 +467,69 @@ def test_anchor_command_appends_anchor_and_keeps_card_replay_working(tmp_path):
     assert json.loads(card.output)["calibration"]["total_verified"] == 1
 
 
+def test_anchor_command_emit_appends_separate_anchors_file(tmp_path):
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=1)
+    anchors_path = tmp_path / "anchors.jsonl"
+
+    first = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "anchor",
+            "--label",
+            "first",
+            "--emit",
+            str(anchors_path),
+            "--json",
+        ],
+    )
+    second = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "anchor",
+            "--label",
+            "second",
+            "--emit",
+            str(anchors_path),
+            "--json",
+        ],
+    )
+
+    assert first.exit_code == 0
+    assert second.exit_code == 0
+    first_data = json.loads(first.output)
+    second_data = json.loads(second.output)
+    records = [
+        json.loads(line) for line in anchors_path.read_text().splitlines()
+    ]
+    assert [record["label"] for record in records] == ["first", "second"]
+    assert records[0]["new_head"] == first_data["new_head"]
+    assert records[1]["new_head"] == second_data["new_head"]
+    assert records[1]["anchored_head"] == first_data["new_head"]
+
+    verify = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-log",
+            "--head",
+            records[-1]["new_head"],
+        ],
+    )
+    assert verify.exit_code == 0
+
+
 def test_anchor_command_fails_on_invalid_log(tmp_path):
     runner = CliRunner()
     _record_verified_predictions(runner, str(tmp_path), count=1)
@@ -481,6 +637,129 @@ def test_verify_card_command_accepts_matching_card(tmp_path):
 
     assert result.exit_code == 0
     assert "Card verified:" in result.output
+    assert "Checked: calibration" in result.output
+
+
+def test_signed_card_validates_with_pubkey_and_0600_private_key(tmp_path):
+    _require_cryptography()
+    from caliber.signing import default_key_paths
+
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=3)
+
+    keygen = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "keygen"],
+    )
+    assert keygen.exit_code == 0
+    keys = default_key_paths(tmp_path, "cli-test")
+    assert keys.private_key.exists()
+    assert keys.public_key.exists()
+    assert stat.S_IMODE(keys.private_key.stat().st_mode) == 0o600
+
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--sign"],
+    )
+    assert card.exit_code == 0
+    data = json.loads(card.output)
+    assert data["signature"]["algorithm"] == "Ed25519"
+    assert len(data["signature"]["event_log_head"]) == 64
+
+    card_path = tmp_path / "signed-card.json"
+    card_path.write_text(card.output)
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-card",
+            str(card_path),
+            "--pubkey",
+            str(keys.public_key),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    verified = json.loads(result.output)
+    assert verified["valid"] is True
+    assert verified["checked"] == ["calibration", "signature"]
+
+
+def test_signed_card_single_field_mutation_fails_signature(tmp_path):
+    _require_cryptography()
+    from caliber.signing import default_key_paths
+
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=3)
+    assert runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "keygen"],
+    ).exit_code == 0
+
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--sign"],
+    )
+    assert card.exit_code == 0
+    data = json.loads(card.output)
+    data["generated"] = "2026-07-05T00:00:00+00:00"
+    card_path = tmp_path / "mutated-signed-card.json"
+    card_path.write_text(json.dumps(data, indent=2) + "\n")
+    keys = default_key_paths(tmp_path, "cli-test")
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-card",
+            str(card_path),
+            "--pubkey",
+            str(keys.public_key),
+        ],
+    )
+
+    assert result.exit_code == 1
+    assert "Card signature failed: signature verification failed" in result.output
+
+
+def test_signed_card_still_verifies_calibration_without_pubkey(tmp_path):
+    _require_cryptography()
+
+    runner = CliRunner()
+    _record_verified_predictions(runner, str(tmp_path), count=3)
+    assert runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "keygen"],
+    ).exit_code == 0
+
+    card = runner.invoke(
+        cli,
+        ["--agent", "cli-test", "--store", str(tmp_path), "card", "--sign"],
+    )
+    assert card.exit_code == 0
+    card_path = tmp_path / "signed-card.json"
+    card_path.write_text(card.output)
+
+    result = runner.invoke(
+        cli,
+        [
+            "--agent",
+            "cli-test",
+            "--store",
+            str(tmp_path),
+            "verify-card",
+            str(card_path),
+        ],
+    )
+
+    assert result.exit_code == 0
     assert "Checked: calibration" in result.output
 
 

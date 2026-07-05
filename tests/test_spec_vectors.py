@@ -83,3 +83,23 @@ def test_card_vector_matches_event_log_backed_store():
     assert verification.event_count == card_meta["event_count"]
     assert verification.head_hash == card_meta["expected_head"]
     assert _without_generated(recomputed) == _without_generated(saved)
+
+
+def test_adjudicated_card_vector_matches_event_log_backed_store():
+    manifest = _manifest()
+    agent = manifest["agent_name"]
+    card_meta = manifest["adjudicated_card"]
+    store_dir = VECTORS / card_meta["store_dir"]
+
+    verification = EventLog(store_dir).verify(agent)
+    tracker = TrustTracker(agent, storage=FileStorage(store_dir))
+    recomputed = tracker.generate_card().to_dict()
+    saved = json.loads((VECTORS / card_meta["path"]).read_text())
+
+    assert verification.valid is True
+    assert verification.event_count == card_meta["event_count"]
+    assert verification.head_hash == card_meta["expected_head"]
+    assert _without_generated(recomputed) == _without_generated(saved)
+    assert "overall_accuracy" not in saved["calibration"]
+    assert saved["calibration"]["self_verified"]["accuracy"] == 1.0
+    assert saved["calibration"]["adjudicated"]["accuracy"] == 0.0

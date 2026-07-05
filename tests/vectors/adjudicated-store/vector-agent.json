@@ -1,0 +1,29 @@
+{
+  "agent_name": "vector-agent",
+  "predictions": [
+    {
+      "id": "p-adj",
+      "claim": "vector adjudicated claim",
+      "confidence": 0.8,
+      "domain": "code",
+      "timestamp": "2026-07-05T12:00:00+00:00",
+      "outcome": false,
+      "verified_at": "2026-07-05T12:30:00+00:00",
+      "notes": "public evidence note",
+      "adjudicated_by": "external-reviewer@example.com",
+      "adjudicated_at": "2026-07-05T12:30:00+00:00",
+      "adjudication_note": "public evidence note",
+      "adjudicator_signature": "sig-vector-1"
+    },
+    {
+      "id": "p-self",
+      "claim": "vector self-verified claim",
+      "confidence": 0.7,
+      "domain": "ops",
+      "timestamp": "2026-07-05T12:01:00+00:00",
+      "outcome": true,
+      "verified_at": "2026-07-05T12:20:00+00:00",
+      "notes": "self check note"
+    }
+  ]
+}

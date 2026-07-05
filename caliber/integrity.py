@@ -276,6 +276,7 @@ class IntegrityReport:
     duplicate_claim_ratio: Optional[float] = None
     template_claim_ratio: Optional[float] = None
     import_share: Optional[float] = None
+    adjudicated_share: Optional[float] = None
     instant_verify_share: Optional[float] = None
     median_verify_latency_seconds: Optional[float] = None
     mendel_p_low: Optional[float] = None
@@ -357,6 +358,9 @@ class IntegrityReport:
             if p.verified_at is not None and p.verified_at != p.timestamp
         ]
         report.import_share = len(imported) / n
+        report.adjudicated_share = (
+            sum(1 for p in verified if p.adjudicated_by) / n
+        )
         if live:
             latencies = sorted(
                 (p.verified_at - p.timestamp).total_seconds() for p in live
@@ -607,6 +611,7 @@ class IntegrityReport:
             "duplicate_claim_ratio",
             "template_claim_ratio",
             "import_share",
+            "adjudicated_share",
             "instant_verify_share",
             "median_verify_latency_seconds",
             "mendel_p_low",
@@ -643,6 +648,10 @@ class IntegrityReport:
             lines.append(
                 f"Outcome base rate: {self.outcome_base_rate:.1%}"
             )
+            if self.adjudicated_share is not None:
+                lines.append(
+                    f"Adjudicated share: {self.adjudicated_share:.1%}"
+                )
         if self.flags:
             lines.append("")
             for flag in self.flags:

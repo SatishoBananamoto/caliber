@@ -240,6 +240,43 @@ class DomainStats:
 
 
 @dataclass
+class AccuracySection:
+    """Accuracy summary for one outcome source."""
+
+    predictions: int
+    correct: int
+
+    @classmethod
+    def from_predictions(cls, predictions: list[Prediction]) -> AccuracySection:
+        return cls(
+            predictions=len(predictions),
+            correct=sum(1 for p in predictions if p.outcome),
+        )
+
+    @property
+    def accuracy(self) -> Optional[float]:
+        if self.predictions == 0:
+            return None
+        return self.correct / self.predictions
+
+    @property
+    def ci95(self) -> Optional[tuple[float, float]]:
+        return _wilson_ci(self.correct, self.predictions)
+
+    def to_dict(self) -> dict:
+        d = {
+            "predictions": self.predictions,
+            "correct": self.correct,
+        }
+        if self.accuracy is not None:
+            d["accuracy"] = round(self.accuracy, 3)
+            ci95 = self.ci95
+            if ci95 is not None:
+                d["ci95"] = [round(ci95[0], 3), round(ci95[1], 3)]
+        return d
+
+
+@dataclass
 class AdaptiveBucketStats:
     """Statistics for one equal-mass adaptive confidence bucket."""
 
@@ -316,6 +353,8 @@ class TrustCard:
     domains: dict[str, DomainStats] = field(default_factory=dict)
     danger_zones: list[str] = field(default_factory=list)
     strength_zones: list[str] = field(default_factory=list)
+    self_verified: Optional[AccuracySection] = None
+    adjudicated: Optional[AccuracySection] = None
 
     @classmethod
     def from_predictions(
@@ -330,11 +369,44 @@ class TrustCard:
                 total_predictions=len(predictions),
             )
 
-        correct = sum(1 for p in verified if p.outcome)
-        overall_accuracy = correct / len(verified)
-        mean_confidence = sum(p.confidence for p in verified) / len(verified)
-        forecasts = [p.confidence for p in verified]
-        outcomes = [1 if p.outcome else 0 for p in verified]
+        adjudicated_predictions = [p for p in verified if p.adjudicated_by]
+        self_verified_predictions = [p for p in verified if not p.adjudicated_by]
+        has_adjudicated = bool(adjudicated_predictions)
+        # When adjudication exists, card-level accuracy must not blend
+        # self-verified and adjudicated outcomes. Keep legacy calibration views
+        # on the self-verified subset and expose adjudicated accuracy separately.
+        scoring_predictions = (
+            self_verified_predictions if has_adjudicated else verified
+        )
+        split_self = (
+            AccuracySection.from_predictions(self_verified_predictions)
+            if has_adjudicated
+            else None
+        )
+        split_adjudicated = (
+            AccuracySection.from_predictions(adjudicated_predictions)
+            if has_adjudicated
+            else None
+        )
+        if not scoring_predictions:
+            return cls(
+                agent_name=agent_name,
+                generated=datetime.now(timezone.utc),
+                total_predictions=len(predictions),
+                total_verified=len(verified),
+                self_verified=split_self,
+                adjudicated=split_adjudicated,
+            )
+
+        correct = sum(1 for p in scoring_predictions if p.outcome)
+        overall_accuracy = (
+            None if has_adjudicated else correct / len(scoring_predictions)
+        )
+        mean_confidence = (
+            sum(p.confidence for p in scoring_predictions) / len(scoring_predictions)
+        )
+        forecasts = [p.confidence for p in scoring_predictions]
+        outcomes = [1 if p.outcome else 0 for p in scoring_predictions]
         brier, reliability, resolution, uncertainty = _murphy_decomposition(
             forecasts,
             outcomes,
@@ -346,7 +418,9 @@ class TrustCard:
         # Build confidence buckets
         buckets: dict[str, BucketStats] = {}
         for low, high, label in BUCKET_RANGES:
-            in_bucket = [p for p in verified if low <= p.confidence <= high]
+            in_bucket = [
+                p for p in scoring_predictions if low <= p.confidence <= high
+            ]
             bucket_correct = sum(1 for p in in_bucket if p.outcome)
             bucket_mean_confidence = (
                 sum(p.confidence for p in in_bucket) / len(in_bucket)
@@ -360,11 +434,11 @@ class TrustCard:
                 mean_confidence=bucket_mean_confidence,
             )
 
-        adaptive_buckets = _build_adaptive_buckets(verified)
+        adaptive_buckets = _build_adaptive_buckets(scoring_predictions)
 
         # Build domain stats
         domain_groups: dict[str, list[Prediction]] = {}
-        for p in verified:
+        for p in scoring_predictions:
             domain_groups.setdefault(p.domain, []).append(p)
 
         domains: dict[str, DomainStats] = {}
@@ -426,6 +500,8 @@ class TrustCard:
             domains=domains,
             danger_zones=danger_zones,
             strength_zones=strength_zones,
+            self_verified=split_self,
+            adjudicated=split_adjudicated,
         )
 
     def to_dict(self) -> dict:
@@ -441,6 +517,10 @@ class TrustCard:
         }
 
         cal = d["calibration"]
+        if self.self_verified is not None and self.adjudicated is not None:
+            cal["accuracy_basis"] = "self_verified"
+            cal["self_verified"] = self.self_verified.to_dict()
+            cal["adjudicated"] = self.adjudicated.to_dict()
         if self.overall_accuracy is not None:
             cal["overall_accuracy"] = round(self.overall_accuracy, 3)
         if self.mean_confidence is not None:

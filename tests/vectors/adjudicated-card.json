@@ -1,0 +1,92 @@
+{
+  "trust_version": "0.1",
+  "agent_name": "vector-agent",
+  "generated": "2026-07-05T12:30:00+00:00",
+  "calibration": {
+    "total_predictions": 2,
+    "total_verified": 2,
+    "accuracy_basis": "self_verified",
+    "self_verified": {
+      "predictions": 1,
+      "correct": 1,
+      "accuracy": 1.0,
+      "ci95": [
+        0.207,
+        1.0
+      ]
+    },
+    "adjudicated": {
+      "predictions": 1,
+      "correct": 0,
+      "accuracy": 0.0,
+      "ci95": [
+        0.0,
+        0.793
+      ]
+    },
+    "mean_confidence": 0.7,
+    "mean_calibration_gap": -0.3,
+    "brier_score": 0.09,
+    "reliability": 0.09,
+    "resolution": 0.0,
+    "uncertainty": 0.0,
+    "calibration_z": 0.6547,
+    "calibration_p": 0.5127,
+    "confidence_buckets": {
+      "50-59": {
+        "predictions": 0,
+        "correct": 0
+      },
+      "60-69": {
+        "predictions": 0,
+        "correct": 0
+      },
+      "70-79": {
+        "predictions": 1,
+        "correct": 1,
+        "mean_confidence": 0.7,
+        "accuracy": 1.0,
+        "ci95": [
+          0.207,
+          1.0
+        ],
+        "calibration_gap": -0.3,
+        "insufficient_data": true
+      },
+      "80-89": {
+        "predictions": 0,
+        "correct": 0
+      },
+      "90-99": {
+        "predictions": 0,
+        "correct": 0
+      }
+    },
+    "adaptive_buckets": [
+      {
+        "index": 1,
+        "predictions": 1,
+        "correct": 1,
+        "confidence_range": [
+          0.7,
+          0.7
+        ],
+        "mean_confidence": 0.7,
+        "accuracy": 1.0,
+        "ci95": [
+          0.207,
+          1.0
+        ],
+        "calibration_gap": -0.3
+      }
+    ],
+    "domains": {
+      "ops": {
+        "predictions": 1,
+        "correct": 1,
+        "avg_confidence": 0.7,
+        "accuracy": 1.0
+      }
+    }
+  }
+}
