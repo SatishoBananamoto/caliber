@@ -29,6 +29,7 @@ dependencies = ["click>=8.0"]
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
 dev = ["hypothesis>=6.0", "mcp>=1.0", "pytest>=8.0"]
+signing = ["cryptography>=42.0"]
 
 [project.scripts]
 caliber = "caliber.cli:main"
